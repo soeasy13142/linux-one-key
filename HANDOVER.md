@@ -146,7 +146,7 @@ linux-one-key/
 | SSH 密钥类型 | Ed25519 | 比 RSA 更安全、更短 |
 | 默认 SSH 端口 | 2222 | 非标准端口，避免自动化扫描 |
 | Fail2Ban 封禁时间 | 3600 秒 | 平衡安全性和误封风险 |
-| 交互模式 | 完整 4 模式菜单 | 基础/标准/高级/自定义，v0.1 仅 SSH 可用 |
+| 交互模式 | 快速开始 + 自定义配置 | 快速开始执行所有任务，自定义逐项选择 |
 | i18n 实现 | 语言文件 source | lang/zh.sh, lang/en.sh，通过 load_lang() 加载 |
 | 日志输出 | 分级输出 | 终端显示简化信息，详细信息写入 /var/log/linux-one-key/ |
 | 备份目录 | /var/log/linux-one-key/backups/ | PRD 原始设计，统一管理 |
@@ -260,3 +260,5 @@ v0.4 (第四周)
 | 2026-06-20 | CREATE | `scripts/lang/en.sh` | 英文翻译文件 |
 | 2026-06-20 | CREATE | `tests/unit/utils.bats` | 工具函数单元测试（19个用例） |
 | 2026-06-20 | UPDATE | `HANDOVER.md` | 更新进度和文件清单 |
+| 2026-06-20 | UPDATE | `install.sh` | 重新设计菜单，快速开始+自定义配置 |
+| 2026-06-20 | UPDATE | `scripts/security/ssh.sh` | 添加 run_ssh_hardening_custom 函数 |
