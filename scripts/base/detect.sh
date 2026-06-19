@@ -128,13 +128,10 @@ detect_package_manager() {
     log_success "${MSG_DETECT_PKG_MANAGER}: ${DETECTED_PKG_MANAGER}"
 }
 
-# 检测网络连接
+# 检测网络连接 (静默检测，仅失败时显示错误)
 detect_network() {
-    log_step "${MSG_DETECT_NETWORK}..."
-
     if check_network "8.8.8.8" 5 || check_network "114.114.114.114" 5; then
         DETECTED_NETWORK_OK="yes"
-        log_success "${MSG_DETECT_NETWORK}: ${MSG_DETECT_NETWORK_OK}"
     else
         DETECTED_NETWORK_OK="no"
         log_error "${MSG_DETECT_NETWORK}: ${MSG_DETECT_NETWORK_FAIL}"
@@ -218,7 +215,6 @@ print_detection_summary() {
     echo -e "  ${MSG_DETECT_ARCH}: ${DETECTED_ARCH}"
     echo -e "  ${MSG_DETECT_USER}: ${DETECTED_CURRENT_USER}"
     echo -e "  ${MSG_DETECT_PKG_MANAGER}: ${DETECTED_PKG_MANAGER}"
-    echo -e "  ${MSG_DETECT_NETWORK}: $([ "${DETECTED_NETWORK_OK}" == "yes" ] && echo "${MSG_DETECT_NETWORK_OK}" || echo "${MSG_DETECT_NETWORK_FAIL}")"
     echo ""
 }
 
