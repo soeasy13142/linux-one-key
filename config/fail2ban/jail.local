@@ -1,0 +1,64 @@
+# ============================================================================
+# Fail2Ban jail 配置模板
+# 由 linux-one-key 使用
+# ============================================================================
+
+[DEFAULT]
+# 封禁时间（秒），默认 1 小时
+bantime = 3600
+
+# 检测时间窗口（秒），默认 10 分钟
+findtime = 600
+
+# 最大失败次数
+maxretry = 5
+
+# 封禁动作（与防火墙集成）
+banaction = firewallcmd-ipset
+
+# 忽略本地回环地址
+ignoreip = 127.0.0.1/8
+
+# ============================================================================
+# SSH 防护
+# ============================================================================
+
+[sshd]
+enabled = true
+port = {ssh_port}
+filter = sshd
+logpath = {auth_log_path}
+maxretry = 5
+bantime = 3600
+findtime = 600
+
+# ============================================================================
+# 可选扩展防护（取消注释以启用）
+# ============================================================================
+
+# Nginx HTTP 认证防护
+# [nginx-http-auth]
+# enabled = true
+# port = http,https
+# filter = nginx-http-auth
+# logpath = /var/log/nginx/error.log
+# maxretry = 5
+# bantime = 3600
+
+# Postfix SMTP 认证防护
+# [postfix-sasl]
+# enabled = true
+# port = smtp,ssmtp
+# filter = postfix-sasl
+# logpath = /var/log/mail.log
+# maxretry = 5
+# bantime = 3600
+
+# 重复封禁（多次被封的 IP 延长封禁）
+# [recidive]
+# enabled = true
+# filter = recidive
+# logpath = /var/log/fail2ban.log
+# bantime = 604800
+# findtime = 86400
+# maxretry = 3
