@@ -2,7 +2,8 @@
 # install.sh - Linux 安全加固脚本主入口
 # 支持 curl 管道执行：curl -fsSL https://xxx/install.sh | bash
 
-set -euo pipefail
+set -eo pipefail
+# 注意: 不使用 -u (nounset)，因为 curl 管道模式下 BASH_SOURCE 未绑定
 
 # ═══════════════════════════════════════════
 # GitHub 仓库配置
@@ -10,7 +11,8 @@ set -euo pipefail
 
 GITHUB_REPO="soeasy13142/linux-one-key"
 GITHUB_BRANCH="main"
-GITHUB_RAW_URL="https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}"
+# 使用 API URL 避免 CDN 缓存问题
+GITHUB_API_URL="https://api.github.com/repos/${GITHUB_REPO}/contents"
 
 # ═══════════════════════════════════════════
 # 脚本目录解析 (支持 curl 管道执行)
@@ -19,13 +21,31 @@ GITHUB_RAW_URL="https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH
 # 检测是否通过 curl 管道执行
 is_curl_pipe() {
     # BASH_SOURCE 为空或者是 bash 时，说明是通过管道执行
-    [[ -z "${BASH_SOURCE[0]:-}" ]] || [[ "${BASH_SOURCE[0]}" == "bash" ]] || [[ "${BASH_SOURCE[0]}" == "/dev/stdin" ]]
+    local first_source="${BASH_SOURCE[0]:-}"
+    [[ -z "$first_source" ]] || [[ "$first_source" == "bash" ]] || [[ "$first_source" == "/dev/stdin" ]]
+}
+
+# 从 GitHub 下载单个文件（使用 API 避免 CDN 缓存）
+download_file() {
+    local api_url="$1"
+    local output_file="$2"
+
+    # 使用 API 获取文件内容，解码 base64
+    local content
+    content=$(curl -fsSL "${api_url}" | python3 -c "import sys,json,base64; d=json.load(sys.stdin); print(base64.b64decode(d['content']).decode())" 2>/dev/null)
+
+    if [[ -n "$content" ]]; then
+        echo "$content" > "${output_file}"
+        return 0
+    else
+        return 1
+    fi
 }
 
 # 从 GitHub 下载文件到临时目录
 download_from_github() {
     local tmp_dir="$1"
-    local repo_url="${GITHUB_RAW_URL}"
+    local api_url="${GITHUB_API_URL}"
 
     echo "正在从 GitHub 下载脚本文件..."
 
@@ -50,7 +70,7 @@ download_from_github() {
 
     for file in "${files[@]}"; do
         echo "  下载: ${file}"
-        if ! curl -fsSL "${repo_url}/${file}" -o "${tmp_dir}/${file}" 2>/dev/null; then
+        if ! download_file "${api_url}/${file}?ref=${GITHUB_BRANCH}" "${tmp_dir}/${file}"; then
             echo "  警告: 下载 ${file} 失败，跳过"
         fi
     done
