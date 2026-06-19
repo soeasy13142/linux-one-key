@@ -377,7 +377,7 @@ cancel_rollback_timer() {
 # 主 SSH 加固流程
 # ═══════════════════════════════════════════
 
-# 执行 SSH 安全加固
+# 执行 SSH 安全加固 (快速开始模式 - 执行所有任务)
 run_ssh_hardening() {
     log_title "${MSG_SSH_START}"
 
@@ -404,6 +404,80 @@ run_ssh_hardening() {
 
     # 配置其他安全参数
     configure_ssh_params || return 1
+
+    # 验证配置
+    validate_ssh_config || return 1
+
+    # 设置回滚保护
+    setup_rollback_timer
+
+    # 重启 SSH 服务
+    restart_ssh || return 1
+
+    log_separator
+    log_success "${MSG_SSH_COMPLETE}"
+
+    # 提示用户
+    log_warn "${MSG_WARN_CONNECTION}"
+    log_warn "${MSG_WARN_SAVE_KEY}"
+    log_warn "${MSG_WARN_TEST_FIRST}"
+
+    return 0
+}
+
+# 执行 SSH 安全加固 (自定义模式 - 按选择执行)
+run_ssh_hardening_custom() {
+    local do_ssh_port="${1:-y}"
+    local do_ssh_key="${2:-y}"
+    local do_disable_root="${3:-y}"
+    local do_disable_passwd="${4:-y}"
+    local do_ssh_params="${5:-y}"
+
+    log_title "${MSG_SSH_START}"
+
+    # 检查是否为 root
+    if ! is_root; then
+        log_error "${MSG_ERROR_NOT_ROOT}"
+        return 1
+    fi
+
+    # 备份配置
+    backup_ssh_config || return 1
+
+    # 修改 SSH 端口
+    if [[ "${do_ssh_port}" == "y" ]]; then
+        change_ssh_port || return 1
+    else
+        log_info "跳过 SSH 端口修改"
+    fi
+
+    # 生成 SSH 密钥
+    if [[ "${do_ssh_key}" == "y" ]]; then
+        generate_ssh_key || return 1
+    else
+        log_info "跳过 SSH 密钥生成"
+    fi
+
+    # 禁止 root 远程登录
+    if [[ "${do_disable_root}" == "y" ]]; then
+        disable_root_login || return 1
+    else
+        log_info "跳过禁止 root 远程登录"
+    fi
+
+    # 禁止密码登录
+    if [[ "${do_disable_passwd}" == "y" ]]; then
+        disable_password_auth || return 1
+    else
+        log_info "跳过禁止密码登录"
+    fi
+
+    # 配置其他安全参数
+    if [[ "${do_ssh_params}" == "y" ]]; then
+        configure_ssh_params || return 1
+    else
+        log_info "跳过 SSH 安全参数配置"
+    fi
 
     # 验证配置
     validate_ssh_config || return 1

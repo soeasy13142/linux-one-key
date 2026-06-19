@@ -93,146 +93,149 @@ show_welcome() {
 }
 
 # ═══════════════════════════════════════════
-# 菜单系统
+# 执行方式选择
 # ═══════════════════════════════════════════
 
-# 显示主菜单
-show_menu() {
-    echo -e "${BOLD}${MSG_MENU_TITLE}${NC}"
+# 显示执行方式菜单
+show_execution_mode_menu() {
+    echo -e "${BOLD}请选择执行方式：${NC}"
     echo ""
-    echo -e "  ${GREEN}${MSG_MENU_BASIC}${NC}"
-    echo -e "  ${GREEN}${MSG_MENU_STANDARD}${NC}"
-    echo -e "  ${GREEN}${MSG_MENU_ADVANCED}${NC}"
-    echo -e "  ${GREEN}${MSG_MENU_CUSTOM}${NC}"
+    echo -e "  ${GREEN}[1] 快速开始（推荐）${NC}"
+    echo -e "      使用默认安全配置，逐项确认后执行"
+    echo ""
+    echo -e "  ${GREEN}[2] 自定义配置${NC}"
+    echo -e "      逐项选择需要执行的任务"
     echo ""
 }
 
-# 获取用户选择
-get_user_choice() {
+# 获取执行方式选择
+get_execution_mode() {
     local choice
 
     while true; do
-        choice=$(prompt_input "${MSG_MENU_CHOICE}" "2")
+        choice=$(prompt_input "请输入选项" "1")
 
         case "${choice}" in
             1)
-                echo "basic"
+                echo "quick"
                 return 0
                 ;;
             2)
-                echo "standard"
-                return 0
-                ;;
-            3)
-                echo "advanced"
-                return 0
-                ;;
-            4)
                 echo "custom"
                 return 0
                 ;;
             *)
-                log_error "${MSG_MENU_INVALID}"
+                log_error "无效选项，请输入 1 或 2"
                 ;;
         esac
     done
 }
 
 # ═══════════════════════════════════════════
-# 任务执行
+# 快速开始模式
 # ═══════════════════════════════════════════
 
-# 显示任务列表 (带状态)
-show_task_list() {
-    local mode="$1"
-
+# 显示快速开始任务列表
+show_quick_start_tasks() {
     echo ""
-    echo -e "${BOLD}Tasks for ${mode}:${NC}"
+    echo -e "${BOLD}即将执行以下安全配置：${NC}"
     echo ""
-
-    case "${mode}" in
-        "basic")
-            echo -e "  ${GREEN}[✓]${NC} ${MSG_TASK_SSH}"
-            echo -e "  ${YELLOW}[~]${NC} ${MSG_TASK_FIREWALL} (${MSG_TASK_DEV_COMING_SOON})"
-            echo -e "  ${YELLOW}[~]${NC} ${MSG_TASK_FAIL2BAN} (${MSG_TASK_DEV_COMING_SOON})"
-            ;;
-        "standard")
-            echo -e "  ${GREEN}[✓]${NC} ${MSG_TASK_SSH}"
-            echo -e "  ${YELLOW}[~]${NC} ${MSG_TASK_FIREWALL} (${MSG_TASK_DEV_COMING_SOON})"
-            echo -e "  ${YELLOW}[~]${NC} ${MSG_TASK_FAIL2BAN} (${MSG_TASK_DEV_COMING_SOON})"
-            echo -e "  ${YELLOW}[~]${NC} ${MSG_TASK_USER_MGMT} (${MSG_TASK_DEV_COMING_SOON})"
-            echo -e "  ${YELLOW}[~]${NC} ${MSG_TASK_KERNEL} (${MSG_TASK_DEV_COMING_SOON})"
-            ;;
-        "advanced")
-            echo -e "  ${GREEN}[✓]${NC} ${MSG_TASK_SSH}"
-            echo -e "  ${YELLOW}[~]${NC} ${MSG_TASK_FIREWALL} (${MSG_TASK_DEV_COMING_SOON})"
-            echo -e "  ${YELLOW}[~]${NC} ${MSG_TASK_FAIL2BAN} (${MSG_TASK_DEV_COMING_SOON})"
-            echo -e "  ${YELLOW}[~]${NC} ${MSG_TASK_USER_MGMT} (${MSG_TASK_DEV_COMING_SOON})"
-            echo -e "  ${YELLOW}[~]${NC} ${MSG_TASK_KERNEL} (${MSG_TASK_DEV_COMING_SOON})"
-            echo -e "  ${YELLOW}[~]${NC} ${MSG_TASK_FILESYSTEM} (${MSG_TASK_DEV_COMING_SOON})"
-            echo -e "  ${YELLOW}[~]${NC} ${MSG_TASK_AUDIT} (${MSG_TASK_DEV_COMING_SOON})"
-            echo -e "  ${YELLOW}[~]${NC} ${MSG_TASK_SERVICES} (${MSG_TASK_DEV_COMING_SOON})"
-            ;;
-    esac
-
+    echo -e "  1. SSH 端口修改 (22 → 2222)"
+    echo -e "  2. SSH 密钥生成 (Ed25519)"
+    echo -e "  3. 禁止 root 远程登录"
+    echo -e "  4. 禁止密码登录"
+    echo -e "  5. SSH 安全参数配置"
     echo ""
 }
 
-# 执行选定的任务
-execute_tasks() {
-    local mode="$1"
-
-    log_title "Executing ${mode} hardening tasks"
+# 快速开始模式执行
+run_quick_start() {
+    log_title "快速开始"
 
     # 显示任务列表
-    show_task_list "${mode}"
+    show_quick_start_tasks
 
     # 确认执行
-    if ! confirm "Start hardening?"; then
-        log_info "Cancelled by user"
+    if ! confirm "确认执行？"; then
+        log_info "已取消"
         return 0
     fi
 
-    # 执行 SSH 加固 (所有模式都包含)
+    # 执行 SSH 加固
     run_ssh_hardening || {
-        log_error "SSH hardening failed"
+        log_error "SSH 加固失败"
         return 1
     }
-
-    # TODO: v0.2 - 添加防火墙和 Fail2Ban
-    # TODO: v0.3 - 添加用户管理和内核加固
 
     return 0
 }
 
 # ═══════════════════════════════════════════
-# 自定义模式
+# 自定义配置模式
 # ═══════════════════════════════════════════
 
-# 自定义任务选择
-custom_task_selection() {
-    log_title "${MSG_MODE_CUSTOM}"
+# 自定义配置模式执行
+run_custom_config() {
+    log_title "自定义配置"
 
-    echo "Available tasks:"
-    echo ""
-    echo -e "  ${GREEN}[1]${NC} ${MSG_TASK_SSH}"
-    echo -e "  ${YELLOW}[2]${NC} ${MSG_TASK_FIREWALL} (${MSG_TASK_DEV_COMING_SOON})"
-    echo -e "  ${YELLOW}[3]${NC} ${MSG_TASK_FAIL2BAN} (${MSG_TASK_DEV_COMING_SOON})"
-    echo -e "  ${YELLOW}[4]${NC} ${MSG_TASK_USER_MGMT} (${MSG_TASK_DEV_COMING_SOON})"
-    echo -e "  ${YELLOW}[5]${NC} ${MSG_TASK_KERNEL} (${MSG_TASK_DEV_COMING_SOON})"
+    echo -e "${BOLD}请选择需要执行的任务：${NC}"
     echo ""
 
-    local choice
-    choice=$(prompt_input "Select task" "1")
+    # SSH 端口修改
+    local do_ssh_port="y"
+    if confirm "1. SSH 端口修改 (22 → 2222)？"; then
+        do_ssh_port="y"
+    else
+        do_ssh_port="n"
+    fi
 
-    case "${choice}" in
-        1)
-            run_ssh_hardening
-            ;;
-        *)
-            log_warn "${MSG_TASK_DEV_COMING_SOON}"
-            ;;
-    esac
+    # SSH 密钥生成
+    local do_ssh_key="y"
+    if confirm "2. SSH 密钥生成 (Ed25519)？"; then
+        do_ssh_key="y"
+    else
+        do_ssh_key="n"
+    fi
+
+    # 禁止 root 登录
+    local do_disable_root="y"
+    if confirm "3. 禁止 root 远程登录？"; then
+        do_disable_root="y"
+    else
+        do_disable_root="n"
+    fi
+
+    # 禁止密码登录
+    local do_disable_passwd="y"
+    if confirm "4. 禁止密码登录？"; then
+        do_disable_passwd="y"
+    else
+        do_disable_passwd="n"
+    fi
+
+    # SSH 安全参数
+    local do_ssh_params="y"
+    if confirm "5. SSH 安全参数配置？"; then
+        do_ssh_params="y"
+    else
+        do_ssh_params="n"
+    fi
+
+    echo ""
+
+    # 检查是否至少选择了一项
+    if [[ "${do_ssh_port}" == "n" && "${do_ssh_key}" == "n" && "${do_disable_root}" == "n" && "${do_disable_passwd}" == "n" && "${do_ssh_params}" == "n" ]]; then
+        log_warn "未选择任何任务"
+        return 0
+    fi
+
+    # 执行选中的任务
+    run_ssh_hardening_custom "${do_ssh_port}" "${do_ssh_key}" "${do_disable_root}" "${do_disable_passwd}" "${do_ssh_params}" || {
+        log_error "SSH 加固失败"
+        return 1
+    }
+
+    return 0
 }
 
 # ═══════════════════════════════════════════
@@ -306,25 +309,22 @@ main() {
     # 显示检测摘要
     print_detection_summary
 
-    # 等待用户确认
-    press_enter
+    # 显示执行方式菜单
+    show_execution_mode_menu
 
-    # 显示菜单
-    show_menu
-
-    # 获取用户选择
+    # 获取执行方式
     local mode
-    mode=$(get_user_choice)
+    mode=$(get_execution_mode)
 
     log_info "Selected mode: ${mode}"
 
     # 执行任务
     case "${mode}" in
-        "basic"|"standard"|"advanced")
-            execute_tasks "${mode}"
+        "quick")
+            run_quick_start
             ;;
         "custom")
-            custom_task_selection
+            run_custom_config
             ;;
     esac
 
