@@ -5,8 +5,13 @@
 # ============================================================================
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/../base/utils.sh"
+# 获取本脚本所在目录（不覆盖外部 SCRIPT_DIR）
+_FIREWALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 检查依赖
+if [[ "${_UTILS_LOADED:-}" != "1" ]]; then
+    source "${_FIREWALL_DIR}/../base/utils.sh"
+fi
 
 # ============================================================================
 # 内部函数

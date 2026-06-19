@@ -3,6 +3,11 @@
 # 提供颜色输出、日志、错误处理、i18n、备份、交互等功能
 # 所有其他脚本都依赖此文件
 
+# Source guard: 防止重复加载
+if [[ "${_UTILS_LOADED:-}" == "1" ]]; then
+    return 0 2>/dev/null || true
+fi
+
 set -euo pipefail
 
 # ═══════════════════════════════════════════
