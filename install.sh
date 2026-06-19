@@ -5,8 +5,58 @@
 set -euo pipefail
 
 # ═══════════════════════════════════════════
+# GitHub 仓库配置
+# ═══════════════════════════════════════════
+
+GITHUB_REPO="soeasy13142/linux-one-key"
+GITHUB_BRANCH="main"
+GITHUB_RAW_URL="https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}"
+
+# ═══════════════════════════════════════════
 # 脚本目录解析 (支持 curl 管道执行)
 # ═══════════════════════════════════════════
+
+# 检测是否通过 curl 管道执行
+is_curl_pipe() {
+    # BASH_SOURCE 为空或者是 bash 时，说明是通过管道执行
+    [[ -z "${BASH_SOURCE[0]:-}" ]] || [[ "${BASH_SOURCE[0]}" == "bash" ]] || [[ "${BASH_SOURCE[0]}" == "/dev/stdin" ]]
+}
+
+# 从 GitHub 下载文件到临时目录
+download_from_github() {
+    local tmp_dir="$1"
+    local repo_url="${GITHUB_RAW_URL}"
+
+    echo "正在从 GitHub 下载脚本文件..."
+
+    # 创建目录结构
+    mkdir -p "${tmp_dir}/scripts/base"
+    mkdir -p "${tmp_dir}/scripts/security"
+    mkdir -p "${tmp_dir}/scripts/lang"
+    mkdir -p "${tmp_dir}/config/fail2ban"
+
+    # 下载文件列表
+    local files=(
+        "scripts/base/utils.sh"
+        "scripts/base/detect.sh"
+        "scripts/base/init.sh"
+        "scripts/security/ssh.sh"
+        "scripts/security/firewall.sh"
+        "scripts/security/fail2ban.sh"
+        "scripts/lang/zh.sh"
+        "scripts/lang/en.sh"
+        "config/fail2ban/jail.local"
+    )
+
+    for file in "${files[@]}"; do
+        echo "  下载: ${file}"
+        if ! curl -fsSL "${repo_url}/${file}" -o "${tmp_dir}/${file}" 2>/dev/null; then
+            echo "  警告: 下载 ${file} 失败，跳过"
+        fi
+    done
+
+    echo "下载完成"
+}
 
 # 获取脚本真实路径
 get_script_dir() {
@@ -24,8 +74,18 @@ get_script_dir() {
 }
 
 # 设置 SCRIPT_DIR
-SCRIPT_DIR="$(get_script_dir)"
-export SCRIPT_DIR
+if is_curl_pipe; then
+    # 通过 curl 管道执行，下载所有文件到临时目录
+    SCRIPT_DIR=$(mktemp -d)
+    export SCRIPT_DIR
+    download_from_github "${SCRIPT_DIR}"
+    # 注册退出时清理临时目录
+    trap 'rm -rf "${SCRIPT_DIR}"' EXIT
+else
+    # 本地执行，获取脚本所在目录
+    SCRIPT_DIR="$(get_script_dir)"
+    export SCRIPT_DIR
+fi
 
 # ═══════════════════════════════════════════
 # 加载依赖模块
