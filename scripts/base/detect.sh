@@ -25,7 +25,7 @@ DETECTED_HOSTNAME=""
 DETECTED_NETWORK_OK=""
 
 # 支持的操作系统列表
-readonly SUPPORTED_OS=("ubuntu" "debian" "centos" "rhel" "rocky" "almalinux" "fedora")
+SUPPORTED_OS=("ubuntu" "debian" "centos" "rhel" "rocky" "almalinux" "fedora")
 
 # ═══════════════════════════════════════════
 # 检测函数
