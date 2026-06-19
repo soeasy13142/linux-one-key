@@ -25,6 +25,12 @@ is_curl_pipe() {
     [[ -z "$first_source" ]] || [[ "$first_source" == "bash" ]] || [[ "$first_source" == "/dev/stdin" ]]
 }
 
+# 检测是否需要下载依赖文件
+needs_download() {
+    # 如果 scripts 目录不存在，需要下载
+    [[ ! -d "${SCRIPT_DIR}/scripts" ]]
+}
+
 # 从 GitHub 下载单个文件（使用 API 避免 CDN 缓存）
 download_file() {
     local api_url="$1"
@@ -105,6 +111,12 @@ else
     # 本地执行，获取脚本所在目录
     SCRIPT_DIR="$(get_script_dir)"
     export SCRIPT_DIR
+
+    # 如果 scripts 目录不存在，尝试下载
+    if needs_download; then
+        echo "scripts 目录不存在，正在从 GitHub 下载..."
+        download_from_github "${SCRIPT_DIR}"
+    fi
 fi
 
 # ═══════════════════════════════════════════
