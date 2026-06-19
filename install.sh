@@ -529,12 +529,5 @@ main() {
 # 脚本入口
 # ═══════════════════════════════════════════
 
-# 如果是通过 curl 管道执行，需要下载完整仓库
-if [[ ! -d "${SCRIPT_DIR}/scripts" ]]; then
-    echo "Error: scripts directory not found"
-    echo "Please clone the full repository or download all files"
-    exit 1
-fi
-
 # 执行主流程
 main "$@"
