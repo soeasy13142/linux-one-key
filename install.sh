@@ -299,8 +299,8 @@ main() {
 
     # 系统检测
     run_detection || {
-        log_error "System detection failed"
-        exit 1
+        log_warn "System detection completed with warnings"
+        log_warn "Some features may not work correctly on this system"
     }
 
     # 显示检测摘要

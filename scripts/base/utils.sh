@@ -69,10 +69,27 @@ load_lang() {
 # 输出函数
 # ═══════════════════════════════════════════
 
+# 内部函数：确保日志目录存在
+_ensure_log_dir() {
+    if [[ -n "${LOG_FILE}" ]] && [[ ! -d "$(dirname "${LOG_FILE}")" ]]; then
+        if ! mkdir -p "$(dirname "${LOG_FILE}")" 2>/dev/null; then
+            # 如果无法创建目标目录，使用临时目录作为后备
+            local fallback_dir="/tmp/linux-one-key"
+            mkdir -p "${fallback_dir}" 2>/dev/null || true
+            LOG_FILE="${fallback_dir}/hardening_${TIMESTAMP}.log"
+            LOG_DIR="${fallback_dir}"
+            BACKUP_DIR="${fallback_dir}/backups"
+            REPORT_DIR="${fallback_dir}/reports"
+            mkdir -p "${BACKUP_DIR}" "${REPORT_DIR}" 2>/dev/null || true
+        fi
+    fi
+}
+
 # 信息输出 (蓝色)
 log_info() {
     local msg="$1"
     echo -e "${BLUE}[INFO]${NC} ${msg}"
+    _ensure_log_dir
     echo "[INFO] $(date '+%Y-%m-%d %H:%M:%S') ${msg}" >> "${LOG_FILE}" 2>/dev/null || true
 }
 
@@ -80,6 +97,7 @@ log_info() {
 log_success() {
     local msg="$1"
     echo -e "${GREEN}[✓]${NC} ${msg}"
+    _ensure_log_dir
     echo "[SUCCESS] $(date '+%Y-%m-%d %H:%M:%S') ${msg}" >> "${LOG_FILE}" 2>/dev/null || true
 }
 
@@ -87,6 +105,7 @@ log_success() {
 log_warn() {
     local msg="$1"
     echo -e "${YELLOW}[!]${NC} ${msg}"
+    _ensure_log_dir
     echo "[WARN] $(date '+%Y-%m-%d %H:%M:%S') ${msg}" >> "${LOG_FILE}" 2>/dev/null || true
 }
 
@@ -94,6 +113,7 @@ log_warn() {
 log_error() {
     local msg="$1"
     echo -e "${RED}[✗]${NC} ${msg}" >&2
+    _ensure_log_dir
     echo "[ERROR] $(date '+%Y-%m-%d %H:%M:%S') ${msg}" >> "${LOG_FILE}" 2>/dev/null || true
 }
 
@@ -101,6 +121,7 @@ log_error() {
 log_step() {
     local msg="$1"
     echo -e "${CYAN}[→]${NC} ${msg}"
+    _ensure_log_dir
     echo "[STEP] $(date '+%Y-%m-%d %H:%M:%S') ${msg}" >> "${LOG_FILE}" 2>/dev/null || true
 }
 
@@ -112,18 +133,21 @@ log_title() {
     echo -e "${BOLD}  ${msg}${NC}"
     echo -e "${BOLD}═══════════════════════════════════════════${NC}"
     echo ""
+    _ensure_log_dir
     echo "=== ${msg} ===" >> "${LOG_FILE}" 2>/dev/null || true
 }
 
 # 分隔线
 log_separator() {
     echo -e "${CYAN}───────────────────────────────────────────${NC}"
+    _ensure_log_dir
     echo "---" >> "${LOG_FILE}" 2>/dev/null || true
 }
 
 # 详细日志 (仅写入文件，不显示在终端)
 log_debug() {
     local msg="$1"
+    _ensure_log_dir
     echo "[DEBUG] $(date '+%Y-%m-%d %H:%M:%S') ${msg}" >> "${LOG_FILE}" 2>/dev/null || true
 }
 
