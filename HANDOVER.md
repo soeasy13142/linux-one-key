@@ -3,7 +3,7 @@
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
 **最后更新**: 2026-06-20
-**当前阶段**: 需求分析完成，待实现
+**当前阶段**: v0.1 基础框架 + SSH 安全 已完成
 
 ---
 
@@ -21,13 +21,13 @@
 
 ## 2. 当前进度
 
-### 总体状态：🟢 需求分析完成
+### 总体状态：🟢 v0.1 已完成
 
 | 阶段 | 状态 | 说明 |
 |------|------|------|
 | 需求分析 | ✅ 完成 | PRD 已编写，见 `.claude/prds/linux-security-hardening.prd.md` |
-| 架构设计 | ⬜ 未开始 | |
-| v0.1 基础框架 + SSH 安全 | ⬜ 未开始 | |
+| 架构设计 | ✅ 完成 | 交互模式、i18n、日志、备份等技术决策已确定 |
+| v0.1 基础框架 + SSH 安全 | ✅ 完成 | utils.sh, detect.sh, init.sh, ssh.sh, install.sh, 语言文件, 测试 |
 | v0.2 防火墙 + Fail2Ban | ⬜ 未开始 | |
 | v0.3 用户管理 + 内核加固 | ⬜ 未开始 | |
 | v0.4 审计日志 + 服务管理 | ⬜ 未开始 | |
@@ -40,6 +40,14 @@
 | 2026-06-20 | 项目初始化，搭建基础目录结构 | `scripts/`, `config/`, `docs/`, `tests/` |
 | 2026-06-20 | 编写完整 PRD 需求文档 | `.claude/prds/linux-security-hardening.prd.md` |
 | 2026-06-20 | 创建交接文档和交接规则 | `HANDOVER.md`, `.claude/rules/common/handover.md` |
+| 2026-06-20 | 安装开发工具 (shellcheck, bats) | brew install shellcheck bats-core |
+| 2026-06-20 | 创建工具函数库 | `scripts/base/utils.sh` (颜色、日志、备份、SSH配置辅助) |
+| 2026-06-20 | 创建系统检测模块 | `scripts/base/detect.sh` (OS、权限、网络、包管理器) |
+| 2026-06-20 | 创建系统初始化模块 | `scripts/base/init.sh` (目录创建、系统更新) |
+| 2026-06-20 | 创建 SSH 安全加固模块 | `scripts/security/ssh.sh` (端口、密钥、root/密码登录) |
+| 2026-06-20 | 创建主入口脚本 | `install.sh` (4模式菜单、交互流程、curl执行支持) |
+| 2026-06-20 | 创建中英文语言文件 | `scripts/lang/zh.sh`, `scripts/lang/en.sh` |
+| 2026-06-20 | 创建单元测试 | `tests/unit/utils.bats` (19个测试用例) |
 
 ---
 
@@ -74,14 +82,24 @@ linux-one-key/
 │       │   └── node.md        # Node.js 规则
 │       └── typescript/        # TS 规则（本项目未使用）
 ├── scripts/
-│   ├── base/                  # [空] 基础环境配置
+│   ├── base/
+│   │   ├── utils.sh           # 工具函数库 ⭐ NEW
+│   │   ├── detect.sh          # 系统检测 ⭐ NEW
+│   │   └── init.sh            # 系统初始化 ⭐ NEW
+│   ├── security/
+│   │   └── ssh.sh             # SSH 安全加固 ⭐ NEW
+│   ├── lang/
+│   │   ├── zh.sh              # 中文翻译 ⭐ NEW
+│   │   └── en.sh              # 英文翻译 ⭐ NEW
 │   ├── dev/                   # [空] 开发工具安装
-│   ├── server/                # [空] 服务器软件安装
-│   └── utils/                 # [空] 通用工具函数
+│   └── server/                # [空] 服务器软件安装
+├── tests/
+│   └── unit/
+│       └── utils.bats         # 工具函数测试 ⭐ NEW
 ├── config/                    # [空] 配置文件模板
 ├── docs/                      # [空] 文档
-├── tests/                     # [空] 测试脚本
-├── README.md                  # 项目说明（初始版本）
+├── install.sh                 # 主入口脚本 ⭐ NEW
+├── README.md                  # 项目说明
 └── HANDOVER.md                # 本文件
 ```
 
@@ -128,6 +146,13 @@ linux-one-key/
 | SSH 密钥类型 | Ed25519 | 比 RSA 更安全、更短 |
 | 默认 SSH 端口 | 2222 | 非标准端口，避免自动化扫描 |
 | Fail2Ban 封禁时间 | 3600 秒 | 平衡安全性和误封风险 |
+| 交互模式 | 完整 4 模式菜单 | 基础/标准/高级/自定义，v0.1 仅 SSH 可用 |
+| i18n 实现 | 语言文件 source | lang/zh.sh, lang/en.sh，通过 load_lang() 加载 |
+| 日志输出 | 分级输出 | 终端显示简化信息，详细信息写入 /var/log/linux-one-key/ |
+| 备份目录 | /var/log/linux-one-key/backups/ | PRD 原始设计，统一管理 |
+| 依赖方式 | SCRIPT_DIR 绝对路径 | 所有 source 使用 ${SCRIPT_DIR}/scripts/xxx.sh |
+| 分发方式 | curl 管道执行 | 支持 curl -fsSL https://xxx/install.sh \| bash |
+| sed 兼容 | macOS/Linux 双平台 | 检测 uname 使用不同 sed -i 语法 |
 
 ---
 
@@ -135,35 +160,36 @@ linux-one-key/
 
 ### 立即需要做的
 
-1. **实现 v0.1**：基础框架 + SSH 安全
-   - 创建 `scripts/base/utils.sh`（颜色输出、日志、错误处理等工具函数）
-   - 创建 `scripts/base/detect.sh`（系统检测：OS、权限、网络）
-   - 创建 `scripts/base/init.sh`（系统初始化）
-   - 创建 `scripts/security/ssh.sh`（SSH 安全配置：端口、密钥、禁止 root/密码登录）
-   - 创建 `install.sh`（主入口脚本）
+1. **实现 v0.2**：防火墙 + Fail2Ban
+   - 创建 `scripts/security/firewall.sh`（防火墙规则配置）
+   - 创建 `scripts/security/fail2ban.sh`（入侵防护配置）
+   - 更新 `install.sh` 菜单，启用防火墙和 Fail2Ban 选项
 
 2. **开始前建议**：
-   - 先阅读 PRD 文档 `.claude/prds/linux-security-hardening.prd.md`
-   - PRD 中第 4 节"交互流程设计"定义了主流程
-   - PRD 中第 2.1 节"SSH 安全加固"定义了详细参数
+   - 阅读 PRD 第 2.2 节"防火墙配置"和第 2.3 节"Fail2Ban 入侵防护"
+   - 参考 v0.1 的代码风格和模式
 
 ### 实现顺序建议
 
 ```
-v0.1 (第一周)
-├── scripts/base/utils.sh       # 先做，其他脚本依赖它
-├── scripts/base/detect.sh      # 系统检测
-├── scripts/security/ssh.sh     # SSH 安全（核心功能）
-└── install.sh                  # 主入口
+v0.1 ✅ 已完成
+├── scripts/base/utils.sh       ✅
+├── scripts/base/detect.sh      ✅
+├── scripts/base/init.sh        ✅
+├── scripts/security/ssh.sh     ✅
+├── scripts/lang/zh.sh          ✅
+├── scripts/lang/en.sh          ✅
+├── tests/unit/utils.bats       ✅
+└── install.sh                  ✅
 
-v0.2 (第二周)
+v0.2 (下一步)
 ├── scripts/security/firewall.sh
 └── scripts/security/fail2ban.sh
 
 v0.3 (第三周)
 ├── scripts/security/kernel.sh
 ├── scripts/security/filesystem.sh
-└── scripts/base/init.sh        # 用户创建等功能
+└── 用户创建功能
 
 v0.4 (第四周)
 ├── scripts/security/audit.sh
@@ -225,3 +251,12 @@ v0.4 (第四周)
 | 2026-06-20 | CREATE | `.claude/rules/common/guardrails.md` | 安全防护规则（来自 ECC） |
 | 2026-06-20 | CREATE | `.claude/rules/common/node.md` | Node.js 规则（来自 ECC） |
 | 2026-06-20 | CREATE | `.claude/research/research-playbook.md` | 研究工作流指南（来自 ECC） |
+| 2026-06-20 | CREATE | `scripts/base/utils.sh` | 工具函数库（颜色、日志、备份、SSH配置辅助） |
+| 2026-06-20 | CREATE | `scripts/base/detect.sh` | 系统检测模块（OS、权限、网络、包管理器） |
+| 2026-06-20 | CREATE | `scripts/base/init.sh` | 系统初始化模块（目录创建、系统更新） |
+| 2026-06-20 | CREATE | `scripts/security/ssh.sh` | SSH 安全加固模块（端口、密钥、root/密码登录） |
+| 2026-06-20 | CREATE | `install.sh` | 主入口脚本（4模式菜单、交互流程） |
+| 2026-06-20 | CREATE | `scripts/lang/zh.sh` | 中文翻译文件 |
+| 2026-06-20 | CREATE | `scripts/lang/en.sh` | 英文翻译文件 |
+| 2026-06-20 | CREATE | `tests/unit/utils.bats` | 工具函数单元测试（19个用例） |
+| 2026-06-20 | UPDATE | `HANDOVER.md` | 更新进度和文件清单 |
