@@ -1,91 +1,82 @@
 #!/usr/bin/env bash
+# ============================================================================
 # install.sh - Linux 安全加固脚本主入口
-# 支持 curl 管道执行：curl -fsSL https://xxx/install.sh | bash
+# 支持多种执行方式：
+#   1. curl 管道: curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash
+#   2. 下载执行:  wget -qO- https://github.com/soeasy13142/linux-one-key/archive/main.tar.gz | tar xz && cd linux-one-key-main && sudo bash install.sh
+#   3. 克隆执行:  git clone https://github.com/soeasy13142/linux-one-key && cd linux-one-key && sudo bash install.sh
+# ============================================================================
 
 set -eo pipefail
-# 注意: 不使用 -u (nounset)，因为 curl 管道模式下 BASH_SOURCE 未绑定
+# 注意: 不使用 -u (nounset)，因为 curl 管道模式下 BASH_SOURCE 可能未绑定
 
 # ═══════════════════════════════════════════
-# GitHub 仓库配置
+# 常量
 # ═══════════════════════════════════════════
 
 GITHUB_REPO="soeasy13142/linux-one-key"
 GITHUB_BRANCH="main"
-# 使用 API URL 避免 CDN 缓存问题
-GITHUB_API_URL="https://api.github.com/repos/${GITHUB_REPO}/contents"
+GITHUB_TARBALL_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/${GITHUB_BRANCH}.tar.gz"
 
 # ═══════════════════════════════════════════
-# 脚本目录解析 (支持 curl 管道执行)
+# Bootstrap: curl 管道模式自动下载完整仓库并 re-exec
 # ═══════════════════════════════════════════
+
+_bootstrap_and_reexec() {
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+
+    echo "正在从 GitHub 下载 linux-one-key..."
+    echo "  仓库: https://github.com/${GITHUB_REPO}"
+    echo ""
+
+    # 下载 tarball 并解压
+    if ! curl -fsSL "${GITHUB_TARBALL_URL}" | tar xz -C "${tmp_dir}"; then
+        echo "错误: 下载或解压失败"
+        echo "请检查网络连接，或手动克隆仓库:"
+        echo "  git clone https://github.com/${GITHUB_REPO}"
+        rm -rf "${tmp_dir}"
+        exit 1
+    fi
+
+    # 找到解压后的目录 (linux-one-key-main)
+    local extracted_dir
+    extracted_dir=$(find "${tmp_dir}" -maxdepth 1 -type d -name "linux-one-key-*" | head -1)
+
+    if [[ -z "${extracted_dir}" ]] || [[ ! -f "${extracted_dir}/install.sh" ]]; then
+        echo "错误: 解压后找不到 install.sh"
+        rm -rf "${tmp_dir}"
+        exit 1
+    fi
+
+    echo "下载完成，正在启动安装脚本..."
+    echo ""
+
+    # 从解压目录 re-exec 自身，传递所有参数
+    # 使用 exec 替换当前进程，临时目录在脚本退出后自动清理
+    chmod +x "${extracted_dir}/install.sh"
+    exec bash "${extracted_dir}/install.sh" "$@"
+}
 
 # 检测是否通过 curl 管道执行
-is_curl_pipe() {
-    # BASH_SOURCE 为空或者是 bash 时，说明是通过管道执行
+_is_curl_pipe() {
     local first_source="${BASH_SOURCE[0]:-}"
     [[ -z "$first_source" ]] || [[ "$first_source" == "bash" ]] || [[ "$first_source" == "/dev/stdin" ]]
 }
 
-# 检测是否需要下载依赖文件
-needs_download() {
-    # 如果 scripts 目录不存在，需要下载
-    [[ ! -d "${SCRIPT_DIR}/scripts" ]]
-}
+# 如果是 curl 管道模式，先下载完整仓库再 re-exec
+if _is_curl_pipe; then
+    _bootstrap_and_reexec "$@"
+    # exec 会替换进程，不会执行到这里
+    exit 1
+fi
 
-# 从 GitHub 下载单个文件（使用 API 避免 CDN 缓存）
-download_file() {
-    local api_url="$1"
-    local output_file="$2"
-
-    # 使用 API 获取文件内容，解码 base64
-    local content
-    content=$(curl -fsSL "${api_url}" | python3 -c "import sys,json,base64; d=json.load(sys.stdin); print(base64.b64decode(d['content']).decode())" 2>/dev/null)
-
-    if [[ -n "$content" ]]; then
-        echo "$content" > "${output_file}"
-        return 0
-    else
-        return 1
-    fi
-}
-
-# 从 GitHub 下载文件到临时目录
-download_from_github() {
-    local tmp_dir="$1"
-    local api_url="${GITHUB_API_URL}"
-
-    echo "正在从 GitHub 下载脚本文件..."
-
-    # 创建目录结构
-    mkdir -p "${tmp_dir}/scripts/base"
-    mkdir -p "${tmp_dir}/scripts/security"
-    mkdir -p "${tmp_dir}/scripts/lang"
-    mkdir -p "${tmp_dir}/config/fail2ban"
-
-    # 下载文件列表
-    local files=(
-        "scripts/base/utils.sh"
-        "scripts/base/detect.sh"
-        "scripts/base/init.sh"
-        "scripts/security/ssh.sh"
-        "scripts/security/firewall.sh"
-        "scripts/security/fail2ban.sh"
-        "scripts/lang/zh.sh"
-        "scripts/lang/en.sh"
-        "config/fail2ban/jail.local"
-    )
-
-    for file in "${files[@]}"; do
-        echo "  下载: ${file}"
-        if ! download_file "${api_url}/${file}?ref=${GITHUB_BRANCH}" "${tmp_dir}/${file}"; then
-            echo "  警告: 下载 ${file} 失败，跳过"
-        fi
-    done
-
-    echo "下载完成"
-}
+# ═══════════════════════════════════════════
+# 以下是正常的本地执行流程
+# ═══════════════════════════════════════════
 
 # 获取脚本真实路径
-get_script_dir() {
+_get_script_dir() {
     local source="${BASH_SOURCE[0]}"
 
     # 处理符号链接
@@ -100,23 +91,21 @@ get_script_dir() {
 }
 
 # 设置 SCRIPT_DIR
-if is_curl_pipe; then
-    # 通过 curl 管道执行，下载所有文件到临时目录
-    SCRIPT_DIR=$(mktemp -d)
-    export SCRIPT_DIR
-    download_from_github "${SCRIPT_DIR}"
-    # 注册退出时清理临时目录
-    trap 'rm -rf "${SCRIPT_DIR}"' EXIT
-else
-    # 本地执行，获取脚本所在目录
-    SCRIPT_DIR="$(get_script_dir)"
-    export SCRIPT_DIR
+SCRIPT_DIR="$(_get_script_dir)"
+export SCRIPT_DIR
 
-    # 如果 scripts 目录不存在，尝试下载
-    if needs_download; then
-        echo "scripts 目录不存在，正在从 GitHub 下载..."
-        download_from_github "${SCRIPT_DIR}"
-    fi
+# 检查 scripts 目录是否存在
+if [[ ! -d "${SCRIPT_DIR}/scripts" ]]; then
+    echo "错误: 未找到 scripts 目录"
+    echo ""
+    echo "请使用以下方式之一运行此脚本:"
+    echo "  1. curl 管道执行 (推荐):"
+    echo "     curl -fsSL https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/install.sh | sudo bash"
+    echo ""
+    echo "  2. 克隆仓库后执行:"
+    echo "     git clone https://github.com/${GITHUB_REPO}.git"
+    echo "     cd linux-one-key && sudo bash install.sh"
+    exit 1
 fi
 
 # ═══════════════════════════════════════════

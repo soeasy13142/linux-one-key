@@ -2,6 +2,11 @@
 # detect.sh - 系统检测模块
 # 检测操作系统、用户权限、网络状态、包管理器、系统架构
 
+# Source guard: 防止重复加载
+if [[ "${_DETECT_LOADED:-}" == "1" ]]; then
+    return 0 2>/dev/null || true
+fi
+
 set -euo pipefail
 
 # 检查 utils.sh 是否已加载
