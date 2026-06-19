@@ -69,6 +69,22 @@ load_dependencies() {
     fi
     # shellcheck source=/dev/null
     source "${SCRIPT_DIR}/scripts/security/ssh.sh"
+
+    # 加载 firewall.sh
+    if [[ ! -f "${SCRIPT_DIR}/scripts/security/firewall.sh" ]]; then
+        echo "Error: Cannot find firewall.sh at ${SCRIPT_DIR}/scripts/security/firewall.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/scripts/security/firewall.sh"
+
+    # 加载 fail2ban.sh
+    if [[ ! -f "${SCRIPT_DIR}/scripts/security/fail2ban.sh" ]]; then
+        echo "Error: Cannot find fail2ban.sh at ${SCRIPT_DIR}/scripts/security/fail2ban.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/scripts/security/fail2ban.sh"
 }
 
 # ═══════════════════════════════════════════
@@ -140,11 +156,18 @@ show_quick_start_tasks() {
     echo ""
     echo -e "${BOLD}即将执行以下安全配置：${NC}"
     echo ""
+    echo -e "  ${GREEN}[SSH 安全]${NC}"
     echo -e "  1. SSH 端口修改 (22 → 2222)"
     echo -e "  2. SSH 密钥生成 (Ed25519)"
     echo -e "  3. 禁止 root 远程登录"
     echo -e "  4. 禁止密码登录"
     echo -e "  5. SSH 安全参数配置"
+    echo ""
+    echo -e "  ${GREEN}[防火墙]${NC}"
+    echo -e "  6. 防火墙配置 (UFW/firewalld)"
+    echo ""
+    echo -e "  ${GREEN}[入侵防护]${NC}"
+    echo -e "  7. Fail2Ban 安装与配置"
     echo ""
 }
 
@@ -167,6 +190,18 @@ run_quick_start() {
         return 1
     }
 
+    # 执行防火墙配置
+    run_firewall_hardening || {
+        log_error "防火墙配置失败"
+        return 1
+    }
+
+    # 执行 Fail2Ban 配置
+    run_fail2ban_hardening || {
+        log_error "Fail2Ban 配置失败"
+        return 1
+    }
+
     return 0
 }
 
@@ -180,6 +215,12 @@ run_custom_config() {
 
     echo -e "${BOLD}请选择需要执行的任务：${NC}"
     echo ""
+
+    # ═══════════════════════════════════════════
+    # SSH 安全配置
+    # ═══════════════════════════════════════════
+
+    echo -e "${GREEN}[SSH 安全]${NC}"
 
     # SSH 端口修改
     local do_ssh_port="y"
@@ -223,17 +264,83 @@ run_custom_config() {
 
     echo ""
 
+    # ═══════════════════════════════════════════
+    # 防火墙配置
+    # ═══════════════════════════════════════════
+
+    echo -e "${GREEN}[防火墙]${NC}"
+
+    # 防火墙配置
+    local do_firewall="y"
+    if confirm "6. 防火墙配置 (UFW/firewalld)？"; then
+        do_firewall="y"
+    else
+        do_firewall="n"
+    fi
+
+    # HTTP/HTTPS 端口
+    local do_http="n"
+    if [[ "$do_firewall" == "y" ]]; then
+        if confirm "   开放 HTTP/HTTPS (80/443) 端口？"; then
+            do_http="y"
+        fi
+    fi
+
+    # ICMP ping
+    local do_icmp="n"
+    if [[ "$do_firewall" == "y" ]]; then
+        if confirm "   允许 ping (ICMP)？"; then
+            do_icmp="y"
+        fi
+    fi
+
+    echo ""
+
+    # ═══════════════════════════════════════════
+    # Fail2Ban 配置
+    # ═══════════════════════════════════════════
+
+    echo -e "${GREEN}[入侵防护]${NC}"
+
+    # Fail2Ban 配置
+    local do_fail2ban="y"
+    if confirm "7. Fail2Ban 安装与配置？"; then
+        do_fail2ban="y"
+    else
+        do_fail2ban="n"
+    fi
+
+    echo ""
+
     # 检查是否至少选择了一项
-    if [[ "${do_ssh_port}" == "n" && "${do_ssh_key}" == "n" && "${do_disable_root}" == "n" && "${do_disable_passwd}" == "n" && "${do_ssh_params}" == "n" ]]; then
+    if [[ "${do_ssh_port}" == "n" && "${do_ssh_key}" == "n" && "${do_disable_root}" == "n" && "${do_disable_passwd}" == "n" && "${do_ssh_params}" == "n" && "${do_firewall}" == "n" && "${do_fail2ban}" == "n" ]]; then
         log_warn "未选择任何任务"
         return 0
     fi
 
-    # 执行选中的任务
-    run_ssh_hardening_custom "${do_ssh_port}" "${do_ssh_key}" "${do_disable_root}" "${do_disable_passwd}" "${do_ssh_params}" || {
-        log_error "SSH 加固失败"
-        return 1
-    }
+    # 执行选中的 SSH 任务
+    if [[ "${do_ssh_port}" == "y" || "${do_ssh_key}" == "y" || "${do_disable_root}" == "y" || "${do_disable_passwd}" == "y" || "${do_ssh_params}" == "y" ]]; then
+        run_ssh_hardening_custom "${do_ssh_port}" "${do_ssh_key}" "${do_disable_root}" "${do_disable_passwd}" "${do_ssh_params}" || {
+            log_error "SSH 加固失败"
+            return 1
+        }
+    fi
+
+    # 执行防火墙配置
+    if [[ "${do_firewall}" == "y" ]]; then
+        run_firewall_hardening_custom "${do_http}" "${do_icmp}" || {
+            log_error "防火墙配置失败"
+            return 1
+        }
+    fi
+
+    # 执行 Fail2Ban 配置
+    if [[ "${do_fail2ban}" == "y" ]]; then
+        run_fail2ban_hardening || {
+            log_error "Fail2Ban 配置失败"
+            return 1
+        }
+    fi
 
     return 0
 }

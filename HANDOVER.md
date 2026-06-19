@@ -3,7 +3,7 @@
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
 **最后更新**: 2026-06-20
-**当前阶段**: v0.1 基础框架 + SSH 安全 已完成
+**当前阶段**: v0.2 防火墙 + Fail2Ban 已完成
 
 ---
 
@@ -21,14 +21,14 @@
 
 ## 2. 当前进度
 
-### 总体状态：🟢 v0.1 已完成
+### 总体状态：🟢 v0.2 已完成
 
 | 阶段 | 状态 | 说明 |
 |------|------|------|
 | 需求分析 | ✅ 完成 | PRD 已编写，见 `.claude/prds/linux-security-hardening.prd.md` |
 | 架构设计 | ✅ 完成 | 交互模式、i18n、日志、备份等技术决策已确定 |
 | v0.1 基础框架 + SSH 安全 | ✅ 完成 | utils.sh, detect.sh, init.sh, ssh.sh, install.sh, 语言文件, 测试 |
-| v0.2 防火墙 + Fail2Ban | ⬜ 未开始 | |
+| v0.2 防火墙 + Fail2Ban | ✅ 完成 | firewall.sh, fail2ban.sh, 语言文件更新, 菜单集成, 单元测试 |
 | v0.3 用户管理 + 内核加固 | ⬜ 未开始 | |
 | v0.4 审计日志 + 服务管理 | ⬜ 未开始 | |
 | v1.0 测试 + 文档 + 发布 | ⬜ 未开始 | |
@@ -48,6 +48,14 @@
 | 2026-06-20 | 创建主入口脚本 | `install.sh` (4模式菜单、交互流程、curl执行支持) |
 | 2026-06-20 | 创建中英文语言文件 | `scripts/lang/zh.sh`, `scripts/lang/en.sh` |
 | 2026-06-20 | 创建单元测试 | `tests/unit/utils.bats` (19个测试用例) |
+| 2026-06-20 | 重新设计菜单系统 | 快速开始 + 自定义配置模式 |
+| 2026-06-20 | 创建防火墙配置模块 | `scripts/security/firewall.sh` (支持 UFW/firewalld) |
+| 2026-06-20 | 创建 Fail2Ban 配置模块 | `scripts/security/fail2ban.sh` |
+| 2026-06-20 | 创建 Fail2Ban 配置模板 | `config/fail2ban/jail.local` |
+| 2026-06-20 | 更新 i18n 翻译文件 | 添加防火墙和 Fail2Ban 相关翻译 |
+| 2026-06-20 | 集成新模块到菜单 | 更新 install.sh 集成防火墙和 Fail2Ban |
+| 2026-06-20 | 创建防火墙单元测试 | `tests/unit/firewall.bats` (9个测试用例) |
+| 2026-06-20 | 创建 Fail2Ban 单元测试 | `tests/unit/fail2ban.bats` (18个测试用例) |
 
 ---
 
@@ -83,20 +91,26 @@ linux-one-key/
 │       └── typescript/        # TS 规则（本项目未使用）
 ├── scripts/
 │   ├── base/
-│   │   ├── utils.sh           # 工具函数库 ⭐ NEW
-│   │   ├── detect.sh          # 系统检测 ⭐ NEW
-│   │   └── init.sh            # 系统初始化 ⭐ NEW
+│   │   ├── utils.sh           # 工具函数库
+│   │   ├── detect.sh          # 系统检测
+│   │   └── init.sh            # 系统初始化
 │   ├── security/
-│   │   └── ssh.sh             # SSH 安全加固 ⭐ NEW
+│   │   ├── ssh.sh             # SSH 安全加固
+│   │   ├── firewall.sh        # 防火墙配置 ⭐ NEW
+│   │   └── fail2ban.sh        # Fail2Ban 入侵防护 ⭐ NEW
 │   ├── lang/
-│   │   ├── zh.sh              # 中文翻译 ⭐ NEW
-│   │   └── en.sh              # 英文翻译 ⭐ NEW
+│   │   ├── zh.sh              # 中文翻译
+│   │   └── en.sh              # 英文翻译
 │   ├── dev/                   # [空] 开发工具安装
 │   └── server/                # [空] 服务器软件安装
 ├── tests/
 │   └── unit/
-│       └── utils.bats         # 工具函数测试 ⭐ NEW
-├── config/                    # [空] 配置文件模板
+│       ├── utils.bats         # 工具函数测试
+│       ├── firewall.bats      # 防火墙测试 ⭐ NEW
+│       └── fail2ban.bats      # Fail2Ban 测试 ⭐ NEW
+├── config/
+│   └── fail2ban/
+│       └── jail.local         # Fail2Ban 配置模板 ⭐ NEW
 ├── docs/                      # [空] 文档
 ├── install.sh                 # 主入口脚本 ⭐ NEW
 ├── README.md                  # 项目说明
@@ -262,3 +276,11 @@ v0.4 (第四周)
 | 2026-06-20 | UPDATE | `HANDOVER.md` | 更新进度和文件清单 |
 | 2026-06-20 | UPDATE | `install.sh` | 重新设计菜单，快速开始+自定义配置 |
 | 2026-06-20 | UPDATE | `scripts/security/ssh.sh` | 添加 run_ssh_hardening_custom 函数 |
+| 2026-06-20 | CREATE | `scripts/security/firewall.sh` | 防火墙配置模块（支持 UFW/firewalld） |
+| 2026-06-20 | CREATE | `scripts/security/fail2ban.sh` | Fail2Ban 入侵防护模块 |
+| 2026-06-20 | CREATE | `config/fail2ban/jail.local` | Fail2Ban jail 配置模板 |
+| 2026-06-20 | UPDATE | `scripts/lang/zh.sh` | 添加防火墙和 Fail2Ban 中文翻译 |
+| 2026-06-20 | UPDATE | `scripts/lang/en.sh` | 添加防火墙和 Fail2Ban 英文翻译 |
+| 2026-06-20 | UPDATE | `install.sh` | 集成防火墙和 Fail2Ban 到菜单流程 |
+| 2026-06-20 | CREATE | `tests/unit/firewall.bats` | 防火墙模块单元测试（9个用例） |
+| 2026-06-20 | CREATE | `tests/unit/fail2ban.bats` | Fail2Ban 模块单元测试（18个用例） |
