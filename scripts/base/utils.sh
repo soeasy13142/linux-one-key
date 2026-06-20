@@ -178,7 +178,7 @@ confirm() {
 
     # 非交互模式：直接使用默认值
     if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
-        log_info "${prompt} [auto: ${default}]"
+        log_info "${prompt} [auto: ${default}]" >&2
         [[ "${default}" =~ ^[Yy]$ ]]
         return $?
     fi
@@ -216,7 +216,7 @@ prompt_input() {
     # 非交互模式：直接使用默认值
     if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
         result="${default}"
-        log_info "${prompt} [auto: ${result:-<empty>}]"
+        log_info "${prompt} [auto: ${result:-<empty>}]" >&2
         echo "${result}"
         return 0
     fi
@@ -239,7 +239,7 @@ prompt_password() {
 
     # 非交互模式：返回空密码
     if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
-        log_info "${prompt} [auto: <empty>]"
+        log_info "${prompt} [auto: <empty>]" >&2
         echo ""
         return 0
     fi
