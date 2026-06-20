@@ -16,9 +16,7 @@ set -eo pipefail
 
 GITHUB_REPO="soeasy13142/linux-one-key"
 GITHUB_BRANCH="main"
-# 缓存破坏时间戳（防止 GitHub CDN 缓存导致版本不一致）
-CACHE_BUST="$(date +%s)"
-GITHUB_TARBALL_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/${GITHUB_BRANCH}.tar.gz?t=${CACHE_BUST}"
+GITHUB_TARBALL_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/${GITHUB_BRANCH}.tar.gz"
 
 # ═══════════════════════════════════════════
 # Bootstrap: curl 管道模式自动下载完整仓库并 re-exec
@@ -52,7 +50,7 @@ _bootstrap_and_reexec() {
     fi
 
     # 完整性校验：对比 SHA256SUMS 文件
-    local checksum_url="https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/SHA256SUMS?t=${CACHE_BUST}"
+    local checksum_url="https://api.github.com/repos/${GITHUB_REPO}/contents/SHA256SUMS?ref=${GITHUB_BRANCH}"
     local checksum_file="${tmp_dir}/SHA256SUMS"
     if curl -fsSL "${checksum_url}" -o "${checksum_file}" 2>/dev/null; then
         local expected_hash actual_hash
@@ -100,16 +98,47 @@ _parse_args() {
         case "${arg}" in
             --yes|-y)
                 export AUTO_ACCEPT="yes"
+                export TARGET_MODULE="all"
+                ;;
+            --quick)
+                export AUTO_ACCEPT="yes"
+                export TARGET_MODULE="all"
+                ;;
+            --ssh)
+                export AUTO_ACCEPT="yes"
+                export TARGET_MODULE="ssh"
+                ;;
+            --firewall)
+                export AUTO_ACCEPT="yes"
+                export TARGET_MODULE="firewall"
+                ;;
+            --fail2ban)
+                export AUTO_ACCEPT="yes"
+                export TARGET_MODULE="fail2ban"
+                ;;
+            --status)
+                export AUTO_ACCEPT="yes"
+                export TARGET_MODULE="status"
                 ;;
             --help|-h)
                 echo "用法: bash install.sh [选项]"
                 echo ""
                 echo "选项:"
-                echo "  --yes, -y    非交互模式，自动使用默认值"
-                echo "  --help, -h   显示帮助信息"
+                echo "  --ssh          仅执行 SSH 安全加固"
+                echo "  --firewall     仅执行防火墙配置"
+                echo "  --fail2ban     仅执行 Fail2Ban 入侵防护"
+                echo "  --status       仅显示系统安全状态"
+                echo "  --quick        一键快速加固（全部执行）"
+                echo "  --yes, -y      等同于 --quick（向后兼容）"
+                echo "  --help, -h     显示帮助信息"
+                echo ""
+                echo "无参数运行进入交互式菜单。"
                 echo ""
                 echo "示例:"
-                echo "  curl -fsSL https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/install.sh | sudo bash -s -- --yes"
+                echo "  bash install.sh                      # 交互式菜单"
+                echo "  bash install.sh --ssh                # 仅 SSH 加固"
+                echo "  bash install.sh --quick              # 一键全部加固"
+                echo "  curl -fsSL .../install.sh | sudo bash -s -- --yes"
                 exit 0
                 ;;
         esac
@@ -258,50 +287,292 @@ show_welcome() {
 }
 
 # ═══════════════════════════════════════════
-# 执行方式选择
+# 系统状态检测（只读，不修改系统）
 # ═══════════════════════════════════════════
 
-# 显示执行方式菜单
-show_execution_mode_menu() {
-    echo -e "${BOLD}请选择执行方式：${NC}"
+# 显示系统安全状态
+show_system_status() {
+    log_title "${MSG_STATUS_TITLE}"
+
+    # SSH 状态
+    echo -e "${GREEN}[SSH]${NC}"
+    local ssh_port
+    ssh_port=$(get_ssh_port 2>/dev/null || echo "22")
+    if [[ "${ssh_port}" == "22" ]]; then
+        echo -e "  ${MSG_STATUS_SSH_PORT}: ${ssh_port} (${MSG_STATUS_DEFAULT_PORT})"
+    else
+        echo -e "  ${MSG_STATUS_SSH_PORT}: ${ssh_port} (${MSG_STATUS_CONFIGURED})"
+    fi
+
+    local root_login
+    root_login=$(get_ssh_config "PermitRootLogin" 2>/dev/null || echo "unknown")
+    if [[ "${root_login}" == "no" ]]; then
+        echo -e "  ${MSG_STATUS_SSH_ROOT}: ${MSG_STATUS_NOT_ALLOWED}"
+    else
+        echo -e "  ${MSG_STATUS_SSH_ROOT}: ${MSG_STATUS_ALLOWED}"
+    fi
+
+    local pass_auth
+    pass_auth=$(get_ssh_config "PasswordAuthentication" 2>/dev/null || echo "unknown")
+    if [[ "${pass_auth}" == "no" ]]; then
+        echo -e "  ${MSG_STATUS_SSH_PASSWD}: ${MSG_STATUS_NOT_ALLOWED}"
+    else
+        echo -e "  ${MSG_STATUS_SSH_PASSWD}: ${MSG_STATUS_ALLOWED}"
+    fi
+
+    local pubkey_auth
+    pubkey_auth=$(get_ssh_config "PubkeyAuthentication" 2>/dev/null || echo "unknown")
+    if [[ "${pubkey_auth}" == "yes" ]] || [[ "${pubkey_auth}" == "unknown" ]]; then
+        echo -e "  ${MSG_STATUS_SSH_KEY}: ${MSG_STATUS_ENABLED}"
+    else
+        echo -e "  ${MSG_STATUS_SSH_KEY}: ${MSG_STATUS_DISABLED}"
+    fi
+
     echo ""
-    echo -e "  ${GREEN}[1] 快速开始（推荐）${NC}"
-    echo -e "      使用默认安全配置，逐项确认后执行"
+
+    # 防火墙状态
+    echo -e "${GREEN}[${MSG_STATUS_FIREWALL}]${NC}"
+    local fw_status="${MSG_STATUS_DISABLED}"
+    if command -v ufw &>/dev/null; then
+        if ufw status 2>/dev/null | grep -q "Status: active"; then
+            fw_status="${MSG_STATUS_ENABLED}"
+        fi
+    elif command -v firewall-cmd &>/dev/null; then
+        if firewall-cmd --state &>/dev/null; then
+            fw_status="${MSG_STATUS_ENABLED}"
+        fi
+    fi
+    echo -e "  ${MSG_STATUS_FIREWALL}: ${fw_status}"
+
     echo ""
-    echo -e "  ${GREEN}[2] 自定义配置${NC}"
-    echo -e "      逐项选择需要执行的任务"
+
+    # Fail2Ban 状态
+    echo -e "${GREEN}[${MSG_STATUS_FAIL2BAN}]${NC}"
+    local f2b_status="${MSG_STATUS_NOT_INSTALLED}"
+    if command -v fail2ban-client &>/dev/null; then
+        if systemctl is-active fail2ban &>/dev/null; then
+            f2b_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_ENABLED})"
+        else
+            f2b_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_DISABLED})"
+        fi
+    fi
+    echo -e "  ${MSG_STATUS_FAIL2BAN}: ${f2b_status}"
+
+    echo ""
+    press_enter
+}
+
+# ═══════════════════════════════════════════
+# 主菜单
+# ═══════════════════════════════════════════
+
+# 显示主菜单
+show_main_menu() {
+    echo ""
+    echo -e "${BOLD}╔═══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BOLD}║       Linux 云服务器安全加固脚本 ${SCRIPT_VERSION}                    ║${NC}"
+    echo -e "${BOLD}╚═══════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "  ${MSG_MAIN_MENU_SYSTEM_INFO}: $(get_detected_os) $(get_detected_os_version) | $(get_detected_arch) | $(whoami)"
+    echo ""
+    echo -e "${BOLD}${MSG_MAIN_MENU_CHOICE}${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_STATUS}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_STATUS_DESC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_SSH}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_SSH_DESC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_FIREWALL}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_FIREWALL_DESC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_FAIL2BAN}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_FAIL2BAN_DESC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_QUICK}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_QUICK_DESC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_REPORT}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_MAIN_MENU_EXIT}${NC}"
     echo ""
 }
 
-# 获取执行方式选择
-get_execution_mode() {
+# 获取主菜单选择
+get_main_menu_choice() {
     local choice
-
     while true; do
-        choice=$(prompt_input "请输入选项" "1")
-
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-6]" "")
         case "${choice}" in
-            1)
-                echo "quick"
-                return 0
-                ;;
-            2)
-                echo "custom"
+            [0-6])
+                echo "${choice}"
                 return 0
                 ;;
             *)
-                log_error "无效选项，请输入 1 或 2"
+                log_error "${MSG_MENU_INVALID}"
                 ;;
         esac
     done
 }
 
 # ═══════════════════════════════════════════
-# 快速开始模式
+# SSH 子菜单
 # ═══════════════════════════════════════════
 
-# 显示快速开始任务列表
-show_quick_start_tasks() {
+show_ssh_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_SSH_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_SSH_MENU_PORT}${NC}"
+    echo -e "  ${GREEN}${MSG_SSH_MENU_KEY}${NC}"
+    echo -e "  ${GREEN}${MSG_SSH_MENU_ROOT}${NC}"
+    echo -e "  ${GREEN}${MSG_SSH_MENU_PASSWD}${NC}"
+    echo -e "  ${GREEN}${MSG_SSH_MENU_PARAMS}${NC}"
+    echo -e "  ${GREEN}${MSG_SSH_MENU_ALL}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_SSH_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_ssh_submenu_loop() {
+    while true; do
+        show_ssh_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-6]" "")
+
+        case "${choice}" in
+            1)
+                if confirm "${MSG_CONFIRM_SSH_PORT}" "y"; then
+                    run_ssh_hardening_custom "y" "n" "n" "n" "n" || log_error "SSH 端口修改失败"
+                fi
+                press_enter
+                ;;
+            2)
+                if confirm "${MSG_CONFIRM_SSH_KEY}" "y"; then
+                    run_ssh_hardening_custom "n" "y" "n" "n" "n" || log_error "SSH 密钥生成失败"
+                fi
+                press_enter
+                ;;
+            3)
+                if confirm "${MSG_CONFIRM_SSH_ROOT}" "y"; then
+                    run_ssh_hardening_custom "n" "n" "y" "n" "n" || log_error "禁止 root 登录失败"
+                fi
+                press_enter
+                ;;
+            4)
+                if confirm "${MSG_CONFIRM_SSH_PASSWD}" "y"; then
+                    run_ssh_hardening_custom "n" "n" "n" "y" "n" || log_error "禁止密码登录失败"
+                fi
+                press_enter
+                ;;
+            5)
+                if confirm "${MSG_CONFIRM_SSH_PARAMS}" "y"; then
+                    run_ssh_hardening_custom "n" "n" "n" "n" "y" || log_error "SSH 参数配置失败"
+                fi
+                press_enter
+                ;;
+            6)
+                if confirm "${MSG_CONFIRM_SSH_ALL}" "y"; then
+                    run_ssh_hardening_custom "y" "y" "y" "y" "y" || log_error "SSH 加固失败"
+                fi
+                press_enter
+                ;;
+            0)
+                return 0
+                ;;
+            *)
+                log_error "${MSG_MENU_INVALID}"
+                ;;
+        esac
+    done
+}
+
+# ═══════════════════════════════════════════
+# 防火墙子菜单
+# ═══════════════════════════════════════════
+
+show_firewall_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_FIREWALL_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_FIREWALL_MENU_ENABLE}${NC}"
+    echo -e "  ${GREEN}${MSG_FIREWALL_MENU_HTTP}${NC}"
+    echo -e "  ${GREEN}${MSG_FIREWALL_MENU_ICMP}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_FIREWALL_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_firewall_submenu_loop() {
+    while true; do
+        show_firewall_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-3]" "")
+
+        case "${choice}" in
+            1)
+                if confirm "${MSG_CONFIRM_FIREWALL_ENABLE}" "y"; then
+                    run_firewall_hardening_custom "n" "n" || log_error "防火墙配置失败"
+                fi
+                press_enter
+                ;;
+            2)
+                if confirm "${MSG_CONFIRM_FIREWALL_HTTP}" "y"; then
+                    run_firewall_hardening_custom "y" "n" || log_error "HTTP/HTTPS 端口开放失败"
+                fi
+                press_enter
+                ;;
+            3)
+                if confirm "${MSG_CONFIRM_FIREWALL_ICMP}" "y"; then
+                    run_firewall_hardening_custom "n" "y" || log_error "ICMP 配置失败"
+                fi
+                press_enter
+                ;;
+            0)
+                return 0
+                ;;
+            *)
+                log_error "${MSG_MENU_INVALID}"
+                ;;
+        esac
+    done
+}
+
+# ═══════════════════════════════════════════
+# 查看报告
+# ═══════════════════════════════════════════
+
+view_report() {
+    local report_dir="/var/log/linux-one-key"
+    local latest_report
+
+    if [[ -d "${report_dir}" ]]; then
+        latest_report=$(ls -t "${report_dir}"/report_*.txt 2>/dev/null | head -1)
+    fi
+
+    if [[ -n "${latest_report}" ]] && [[ -f "${latest_report}" ]]; then
+        echo ""
+        cat "${latest_report}"
+        echo ""
+    else
+        log_warn "${MSG_REPORT_NOT_FOUND}"
+    fi
+
+    press_enter
+}
+
+# ═══════════════════════════════════════════
+# 一键快速加固
+# ═══════════════════════════════════════════
+
+run_quick_hardening() {
+    log_title "${MSG_QUICK_TITLE}"
+
+    # 显示任务列表
     echo ""
     echo -e "${BOLD}即将执行以下安全配置：${NC}"
     echo ""
@@ -319,14 +590,6 @@ show_quick_start_tasks() {
     echo -e "  ${GREEN}[入侵防护]${NC}"
     echo -e "  7. Fail2Ban 安装与配置"
     echo ""
-}
-
-# 快速开始模式执行
-run_quick_start() {
-    log_title "快速开始"
-
-    # 显示任务列表
-    show_quick_start_tasks
 
     # 确认执行
     if ! confirm "确认执行？" "y"; then
@@ -356,143 +619,48 @@ run_quick_start() {
 }
 
 # ═══════════════════════════════════════════
-# 自定义配置模式
+# 清理并退出
 # ═══════════════════════════════════════════
 
-# 自定义配置模式执行
-run_custom_config() {
-    log_title "自定义配置"
-
-    echo -e "${BOLD}请选择需要执行的任务：${NC}"
+cleanup_and_exit() {
+    # 清理 bootstrap 临时目录
+    if [[ -n "${_CLEANUP_DIR:-}" ]] && [[ -d "${_CLEANUP_DIR}" ]]; then
+        rm -rf "${_CLEANUP_DIR}" 2>/dev/null || true
+    fi
     echo ""
-
-    # ═══════════════════════════════════════════
-    # SSH 安全配置
-    # ═══════════════════════════════════════════
-
-    echo -e "${GREEN}[SSH 安全]${NC}"
-
-    # SSH 端口修改
-    local do_ssh_port
-    if confirm "1. SSH 端口修改 (22 → 2222)？"; then
-        do_ssh_port="y"
-    else
-        do_ssh_port="n"
-    fi
-
-    # SSH 密钥生成
-    local do_ssh_key
-    if confirm "2. SSH 密钥生成 (Ed25519)？"; then
-        do_ssh_key="y"
-    else
-        do_ssh_key="n"
-    fi
-
-    # 禁止 root 登录
-    local do_disable_root
-    if confirm "3. 禁止 root 远程登录？"; then
-        do_disable_root="y"
-    else
-        do_disable_root="n"
-    fi
-
-    # 禁止密码登录
-    local do_disable_passwd
-    if confirm "4. 禁止密码登录？"; then
-        do_disable_passwd="y"
-    else
-        do_disable_passwd="n"
-    fi
-
-    # SSH 安全参数
-    local do_ssh_params
-    if confirm "5. SSH 安全参数配置？"; then
-        do_ssh_params="y"
-    else
-        do_ssh_params="n"
-    fi
-
+    log_info "${MSG_GOODBYE}"
     echo ""
+    exit 0
+}
 
-    # ═══════════════════════════════════════════
-    # 防火墙配置
-    # ═══════════════════════════════════════════
+# ═══════════════════════════════════════════
+# 主菜单循环
+# ═══════════════════════════════════════════
 
-    echo -e "${GREEN}[防火墙]${NC}"
+run_main_menu_loop() {
+    while true; do
+        show_main_menu
+        local choice
+        choice=$(get_main_menu_choice)
 
-    # 防火墙配置
-    local do_firewall="y"
-    if confirm "6. 防火墙配置 (UFW/firewalld)？"; then
-        do_firewall="y"
-    else
-        do_firewall="n"
-    fi
-
-    # HTTP/HTTPS 端口
-    local do_http="n"
-    if [[ "$do_firewall" == "y" ]]; then
-        if confirm "   开放 HTTP/HTTPS (80/443) 端口？"; then
-            do_http="y"
-        fi
-    fi
-
-    # ICMP ping
-    local do_icmp="n"
-    if [[ "$do_firewall" == "y" ]]; then
-        if confirm "   允许 ping (ICMP)？"; then
-            do_icmp="y"
-        fi
-    fi
-
-    echo ""
-
-    # ═══════════════════════════════════════════
-    # Fail2Ban 配置
-    # ═══════════════════════════════════════════
-
-    echo -e "${GREEN}[入侵防护]${NC}"
-
-    # Fail2Ban 配置
-    local do_fail2ban="y"
-    if confirm "7. Fail2Ban 安装与配置？"; then
-        do_fail2ban="y"
-    else
-        do_fail2ban="n"
-    fi
-
-    echo ""
-
-    # 检查是否至少选择了一项
-    if [[ "${do_ssh_port}" == "n" && "${do_ssh_key}" == "n" && "${do_disable_root}" == "n" && "${do_disable_passwd}" == "n" && "${do_ssh_params}" == "n" && "${do_firewall}" == "n" && "${do_fail2ban}" == "n" ]]; then
-        log_warn "未选择任何任务"
-        return 0
-    fi
-
-    # 执行选中的 SSH 任务
-    if [[ "${do_ssh_port}" == "y" || "${do_ssh_key}" == "y" || "${do_disable_root}" == "y" || "${do_disable_passwd}" == "y" || "${do_ssh_params}" == "y" ]]; then
-        run_ssh_hardening_custom "${do_ssh_port}" "${do_ssh_key}" "${do_disable_root}" "${do_disable_passwd}" "${do_ssh_params}" || {
-            log_error "SSH 加固失败"
-            return 1
-        }
-    fi
-
-    # 执行防火墙配置
-    if [[ "${do_firewall}" == "y" ]]; then
-        run_firewall_hardening_custom "${do_http}" "${do_icmp}" || {
-            log_error "防火墙配置失败"
-            return 1
-        }
-    fi
-
-    # 执行 Fail2Ban 配置
-    if [[ "${do_fail2ban}" == "y" ]]; then
-        run_fail2ban_hardening || {
-            log_error "Fail2Ban 配置失败"
-            return 1
-        }
-    fi
-
-    return 0
+        case "${choice}" in
+            1) show_system_status ;;
+            2) run_ssh_submenu_loop ;;
+            3) run_firewall_submenu_loop ;;
+            4)
+                if confirm "${MSG_CONFIRM_FAIL2BAN}" "y"; then
+                    run_fail2ban_hardening || log_error "Fail2Ban 配置失败"
+                fi
+                press_enter
+                ;;
+            5)
+                run_quick_hardening
+                press_enter
+                ;;
+            6) view_report ;;
+            0) cleanup_and_exit ;;
+        esac
+    done
 }
 
 # ═══════════════════════════════════════════
@@ -555,55 +723,67 @@ main() {
     # 设置错误陷阱
     setup_error_trap
 
-    # 显示欢迎信息
+    # 非交互模式：根据 TARGET_MODULE 直接执行（不显示菜单）
+    if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
+        local rc=0
+        case "${TARGET_MODULE:-all}" in
+            status)
+                run_detection || true
+                print_detection_summary
+                exit 0
+                ;;
+            ssh)
+                run_detection || true
+                run_ssh_hardening || rc=$?
+                ;;
+            firewall)
+                run_detection || true
+                run_firewall_hardening || rc=$?
+                ;;
+            fail2ban)
+                run_detection || true
+                run_fail2ban_hardening || rc=$?
+                ;;
+            all|"")
+                run_detection || true
+                run_quick_hardening || rc=$?
+                ;;
+            *)
+                log_error "未知模块: ${TARGET_MODULE}"
+                exit 1
+                ;;
+        esac
+
+        if [[ ${rc} -eq 0 ]]; then
+            generate_report
+        else
+            log_error "任务执行失败（exit code: ${rc}），跳过报告生成"
+        fi
+
+        # 清理 bootstrap 临时目录
+        if [[ -n "${_CLEANUP_DIR:-}" ]] && [[ -d "${_CLEANUP_DIR}" ]]; then
+            rm -rf "${_CLEANUP_DIR}" 2>/dev/null || true
+        fi
+
+        echo ""
+        log_title "${MSG_FINISH}"
+        log_info "${MSG_FINISH_HINT}"
+        echo ""
+        exit "${rc}"
+    fi
+
+    # 交互模式：显示欢迎 → 系统检测 → 主菜单循环
     show_welcome
 
-    # 系统检测
     run_detection || {
         log_warn "System detection completed with warnings"
         log_warn "Some features may not work correctly on this system"
     }
 
-    # 显示检测摘要
     print_detection_summary
 
-    # 显示执行方式菜单
-    show_execution_mode_menu
-
-    # 获取执行方式
-    local mode
-    mode=$(get_execution_mode)
-
-    log_info "Selected mode: ${mode}"
-
-    # 执行任务
-    local rc=0
-    case "${mode}" in
-        "quick")  run_quick_start  || rc=$? ;;
-        "custom") run_custom_config || rc=$? ;;
-        *)        log_error "未知的执行模式: ${mode}" ; rc=1 ;;
-    esac
-
-    # 仅在成功时生成报告，失败时跳过
-    if [[ ${rc} -eq 0 ]]; then
-        generate_report
-    else
-        log_error "任务执行失败（exit code: ${rc}），跳过报告生成"
-    fi
-
-    # 清理 bootstrap 临时目录（如果存在）
-    if [[ -n "${_CLEANUP_DIR:-}" ]] && [[ -d "${_CLEANUP_DIR}" ]]; then
-        rm -rf "${_CLEANUP_DIR}" 2>/dev/null || true
-        log_debug "Cleaned up bootstrap temp directory: ${_CLEANUP_DIR}"
-    fi
-
-    # 完成
-    echo ""
-    log_title "${MSG_FINISH}"
-    log_info "${MSG_FINISH_HINT}"
-    echo ""
-
-    exit "${rc}"
+    # 进入主菜单循环
+    run_main_menu_loop
 }
 
 # ═══════════════════════════════════════════

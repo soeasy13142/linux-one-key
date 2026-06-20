@@ -3,7 +3,7 @@
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
 **最后更新**: 2026-06-20
-**当前阶段**: v0.2 已完成 + 第二轮 Code Review 完成（发现 50 个问题）
+**当前阶段**: v0.2 已完成 + 主菜单入口重设计完成
 
 ---
 
@@ -321,3 +321,8 @@ v0.4 (第四周)
 | 2026-06-20 | CREATE | `docs/bug-review-report.md` | 全面 Code Review 报告，记录 2 CRITICAL + 7 HIGH + 14 MEDIUM + 9 LOW 级别 bug，含修复方案和优先级计划 |
 | 2026-06-20 | CREATE | `docs/code-review-report-20260620.md` | 第二轮 Code Review 综合报告，3 代理并行（安全/质量/静默失败），发现 10 CRITICAL + 15 HIGH + 13 MEDIUM + 12 LOW，共 50 个问题 |
 | 2026-06-20 | UPDATE | `HANDOVER.md` | 记录第二轮 Code Review 结果、更新进度状态和下一步工作 |
+| 2026-06-20 | CREATE | `.claude/prds/main-menu-redesign.prd.md` | 主菜单入口重设计 PRD |
+| 2026-06-20 | CREATE | `.claude/plans/main-menu-redesign.plan.md` | 主菜单入口重设计实施计划 |
+| 2026-06-20 | UPDATE | `install.sh` | 重构主入口：主菜单循环、SSH/防火墙子菜单、系统状态检测、查看报告、非交互参数扩展 |
+| 2026-06-20 | UPDATE | `scripts/lang/zh.sh` | 新增主菜单、子菜单、状态检测等翻译键 (~45 条) |
+| 2026-06-20 | UPDATE | `scripts/lang/en.sh` | 新增对应英文翻译键 (~45 条) |

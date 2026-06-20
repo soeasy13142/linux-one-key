@@ -58,6 +58,79 @@ MSG_MODE_ADVANCED="Advanced Hardening"
 MSG_MODE_CUSTOM="Custom"
 
 # ═══════════════════════════════════════════
+# Main Menu
+# ═══════════════════════════════════════════
+
+MSG_MAIN_MENU_TITLE="Main Menu"
+MSG_MAIN_MENU_STATUS="[1] System Status Check"
+MSG_MAIN_MENU_STATUS_DESC="View current system security status (no changes)"
+MSG_MAIN_MENU_SSH="[2] SSH Security Hardening"
+MSG_MAIN_MENU_SSH_DESC="Port change, key auth, disable root/password login"
+MSG_MAIN_MENU_FIREWALL="[3] Firewall Configuration"
+MSG_MAIN_MENU_FIREWALL_DESC="UFW/firewalld rule configuration"
+MSG_MAIN_MENU_FAIL2BAN="[4] Fail2Ban Intrusion Prevention"
+MSG_MAIN_MENU_FAIL2BAN_DESC="Auto-ban malicious login attempts"
+MSG_MAIN_MENU_QUICK="[5] Quick Hardening (Recommended)"
+MSG_MAIN_MENU_QUICK_DESC="Run all items above in order, confirm each step"
+MSG_MAIN_MENU_REPORT="[6] View Last Report"
+MSG_MAIN_MENU_EXIT="[0] Exit"
+MSG_MAIN_MENU_PROMPT="Enter option"
+MSG_MAIN_MENU_CHOICE="Please select an action"
+MSG_MAIN_MENU_SYSTEM_INFO="System"
+
+# SSH Submenu
+MSG_SSH_MENU_TITLE="SSH Security Hardening"
+MSG_SSH_MENU_PORT="[1] Change SSH Port"
+MSG_SSH_MENU_KEY="[2] Generate SSH Key Pair"
+MSG_SSH_MENU_ROOT="[3] Disable Root Remote Login"
+MSG_SSH_MENU_PASSWD="[4] Disable Password Login"
+MSG_SSH_MENU_PARAMS="[5] Configure SSH Security Parameters"
+MSG_SSH_MENU_ALL="[6] Run All Above"
+MSG_SSH_MENU_BACK="[0] Back to Main Menu"
+
+# Firewall Submenu
+MSG_FIREWALL_MENU_TITLE="Firewall Configuration"
+MSG_FIREWALL_MENU_ENABLE="[1] Enable Firewall with Basic Rules"
+MSG_FIREWALL_MENU_HTTP="[2] Open HTTP/HTTPS Ports"
+MSG_FIREWALL_MENU_ICMP="[3] Allow ICMP Ping"
+MSG_FIREWALL_MENU_BACK="[0] Back to Main Menu"
+
+# System Status
+MSG_STATUS_TITLE="System Security Status"
+MSG_STATUS_SSH_PORT="SSH Port"
+MSG_STATUS_SSH_ROOT="Root Remote Login"
+MSG_STATUS_SSH_PASSWD="Password Authentication"
+MSG_STATUS_SSH_KEY="Key Authentication"
+MSG_STATUS_FIREWALL="Firewall"
+MSG_STATUS_FAIL2BAN="Fail2Ban"
+MSG_STATUS_ENABLED="Enabled"
+MSG_STATUS_DISABLED="Disabled"
+MSG_STATUS_INSTALLED="Installed"
+MSG_STATUS_NOT_INSTALLED="Not Installed"
+MSG_STATUS_ALLOWED="Allowed"
+MSG_STATUS_NOT_ALLOWED="Disabled"
+MSG_STATUS_DEFAULT_PORT="Default port, consider changing"
+MSG_STATUS_CONFIGURED="Configured"
+
+# Report
+MSG_REPORT_NOT_FOUND="No hardening report found. Please run hardening first."
+
+# Confirmation prompts
+MSG_CONFIRM_SSH_PORT="Confirm changing SSH port?"
+MSG_CONFIRM_SSH_KEY="Confirm generating SSH key pair?"
+MSG_CONFIRM_SSH_ROOT="Confirm disabling root remote login?"
+MSG_CONFIRM_SSH_PASSWD="Confirm disabling password login?"
+MSG_CONFIRM_SSH_PARAMS="Confirm configuring SSH security parameters?"
+MSG_CONFIRM_SSH_ALL="Confirm running all SSH hardening?"
+MSG_CONFIRM_FIREWALL_ENABLE="Confirm enabling firewall?"
+MSG_CONFIRM_FIREWALL_HTTP="Confirm opening HTTP/HTTPS ports?"
+MSG_CONFIRM_FIREWALL_ICMP="Confirm allowing ICMP ping?"
+MSG_CONFIRM_FAIL2BAN="Confirm installing and configuring Fail2Ban?"
+
+# Quick Hardening
+MSG_QUICK_TITLE="Quick Hardening"
+
+# ═══════════════════════════════════════════
 # Task Descriptions
 # ═══════════════════════════════════════════
 
