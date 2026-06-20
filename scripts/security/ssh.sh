@@ -451,6 +451,15 @@ run_ssh_hardening() {
     log_warn "${MSG_WARN_SAVE_KEY}"
     log_warn "${MSG_WARN_TEST_FIRST}"
 
+    # 提示手动关闭 22 端口
+    local final_port
+    final_port=$(get_ssh_port)
+    if [[ "${final_port}" != "22" ]]; then
+        echo ""
+        log_warn "${MSG_FIREWALL_SSH_PORT22_WARN}"
+        log_warn "${MSG_FIREWALL_SSH_PORT22_CLOSE}"
+    fi
+
     return 0
 }
 
@@ -531,6 +540,15 @@ run_ssh_hardening_custom() {
     log_warn "${MSG_WARN_CONNECTION}"
     log_warn "${MSG_WARN_SAVE_KEY}"
     log_warn "${MSG_WARN_TEST_FIRST}"
+
+    # 提示手动关闭 22 端口
+    local final_port
+    final_port=$(get_ssh_port)
+    if [[ "${final_port}" != "22" ]]; then
+        echo ""
+        log_warn "${MSG_FIREWALL_SSH_PORT22_WARN}"
+        log_warn "${MSG_FIREWALL_SSH_PORT22_CLOSE}"
+    fi
 
     return 0
 }

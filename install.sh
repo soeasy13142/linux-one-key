@@ -312,6 +312,7 @@ show_quick_start_tasks() {
     echo ""
     echo -e "  ${GREEN}[防火墙]${NC}"
     echo -e "  6. 防火墙配置 (UFW/firewalld)"
+    echo -e "     ⚠ 22 端口始终放通（防锁死），请在确认新端口后手动关闭"
     echo ""
     echo -e "  ${GREEN}[入侵防护]${NC}"
     echo -e "  7. Fail2Ban 安装与配置"
@@ -528,6 +529,7 @@ ${MSG_REPORT_WARNINGS}:
   ⚠ ${MSG_WARN_CONNECTION}
   ⚠ ${MSG_WARN_SAVE_KEY}
   ⚠ ${MSG_WARN_TEST_FIRST}
+  ⚠ 防火墙已保留放通 22 端口，确认新 SSH 端口可用后请手动关闭: sudo ufw deny 22/tcp
 
 ${MSG_REPORT_SAVED}: ${report_path}
 

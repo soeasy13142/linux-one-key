@@ -353,7 +353,13 @@ run_firewall_hardening() {
 
     # 开放 SSH 端口
     log_step "$MSG_FIREWALL_CONFIG_SSH"
-    open_port "$ssh_port" "tcp" "SSH"
+    # 始终放通 22 端口（安全兜底，防止端口变更后锁死）
+    open_port "22" "tcp" "SSH-default"
+    log_info "$MSG_FIREWALL_SSH_PORT22"
+    # 如果 SSH 端口不是 22，也开放新端口
+    if [[ "$ssh_port" != "22" ]]; then
+        open_port "$ssh_port" "tcp" "SSH-custom"
+    fi
 
     # 询问是否开放 HTTP/HTTPS
     echo ""
@@ -419,7 +425,13 @@ run_firewall_hardening_custom() {
 
     # 开放 SSH 端口（必须）
     log_step "$MSG_FIREWALL_CONFIG_SSH"
-    open_port "$ssh_port" "tcp" "SSH"
+    # 始终放通 22 端口（安全兜底，防止端口变更后锁死）
+    open_port "22" "tcp" "SSH-default"
+    log_info "$MSG_FIREWALL_SSH_PORT22"
+    # 如果 SSH 端口不是 22，也开放新端口
+    if [[ "$ssh_port" != "22" ]]; then
+        open_port "$ssh_port" "tcp" "SSH-custom"
+    fi
 
     # 根据参数决定是否开放 HTTP/HTTPS
     if [[ "$do_http" == "y" ]]; then
