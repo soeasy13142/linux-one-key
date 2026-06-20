@@ -16,7 +16,9 @@ set -eo pipefail
 
 GITHUB_REPO="soeasy13142/linux-one-key"
 GITHUB_BRANCH="main"
-GITHUB_TARBALL_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/${GITHUB_BRANCH}.tar.gz"
+# 缓存破坏时间戳（防止 GitHub CDN 缓存导致版本不一致）
+CACHE_BUST="$(date +%s)"
+GITHUB_TARBALL_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/${GITHUB_BRANCH}.tar.gz?t=${CACHE_BUST}"
 
 # ═══════════════════════════════════════════
 # Bootstrap: curl 管道模式自动下载完整仓库并 re-exec
@@ -31,7 +33,7 @@ _bootstrap_and_reexec() {
     echo ""
 
     # 下载 tarball 并解压
-    if ! curl -fsSL -H "Cache-Control: no-cache" "${GITHUB_TARBALL_URL}" | tar xz -C "${tmp_dir}"; then
+    if ! curl -fsSL "${GITHUB_TARBALL_URL}" | tar xz -C "${tmp_dir}"; then
         echo "错误: 下载或解压失败"
         echo "请检查网络连接，或手动克隆仓库:"
         echo "  git clone https://github.com/${GITHUB_REPO}"
@@ -50,9 +52,9 @@ _bootstrap_and_reexec() {
     fi
 
     # 完整性校验：对比 SHA256SUMS 文件
-    local checksum_url="https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/SHA256SUMS"
+    local checksum_url="https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/SHA256SUMS?t=${CACHE_BUST}"
     local checksum_file="${tmp_dir}/SHA256SUMS"
-    if curl -fsSL -H "Cache-Control: no-cache" "${checksum_url}" -o "${checksum_file}" 2>/dev/null; then
+    if curl -fsSL "${checksum_url}" -o "${checksum_file}" 2>/dev/null; then
         local expected_hash actual_hash
         expected_hash=$(grep "install.sh" "${checksum_file}" | awk '{print $1}')
         actual_hash=$(sha256sum "${extracted_dir}/install.sh" | awk '{print $1}')
