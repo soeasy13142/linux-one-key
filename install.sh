@@ -79,6 +79,7 @@ _bootstrap_and_reexec() {
     # 使用 exec 替换当前进程，临时目录在脚本退出后自动清理
     # curl 管道模式下 stdin 是管道，exec 后已关闭（EOF），
     # 需要重新打开 stdin 以支持交互式输入
+    # 注意: "$@" 包含原始参数（如 --yes），会传递给 re-exec 的脚本
     chmod +x "${extracted_dir}/install.sh"
     if tty &>/dev/null; then
         exec bash "${extracted_dir}/install.sh" "$@" < /dev/tty
@@ -86,6 +87,40 @@ _bootstrap_and_reexec() {
         exec bash "${extracted_dir}/install.sh" "$@" < /dev/null
     fi
 }
+
+# ═══════════════════════════════════════════
+# 参数解析
+# ═══════════════════════════════════════════
+
+# 解析命令行参数
+_parse_args() {
+    for arg in "$@"; do
+        case "${arg}" in
+            --yes|-y)
+                export AUTO_ACCEPT="yes"
+                ;;
+            --help|-h)
+                echo "用法: bash install.sh [选项]"
+                echo ""
+                echo "选项:"
+                echo "  --yes, -y    非交互模式，自动使用默认值"
+                echo "  --help, -h   显示帮助信息"
+                echo ""
+                echo "示例:"
+                echo "  curl -fsSL https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/install.sh | sudo bash -s -- --yes"
+                exit 0
+                ;;
+        esac
+    done
+}
+
+_parse_args "$@"
+
+# 自动检测非交互模式：如果没有 TTY 且未显式设置 --yes，自动启用 AUTO_ACCEPT
+# curl 管道模式下 stdin 是管道（非终端），需要自动使用默认值
+if [[ ! -t 0 ]] && [[ "${AUTO_ACCEPT}" != "yes" ]]; then
+    export AUTO_ACCEPT="yes"
+fi
 
 # 检测是否通过 curl 管道执行
 # 注意: BASH_SOURCE[0] 在函数内外行为不同（管道模式下函数内返回 "main"），

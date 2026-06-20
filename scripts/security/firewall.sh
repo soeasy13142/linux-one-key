@@ -29,13 +29,21 @@ _install_firewall() {
             fi
             apt-get install -y ufw >> "$LOG_FILE" 2>&1
             ;;
-        centos)
+        centos|rhel|rocky|almalinux)
             if command_exists firewall-cmd; then
                 log_info "$MSG_FIREWALL_ALREADY_INSTALLED (firewalld)"
                 return 0
             fi
             yum install -y firewalld >> "$LOG_FILE" 2>&1
             # 安装后启动 firewalld 服务
+            systemctl enable --now firewalld >> "$LOG_FILE" 2>&1 || true
+            ;;
+        fedora)
+            if command_exists firewall-cmd; then
+                log_info "$MSG_FIREWALL_ALREADY_INSTALLED (firewalld)"
+                return 0
+            fi
+            dnf install -y firewalld >> "$LOG_FILE" 2>&1
             systemctl enable --now firewalld >> "$LOG_FILE" 2>&1 || true
             ;;
         *)
@@ -50,9 +58,9 @@ _install_firewall() {
 # 获取防火墙类型
 _get_firewall_type() {
     case "$DETECTED_OS" in
-        ubuntu|debian) echo "ufw" ;;
-        centos)        echo "firewalld" ;;
-        *)             echo "unknown" ;;
+        ubuntu|debian)                          echo "ufw" ;;
+        centos|rhel|rocky|almalinux|fedora)     echo "firewalld" ;;
+        *)                                      echo "unknown" ;;
     esac
 }
 
@@ -385,6 +393,12 @@ run_firewall_hardening_custom() {
 
     log_step "$MSG_FIREWALL_TITLE"
 
+    # 检查 root 权限
+    if ! is_root; then
+        log_error "${MSG_ERROR_NOT_ROOT}"
+        return 1
+    fi
+
     # 检查系统兼容性
     local fw_type
     fw_type=$(_get_firewall_type)
@@ -418,10 +432,15 @@ run_firewall_hardening_custom() {
         allow_icmp
     fi
 
-    # 询问是否开放其他端口
+    # 询问是否开放其他端口（非交互模式跳过）
     echo ""
     log_info "$MSG_FIREWALL_CUSTOM_PORTS"
     while true; do
+        # 非交互模式：跳过自定义端口输入
+        if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
+            log_info "非交互模式，跳过自定义端口输入"
+            break
+        fi
         read -r -p "  > " extra_port
         if [[ -z "$extra_port" ]]; then
             break

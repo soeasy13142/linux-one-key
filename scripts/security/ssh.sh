@@ -438,6 +438,8 @@ run_ssh_hardening() {
         # SSH 重启成功，取消回滚定时器
         cancel_rollback_timer
     else
+        # SSH 重启失败，取消回滚定时器（避免无意义的二次回滚）
+        cancel_rollback_timer
         return 1
     fi
 
@@ -517,6 +519,8 @@ run_ssh_hardening_custom() {
         # SSH 重启成功，取消回滚定时器
         cancel_rollback_timer
     else
+        # SSH 重启失败，取消回滚定时器（避免无意义的二次回滚）
+        cancel_rollback_timer
         return 1
     fi
 
