@@ -122,7 +122,7 @@ generate_ssh_key() {
     # 检查是否已存在
     if [[ -f "${key_path}" ]]; then
         log_warn "Key already exists: ${key_path}"
-        if ! confirm "Overwrite existing key?"; then
+        if ! confirm "Overwrite existing key?" "n"; then
             log_info "Skipping key generation"
             return 0
         fi
@@ -201,7 +201,7 @@ disable_root_login() {
     log_warn "${MSG_SSH_ROOT_RISK}"
 
     # 确认
-    if ! confirm "${MSG_SSH_ROOT_CONFIRM}"; then
+    if ! confirm "${MSG_SSH_ROOT_CONFIRM}" "y"; then
         log_info "Skipped"
         return 0
     fi
@@ -256,7 +256,7 @@ disable_password_auth() {
     log_warn "${MSG_SSH_PASSWD_RISK}"
 
     # 确认
-    if ! confirm "${MSG_SSH_PASSWD_CONFIRM}"; then
+    if ! confirm "${MSG_SSH_PASSWD_CONFIRM}" "y"; then
         log_info "Skipped"
         return 0
     fi

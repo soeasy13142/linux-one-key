@@ -326,7 +326,7 @@ run_quick_start() {
     show_quick_start_tasks
 
     # 确认执行
-    if ! confirm "确认执行？"; then
+    if ! confirm "确认执行？" "y"; then
         log_info "已取消"
         return 0
     fi
