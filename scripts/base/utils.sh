@@ -539,6 +539,9 @@ get_package_manager() {
 }
 
 # 延时执行（用于回滚保护）
+# 注意：不使用命令替换捕获 PID（命令替换子 shell 中的后台进程
+# 会继承子 shell 的 stdout pipe，pipe 关闭后可能导致后台进程异常），
+# 而是通过全局变量 _SCHEDULED_PID 传递 PID
 schedule_rollback() {
     local delay="$1"
     local callback="$2"
@@ -550,9 +553,8 @@ schedule_rollback() {
         sleep "${delay}" && "${callback}"
     ) &
 
-    local pid=$!
-    log_debug "Scheduled rollback task PID: ${pid}"
-    echo "${pid}"
+    _SCHEDULED_PID=$!
+    log_debug "Scheduled rollback task PID: ${_SCHEDULED_PID}"
 }
 
 # 取消延时任务
