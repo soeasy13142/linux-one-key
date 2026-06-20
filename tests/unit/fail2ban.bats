@@ -12,7 +12,9 @@ setup() {
 
     mkdir -p "${LOG_DIR}" "${BACKUP_DIR}" "${REPORT_DIR}"
 
-    # 只 source fail2ban.sh，它会自动 source utils.sh
+    # 先加载依赖模块，再 source 被测模块
+    source "${SCRIPT_DIR}/scripts/base/utils.sh"
+    load_lang "${SCRIPT_DIR}"
     source "${SCRIPT_DIR}/scripts/security/fail2ban.sh"
 
     # 定义测试所需的 MSG_ 变量
@@ -23,7 +25,7 @@ setup() {
     LOG_FILE="${TEST_DIR}/test.log"
 
     # Mock system commands
-    export DETECT_OS="ubuntu"
+    export DETECTED_OS="ubuntu"
 }
 
 teardown() {
@@ -63,38 +65,38 @@ teardown() {
 
 # 测试 _get_auth_log_path 函数
 @test "_get_auth_log_path returns auth.log for ubuntu" {
-    export DETECT_OS="ubuntu"
+    export DETECTED_OS="ubuntu"
     result=$(_get_auth_log_path)
     [[ "${result}" == "/var/log/auth.log" ]]
 }
 
 @test "_get_auth_log_path returns auth.log for debian" {
-    export DETECT_OS="debian"
+    export DETECTED_OS="debian"
     result=$(_get_auth_log_path)
     [[ "${result}" == "/var/log/auth.log" ]]
 }
 
 @test "_get_auth_log_path returns secure for centos" {
-    export DETECT_OS="centos"
+    export DETECTED_OS="centos"
     result=$(_get_auth_log_path)
     [[ "${result}" == "/var/log/secure" ]]
 }
 
 @test "_get_auth_log_path returns auth.log for unknown OS" {
-    export DETECT_OS="unknown"
+    export DETECTED_OS="unknown"
     result=$(_get_auth_log_path)
     [[ "${result}" == "/var/log/auth.log" ]]
 }
 
 # 测试 _get_ssh_service_name 函数
 @test "_get_ssh_service_name returns sshd for ubuntu" {
-    export DETECT_OS="ubuntu"
+    export DETECTED_OS="ubuntu"
     result=$(_get_ssh_service_name)
     [[ "${result}" == "sshd" ]]
 }
 
 @test "_get_ssh_service_name returns sshd for centos" {
-    export DETECT_OS="centos"
+    export DETECTED_OS="centos"
     result=$(_get_ssh_service_name)
     [[ "${result}" == "sshd" ]]
 }
@@ -224,7 +226,10 @@ teardown() {
         echo "2222"
     }
 
-    # Mock _get_auth_log_path
+    # Mock get_ssh_port and _get_auth_log_path
+    get_ssh_port() {
+        echo "2222"
+    }
     _get_auth_log_path() {
         echo "/var/log/auth.log"
     }
@@ -236,6 +241,6 @@ teardown() {
 }
 
 # 测试 run_fail2ban_hardening_custom 函数
-@test "run_fail2ban_hardening_custom exists and is callable" {
-    type run_fail2ban_hardening_custom | grep -q "function"
+@test "run_fail2ban_wizard exists and is callable" {
+    type run_fail2ban_wizard | grep -q "function"
 }
