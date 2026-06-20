@@ -32,7 +32,7 @@ _install_fail2ban() {
         return 0
     fi
 
-    case "$DETECT_OS" in
+    case "$DETECTED_OS" in
         ubuntu|debian)
             apt-get install -y fail2ban >> "$LOG_FILE" 2>&1
             ;;
@@ -59,32 +59,30 @@ _get_ssh_port() {
 
 # 获取认证日志路径
 _get_auth_log_path() {
-    case "$DETECT_OS" in
+    local auth_log
+    case "${DETECTED_OS}" in
         ubuntu|debian)
-            echo "/var/log/auth.log"
+            auth_log="/var/log/auth.log"
             ;;
-        centos)
-            echo "/var/log/secure"
+        centos|rhel|rocky|almalinux)
+            auth_log="/var/log/secure"
             ;;
         *)
-            echo "/var/log/auth.log"
+            auth_log="/var/log/auth.log"
             ;;
     esac
+
+    # 检查日志文件是否存在（部分系统仅使用 journald）
+    if [[ ! -f "${auth_log}" ]]; then
+        log_warn "认证日志文件未找到: ${auth_log}，fail2ban 可能需要 journald backend"
+    fi
+
+    echo "${auth_log}"
 }
 
 # 获取 SSH 服务名称
 _get_ssh_service_name() {
-    case "$DETECT_OS" in
-        ubuntu|debian)
-            echo "sshd"
-            ;;
-        centos)
-            echo "sshd"
-            ;;
-        *)
-            echo "sshd"
-            ;;
-    esac
+    echo "sshd"
 }
 
 # 备份现有 Fail2Ban 配置
@@ -107,6 +105,14 @@ _configure_fail2ban_jail() {
     # 备份现有配置
     _backup_fail2ban_config
 
+    # 根据操作系统选择 banaction
+    local banaction
+    case "${DETECTED_OS}" in
+        ubuntu|debian)           banaction="ufw" ;;
+        centos|rhel|rocky|almalinux) banaction="firewallcmd-ipset" ;;
+        *)                       banaction="iptables-multiport" ;;
+    esac
+
     # 生成 jail.local 配置
     cat > "$FAIL2BAN_JAIL_LOCAL" << EOF
 # ============================================================================
@@ -125,8 +131,8 @@ findtime = ${findtime}
 # 最大失败次数
 maxretry = ${maxretry}
 
-# 封禁动作
-banaction = firewallcmd-ipset
+# 封禁动作（根据操作系统自动选择）
+banaction = ${banaction}
 
 # 忽略本地回环
 ignoreip = 127.0.0.1/8
@@ -250,6 +256,12 @@ unban_ip() {
 # 一键配置 Fail2Ban（使用推荐配置）
 run_fail2ban_hardening() {
     log_step "$MSG_FAIL2BAN_TITLE"
+
+    # 检查 root 权限
+    if ! is_root; then
+        log_error "${MSG_ERROR_NOT_ROOT}"
+        return 1
+    fi
 
     # 安装 Fail2Ban
     _install_fail2ban

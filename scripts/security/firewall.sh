@@ -21,7 +21,7 @@ fi
 _install_firewall() {
     log_step "$MSG_FIREWALL_INSTALL"
 
-    case "$DETECT_OS" in
+    case "$DETECTED_OS" in
         ubuntu|debian)
             if command_exists ufw; then
                 log_info "$MSG_FIREWALL_ALREADY_INSTALLED (UFW)"
@@ -35,6 +35,8 @@ _install_firewall() {
                 return 0
             fi
             yum install -y firewalld >> "$LOG_FILE" 2>&1
+            # 安装后启动 firewalld 服务
+            systemctl enable --now firewalld >> "$LOG_FILE" 2>&1 || true
             ;;
         *)
             log_error "$MSG_FIREWALL_UNSUPPORTED_OS"
@@ -47,7 +49,7 @@ _install_firewall() {
 
 # 获取防火墙类型
 _get_firewall_type() {
-    case "$DETECT_OS" in
+    case "$DETECTED_OS" in
         ubuntu|debian) echo "ufw" ;;
         centos)        echo "firewalld" ;;
         *)             echo "unknown" ;;
@@ -313,6 +315,12 @@ enable_firewall() {
 # 一键配置防火墙（使用推荐配置）
 run_firewall_hardening() {
     log_step "$MSG_FIREWALL_TITLE"
+
+    # 检查 root 权限
+    if ! is_root; then
+        log_error "${MSG_ERROR_NOT_ROOT}"
+        return 1
+    fi
 
     # 检查系统兼容性
     local fw_type

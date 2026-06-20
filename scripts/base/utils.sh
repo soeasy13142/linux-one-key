@@ -8,7 +8,8 @@ if [[ "${_UTILS_LOADED:-}" == "1" ]]; then
     return 0 2>/dev/null || true
 fi
 
-set -euo pipefail
+set -eo pipefail
+# 注意: 不使用 -u (nounset)，由调用者决定。关键变量使用 ${VAR:-} 默认值
 
 # ═══════════════════════════════════════════
 # 全局变量
@@ -51,7 +52,11 @@ readonly NC='\033[0m' # No Color
 
 # 加载语言文件
 load_lang() {
-    local script_dir="${1:-${SCRIPT_DIR}}"
+    local script_dir="${1:-${SCRIPT_DIR:-}}"
+    if [[ -z "${script_dir}" ]]; then
+        echo "Error: SCRIPT_DIR is not set and no argument provided to load_lang"
+        return 1
+    fi
     local lang_file="${script_dir}/scripts/lang/${LANG_CODE}.sh"
 
     if [[ -f "${lang_file}" ]]; then
@@ -80,6 +85,7 @@ _ensure_log_dir() {
         if ! mkdir -p "$(dirname "${LOG_FILE}")" 2>/dev/null; then
             # 如果无法创建目标目录，使用临时目录作为后备
             local fallback_dir="/tmp/linux-one-key"
+            log_warn "Cannot create log directory, using fallback: ${fallback_dir}"
             mkdir -p "${fallback_dir}" 2>/dev/null || true
             LOG_FILE="${fallback_dir}/hardening_${TIMESTAMP}.log"
             LOG_DIR="${fallback_dir}"
@@ -172,7 +178,7 @@ confirm() {
         prompt="${prompt} [y/N] "
     fi
 
-    read -r -p "$(echo -e "${YELLOW}${prompt}${NC}")" reply
+    read -r -p "$(printf "%b" "${YELLOW}${prompt}${NC}")" reply
     reply="${reply:-${default}}"
 
     [[ "${reply}" =~ ^[Yy]$ ]]
@@ -298,12 +304,13 @@ set_ssh_config() {
     local value="$2"
     local config_file="${3:-/etc/ssh/sshd_config}"
 
-    if grep -q "^#*${key}" "${config_file}" 2>/dev/null; then
+    # 使用词边界防止误匹配：Port 不会匹配 PortForwarding
+    if grep -qE "^#*${key}(\s|$)" "${config_file}" 2>/dev/null; then
         # 参数存在，修改它 (兼容 macOS 和 Linux)
         if [[ "$(uname)" == "Darwin" ]]; then
-            sed -i '' "s|^#*${key}.*|${key} ${value}|" "${config_file}"
+            sed -i '' "s|^#*${key}\s.*|${key} ${value}|" "${config_file}"
         else
-            sed -i "s|^#*${key}.*|${key} ${value}|" "${config_file}"
+            sed -i "s|^#*${key}\s.*|${key} ${value}|" "${config_file}"
         fi
     else
         # 参数不存在，添加它
@@ -491,7 +498,7 @@ schedule_rollback() {
 
     (
         sleep "${delay}"
-        eval "${callback}"
+        "${callback}"
     ) &
 
     local pid=$!

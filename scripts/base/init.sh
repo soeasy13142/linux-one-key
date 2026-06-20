@@ -41,21 +41,40 @@ update_system_packages() {
     case "${pkg_manager}" in
         apt)
             apt-get update -qq 2>/dev/null
-            apt-get upgrade -y -qq --only-upgrade 2>/dev/null || true
+            if apt-get upgrade -y -qq 2>/dev/null; then
+                log_success "System packages updated"
+            else
+                log_warn "System package update failed or partially completed"
+            fi
             ;;
         dnf)
-            dnf update -y --security -q 2>/dev/null || true
+            if dnf update -y --security -q 2>/dev/null; then
+                log_success "System packages updated"
+            else
+                log_warn "Security update failed or partially completed"
+            fi
             ;;
         yum)
-            yum update -y --security -q 2>/dev/null || true
+            # yum-security 插件可能未安装
+            if yum info yum-plugin-security &>/dev/null; then
+                if yum update -y --security -q 2>/dev/null; then
+                    log_success "System packages updated"
+                else
+                    log_warn "Security update failed or partially completed"
+                fi
+            else
+                if yum update -y -q 2>/dev/null; then
+                    log_success "System packages updated (full update, yum-security plugin not available)"
+                else
+                    log_warn "System package update failed or partially completed"
+                fi
+            fi
             ;;
         *)
             log_warn "Unknown package manager, skipping system update"
             return 0
             ;;
     esac
-
-    log_success "System packages updated"
 }
 
 # 安装基础工具
@@ -107,13 +126,16 @@ setup_timezone() {
 run_init() {
     log_title "System Initialization"
 
-    init_directories
-
-    # 检查是否为 root
+    # 检查是否为 root（在目录创建之前检查，给用户清晰的提示）
     if ! is_root; then
         log_error "${MSG_ERROR_NOT_ROOT}"
         return 1
     fi
+
+    init_directories
+
+    # 设置时区（默认 Asia/Shanghai）
+    setup_timezone
 
     # 更新系统包
     update_system_packages

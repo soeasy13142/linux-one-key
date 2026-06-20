@@ -41,11 +41,10 @@ detect_os() {
     log_step "${MSG_DETECT_OS}..."
 
     if [[ -f /etc/os-release ]]; then
-        # shellcheck source=/dev/null
-        source /etc/os-release
-        DETECTED_OS="${ID}"
-        DETECTED_OS_VERSION="${VERSION_ID:-unknown}"
-        DETECTED_HOSTNAME="${HOSTNAME:-$(hostname 2>/dev/null || echo "unknown")}"
+        # 使用子 shell 提取，防止 /etc/os-release 中的 ID/NAME/VERSION 等变量污染全局命名空间
+        DETECTED_OS=$(. /etc/os-release && echo "${ID}")
+        DETECTED_OS_VERSION=$(. /etc/os-release && echo "${VERSION_ID:-unknown}")
+        DETECTED_HOSTNAME=$(. /etc/os-release && echo "${HOSTNAME:-$(hostname 2>/dev/null || echo "unknown")}")
     elif [[ -f /etc/redhat-release ]]; then
         DETECTED_OS="centos"
         DETECTED_OS_VERSION=$(grep -oE '[0-9]+\.[0-9]+' /etc/redhat-release | head -1)
