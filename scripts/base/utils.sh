@@ -84,11 +84,18 @@ load_lang() {
 
 # 内部函数：确保日志目录存在
 _ensure_log_dir() {
+    # 防重入保护：避免 log_warn → _ensure_log_dir 无限递归
+    if [[ "${_ENSURING_LOG_DIR:-}" == "1" ]]; then
+        return 0
+    fi
+    export _ENSURING_LOG_DIR=1
+
     if [[ -n "${LOG_FILE}" ]] && [[ ! -d "$(dirname "${LOG_FILE}")" ]]; then
         if ! mkdir -p "$(dirname "${LOG_FILE}")" 2>/dev/null; then
             # 如果无法创建目标目录，使用临时目录作为后备
             local fallback_dir="/tmp/linux-one-key"
-            log_warn "Cannot create log directory, using fallback: ${fallback_dir}"
+            # 注意：此处不能调用 log_warn（会触发无限递归），直接 echo 到 stderr
+            echo -e "${YELLOW}[!]${NC} Cannot create log directory, using fallback: ${fallback_dir}" >&2
             mkdir -p "${fallback_dir}" 2>/dev/null || true
             LOG_FILE="${fallback_dir}/hardening_${TIMESTAMP}.log"
             LOG_DIR="${fallback_dir}"
@@ -97,6 +104,8 @@ _ensure_log_dir() {
             mkdir -p "${BACKUP_DIR}" "${REPORT_DIR}" 2>/dev/null || true
         fi
     fi
+
+    unset _ENSURING_LOG_DIR
 }
 
 # 信息输出 (蓝色)
@@ -255,8 +264,9 @@ prompt_password() {
 
 # 初始化日志系统
 init_logging() {
-    # 创建日志目录
-    mkdir -p "${LOG_DIR}" "${BACKUP_DIR}" "${REPORT_DIR}"
+    # 创建日志目录（使用 _ensure_log_dir 处理 fallback）
+    _ensure_log_dir
+    mkdir -p "${LOG_DIR}" "${BACKUP_DIR}" "${REPORT_DIR}" 2>/dev/null || true
 
     # 初始化日志文件
     cat > "${LOG_FILE}" << EOF
