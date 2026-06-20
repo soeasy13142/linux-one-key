@@ -203,10 +203,7 @@ MSG_WIZARD_STEP_FIREWALL="[2/4] 防火墙配置"
 MSG_WIZARD_STEP_FAIL2BAN="[3/4] Fail2Ban 入侵防护"
 MSG_WIZARD_STEP_SUMMARY="[4/4] 变更摘要与确认"
 MSG_WIZARD_SKIP_STEP="跳过此步骤？(y/N)"
-MSG_WIZARD_SUMMARY_TITLE="即将执行以下变更："
-MSG_WIZARD_CONFIRM="确认执行以上所有变更？(y/N)"
 MSG_WIZARD_COMPLETE="向导完成"
-MSG_WIZARD_CANCELLED="向导已取消"
 MSG_WIZARD_SKIPPED_SSH="跳过 SSH 安全加固"
 MSG_WIZARD_ERR_SSH="SSH 加固出现错误，继续后续步骤"
 MSG_WIZARD_SKIPPED_FIREWALL="跳过防火墙配置"
@@ -214,11 +211,6 @@ MSG_WIZARD_ERR_FIREWALL="防火墙配置出现错误"
 MSG_WIZARD_SKIPPED_FAIL2BAN="跳过 Fail2Ban 配置"
 MSG_WIZARD_ERR_FAIL2BAN="Fail2Ban 配置出现错误"
 MSG_WIZARD_ERR_HINT="（部分步骤出现错误，请查看日志）"
-
-# 旧参数迁移提示
-MSG_ERROR_REMOVED_ARG="错误: --{arg} 参数已被移除。"
-MSG_ERROR_REMOVED_HINT="本脚本已改为纯交互模式，请不带参数运行: sudo bash install.sh"
-MSG_ERROR_REMOVED_STATUS="提示: --status 仍然可用用于只读检测: sudo bash install.sh --status"
 
 # SSH 密钥
 MSG_SSH_KEY_TITLE="生成 SSH 密钥对"
