@@ -207,6 +207,13 @@ MSG_WIZARD_SUMMARY_TITLE="The following changes will be applied:"
 MSG_WIZARD_CONFIRM="Confirm executing all above changes? (y/N)"
 MSG_WIZARD_COMPLETE="Wizard complete"
 MSG_WIZARD_CANCELLED="Wizard cancelled"
+MSG_WIZARD_SKIPPED_SSH="Skipping SSH hardening"
+MSG_WIZARD_ERR_SSH="SSH hardening had errors, continuing"
+MSG_WIZARD_SKIPPED_FIREWALL="Skipping firewall configuration"
+MSG_WIZARD_ERR_FIREWALL="Firewall configuration had errors"
+MSG_WIZARD_SKIPPED_FAIL2BAN="Skipping Fail2Ban configuration"
+MSG_WIZARD_ERR_FAIL2BAN="Fail2Ban configuration had errors"
+MSG_WIZARD_ERR_HINT="(some steps had errors, check logs)"
 
 # Old Argument Migration Messages
 MSG_ERROR_REMOVED_ARG="Error: --{arg} argument has been removed."
