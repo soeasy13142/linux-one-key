@@ -168,6 +168,51 @@ MSG_SSH_PORT_IN_USE="Port is already in use, please choose another port"
 MSG_SSH_PORT_SUCCESS="SSH port has been changed"
 MSG_SSH_PORT_HINT="Use the following command to connect: ssh -p {port} user@your-server-ip"
 
+# SSH Port Interactive Options
+MSG_SSH_PORT_OPTION_TITLE="Choose SSH port configuration method"
+MSG_SSH_PORT_OPTION_CUSTOM="[1] Enter custom port (default: 2222)"
+MSG_SSH_PORT_OPTION_RANDOM="[2] Generate random high port (1024-65535)"
+MSG_SSH_PORT_OPTION_KEEP="[3] Keep current port (skip)"
+MSG_SSH_PORT_OPTION_PROMPT="Enter option [1-3]"
+MSG_SSH_PORT_RANDOM_GEN="Random port generated: "
+MSG_SSH_PORT_RANDOM_ACCEPT="Use this port? (y=yes / n=regenerate / enter number=custom)"
+MSG_SSH_PORT_CONFIRM="Confirm changing SSH port from {current} to {new}?"
+MSG_SSH_PORT_SKIP="Skipping SSH port change"
+
+# SSH Parameter Customization
+MSG_SSH_PARAMS_CUSTOM_TITLE="SSH Security Parameter Configuration"
+MSG_SSH_PARAMS_CUSTOM_PROMPT="Each parameter shows its default; press Enter to accept or type a new value"
+MSG_SSH_PARAMS_MAXAUTHTRIES="Max authentication attempts (MaxAuthTries)"
+MSG_SSH_PARAMS_LOGINGRACETIME="Login grace time in seconds (LoginGraceTime)"
+MSG_SSH_PARAMS_CLIENTALIVEINTERVAL="Client alive interval in seconds (ClientAliveInterval)"
+MSG_SSH_PARAMS_CLIENTALIVECOUNTMAX="Max client alive count (ClientAliveCountMax)"
+MSG_SSH_PARAMS_MAXSESSIONS="Max concurrent sessions (MaxSessions)"
+
+# Fail2Ban Custom Parameters
+MSG_FAIL2BAN_CUSTOM_TITLE="Fail2Ban Parameter Configuration"
+MSG_FAIL2BAN_CUSTOM_PROMPT="Each parameter shows its default; press Enter to accept or type a new value"
+MSG_FAIL2BAN_BANTIME_PROMPT="Ban duration in seconds (bantime)"
+MSG_FAIL2BAN_FINDTIME_PROMPT="Detection window in seconds (findtime)"
+MSG_FAIL2BAN_MAXRETRY_PROMPT="Max failure attempts (maxretry)"
+
+# Full Wizard
+MSG_WIZARD_TITLE="Full Security Configuration Wizard"
+MSG_WIZARD_DESC="This wizard will guide you through all security configurations step by step. Each step: confirm / modify / skip."
+MSG_WIZARD_STEP_SSH="[1/4] SSH Security Hardening"
+MSG_WIZARD_STEP_FIREWALL="[2/4] Firewall Configuration"
+MSG_WIZARD_STEP_FAIL2BAN="[3/4] Fail2Ban Intrusion Prevention"
+MSG_WIZARD_STEP_SUMMARY="[4/4] Change Summary & Confirmation"
+MSG_WIZARD_SKIP_STEP="Skip this step? (y/N)"
+MSG_WIZARD_SUMMARY_TITLE="The following changes will be applied:"
+MSG_WIZARD_CONFIRM="Confirm executing all above changes? (y/N)"
+MSG_WIZARD_COMPLETE="Wizard complete"
+MSG_WIZARD_CANCELLED="Wizard cancelled"
+
+# Old Argument Migration Messages
+MSG_ERROR_REMOVED_ARG="Error: --{arg} argument has been removed."
+MSG_ERROR_REMOVED_HINT="This script is now fully interactive. Run without arguments: sudo bash install.sh"
+MSG_ERROR_REMOVED_STATUS="Tip: --status is still available for read-only checks: sudo bash install.sh --status"
+
 # SSH Key
 MSG_SSH_KEY_TITLE="Generate SSH Key Pair"
 MSG_SSH_KEY_TYPE="Key type"

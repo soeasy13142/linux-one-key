@@ -5,6 +5,7 @@
 
 # Source guard: 防止重复加载
 if [[ "${_UTILS_LOADED:-}" == "1" ]]; then
+    # shellcheck disable=SC2317
     return 0 2>/dev/null || true
 fi
 
@@ -30,9 +31,6 @@ readonly TIMESTAMP
 
 # 日志文件
 LOG_FILE="${LOG_DIR}/hardening_${TIMESTAMP}.log"
-
-# 非交互模式标志 (由 --yes/-y 参数设置)
-AUTO_ACCEPT="${AUTO_ACCEPT:-no}"
 
 # 语言设置 (默认中文)
 LANG_CODE="${LANG_CODE:-zh}"
@@ -178,19 +176,11 @@ log_debug() {
 # 交互函数
 # ═══════════════════════════════════════════
 
-# 确认操作 (y/N)
-# 当 AUTO_ACCEPT=yes 时自动使用默认值
+# Confirm an action (y/N)
 confirm() {
     local prompt="${1:-${MSG_CONFIRM}}"
     local default="${2:-n}"
     local reply
-
-    # 非交互模式：直接使用默认值
-    if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
-        log_info "${prompt} [auto: ${default}]" >&2
-        [[ "${default}" =~ ^[Yy]$ ]]
-        return $?
-    fi
 
     if [[ "${default}" == "y" || "${default}" == "Y" ]]; then
         prompt="${prompt} [Y/n] "
@@ -204,31 +194,17 @@ confirm() {
     [[ "${reply}" =~ ^[Yy]$ ]]
 }
 
-# 按任意键继续
-# 当 AUTO_ACCEPT=yes 时跳过等待
+# Wait for user to press Enter
 press_enter() {
     local msg="${1:-${MSG_PRESS_ENTER}}"
-    # 非交互模式：跳过等待
-    if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
-        return 0
-    fi
     read -r -p "$(echo -e "${BLUE}${msg}${NC}")"
 }
 
-# 读取用户输入 (带默认值)
-# 当 AUTO_ACCEPT=yes 时自动使用默认值
+# Read user input with optional default value
 prompt_input() {
     local prompt="$1"
     local default="${2:-}"
     local result
-
-    # 非交互模式：直接使用默认值
-    if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
-        result="${default}"
-        log_info "${prompt} [auto: ${result:-<empty>}]" >&2
-        echo "${result}"
-        return 0
-    fi
 
     if [[ -n "${default}" ]]; then
         read -r -p "$(echo -e "${BLUE}${prompt}${NC} [${default}]: ")" result
@@ -240,21 +216,13 @@ prompt_input() {
     echo "${result}"
 }
 
-# 读取密码 (不显示)
-# 当 AUTO_ACCEPT=yes 时返回空密码
+# Read password (no echo)
 prompt_password() {
     local prompt="$1"
     local password
 
-    # 非交互模式：返回空密码
-    if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
-        log_info "${prompt} [auto: <empty>]" >&2
-        echo ""
-        return 0
-    fi
-
     read -r -s -p "$(echo -e "${BLUE}${prompt}${NC}: ")" password
-    echo "" # 换行
+    echo ""  # newline after hidden input
     echo "${password}"
 }
 
@@ -567,6 +535,58 @@ cancel_scheduled_task() {
         return 0
     fi
     return 1
+}
+
+# ═══════════════════════════════════════════
+# Random Port Generation
+# ═══════════════════════════════════════════
+
+# Well-known ports to avoid (beyond 0-1023)
+readonly WELL_KNOWN_PORTS=(
+    3306   # MySQL
+    5432   # PostgreSQL
+    6379   # Redis
+    27017  # MongoDB
+    8080   # HTTP alt
+    8443   # HTTPS alt
+    9090   # Prometheus
+    3000   # Grafana / dev
+    5000   # Flask / dev
+    8000   # Django / dev
+    9200   # Elasticsearch
+    11211  # Memcached
+)
+
+# Generate a random high port (1024-65535) avoiding well-known ports
+generate_random_port() {
+    local port
+    local attempts=0
+    local max_attempts=100
+
+    while [[ ${attempts} -lt ${max_attempts} ]]; do
+        # Use $RANDOM for portability (bash builtin, 0-32767)
+        # Scale to 1024-65535 range
+        port=$((1024 + RANDOM % 64512))
+
+        # Avoid well-known ports
+        local is_known=0
+        for known in "${WELL_KNOWN_PORTS[@]}"; do
+            if [[ "${port}" -eq "${known}" ]]; then
+                is_known=1
+                break
+            fi
+        done
+
+        if [[ ${is_known} -eq 0 ]]; then
+            echo "${port}"
+            return 0
+        fi
+
+        ((attempts++))
+    done
+
+    # Fallback: return a port we know is safe
+    echo "2222"
 }
 
 # ═══════════════════════════════════════════
