@@ -60,7 +60,7 @@ validate_port() {
     return 0
 }
 
-# 修改 SSH 端口
+# Modify SSH port with interactive options (custom / random / skip)
 change_ssh_port() {
     log_title "${MSG_SSH_PORT_TITLE}"
 
@@ -68,33 +68,111 @@ change_ssh_port() {
     current_port=$(get_ssh_port)
     log_info "${MSG_SSH_PORT_CURRENT}: ${current_port}"
 
-    local new_port
-    while true; do
-        new_port=$(prompt_input "${MSG_SSH_PORT_PROMPT}" "${DEFAULT_SSH_PORT}")
+    local new_port=""
 
-        if ! validate_port "${new_port}"; then
-            log_error "${MSG_SSH_PORT_INVALID}"
-            continue
-        fi
+    # Show options
+    echo ""
+    echo -e "${BOLD}${MSG_SSH_PORT_OPTION_TITLE}${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_SSH_PORT_OPTION_CUSTOM}${NC}"
+    echo -e "  ${GREEN}${MSG_SSH_PORT_OPTION_RANDOM}${NC}"
+    echo -e "  ${GREEN}${MSG_SSH_PORT_OPTION_KEEP}${NC}"
+    echo ""
 
-        if [[ "${new_port}" == "${current_port}" ]]; then
-            log_info "Port unchanged, skipping"
-            return 0
-        fi
+    local choice
+    while [[ -z "${new_port}" ]]; do
+        choice=$(prompt_input "${MSG_SSH_PORT_OPTION_PROMPT}" "1")
 
-        if check_port_in_use "${new_port}"; then
-            log_error "${MSG_SSH_PORT_IN_USE}: ${new_port}"
-            continue
-        fi
+        case "${choice}" in
+            1)
+                # Custom port
+                while true; do
+                    new_port=$(prompt_input "${MSG_SSH_PORT_PROMPT}" "${DEFAULT_SSH_PORT}")
 
-        break
+                    if ! validate_port "${new_port}"; then
+                        log_error "${MSG_SSH_PORT_INVALID}"
+                        continue
+                    fi
+
+                    if [[ "${new_port}" == "${current_port}" ]]; then
+                        log_info "Port unchanged, skipping"
+                        return 0
+                    fi
+
+                    if check_port_in_use "${new_port}"; then
+                        log_error "${MSG_SSH_PORT_IN_USE}: ${new_port}"
+                        continue
+                    fi
+
+                    break
+                done
+                ;;
+            2)
+                # Random port
+                while true; do
+                    new_port=$(generate_random_port)
+                    echo ""
+                    echo -e "${GREEN}${MSG_SSH_PORT_RANDOM_GEN}${BOLD}${new_port}${NC}"
+                    echo ""
+
+                    local rand_choice
+                    rand_choice=$(prompt_input "${MSG_SSH_PORT_RANDOM_ACCEPT}" "y")
+
+                    case "${rand_choice}" in
+                        y|Y|yes|YES)
+                            if validate_port "${new_port}" && ! check_port_in_use "${new_port}"; then
+                                break
+                            else
+                                log_error "${MSG_SSH_PORT_IN_USE}: ${new_port}"
+                                new_port=""
+                                continue
+                            fi
+                            ;;
+                        n|N|no|NO)
+                            new_port=""
+                            continue
+                            ;;
+                        *)
+                            # User typed a number — treat as custom
+                            if validate_port "${rand_choice}"; then
+                                if ! check_port_in_use "${rand_choice}"; then
+                                    new_port="${rand_choice}"
+                                    break
+                                else
+                                    log_error "${MSG_SSH_PORT_IN_USE}: ${rand_choice}"
+                                    new_port=""
+                                    continue
+                                fi
+                            fi
+                            log_error "${MSG_SSH_PORT_INVALID}"
+                            new_port=""
+                            ;;
+                    esac
+                done
+                ;;
+            3)
+                log_info "${MSG_SSH_PORT_SKIP}"
+                return 0
+                ;;
+            *)
+                log_error "${MSG_MENU_INVALID}"
+                ;;
+        esac
     done
 
-    # 修改配置
+    # Confirm the change
+    local confirm_msg="${MSG_SSH_PORT_CONFIRM//\{current\}/${current_port}}"
+    confirm_msg="${confirm_msg//\{new\}/${new_port}}"
+    if ! confirm "${confirm_msg}" "y"; then
+        log_info "Cancelled"
+        return 0
+    fi
+
+    # Apply
     set_ssh_config "Port" "${new_port}"
 
     log_success "${MSG_SSH_PORT_SUCCESS}: ${current_port} → ${new_port}"
-    echo "${MSG_SSH_PORT_HINT//\{port\}/${new_port}}"
+    echo -e "${MSG_SSH_PORT_HINT//\{port\}/${new_port}}"
 
     return 0
 }
@@ -277,28 +355,35 @@ disable_password_auth() {
 # 其他安全参数
 # ═══════════════════════════════════════════
 
-# 配置其他 SSH 安全参数
+# Configure SSH security parameters interactively
 configure_ssh_params() {
     log_title "${MSG_SSH_PARAMS_TITLE}"
 
-    # 最大认证尝试次数
-    set_ssh_config "MaxAuthTries" "3"
+    echo ""
+    echo -e "${BLUE}${MSG_SSH_PARAMS_CUSTOM_PROMPT}${NC}"
+    echo ""
 
-    # 登录超时时间
-    set_ssh_config "LoginGraceTime" "60"
+    local val
 
-    # 客户端心跳
-    set_ssh_config "ClientAliveInterval" "300"
-    set_ssh_config "ClientAliveCountMax" "2"
+    val=$(prompt_input "${MSG_SSH_PARAMS_MAXAUTHTRIES}" "3")
+    set_ssh_config "MaxAuthTries" "${val}"
 
-    # 禁用 X11 转发
+    val=$(prompt_input "${MSG_SSH_PARAMS_LOGINGRACETIME}" "60")
+    set_ssh_config "LoginGraceTime" "${val}"
+
+    val=$(prompt_input "${MSG_SSH_PARAMS_CLIENTALIVEINTERVAL}" "300")
+    set_ssh_config "ClientAliveInterval" "${val}"
+
+    val=$(prompt_input "${MSG_SSH_PARAMS_CLIENTALIVECOUNTMAX}" "2")
+    set_ssh_config "ClientAliveCountMax" "${val}"
+
+    val=$(prompt_input "${MSG_SSH_PARAMS_MAXSESSIONS}" "2")
+    set_ssh_config "MaxSessions" "${val}"
+
+    # X11Forwarding always disabled (no need to ask)
     set_ssh_config "X11Forwarding" "no"
 
-    # 最大会话数
-    set_ssh_config "MaxSessions" "2"
-
     log_success "${MSG_SSH_PARAMS_SUCCESS}"
-
     return 0
 }
 
@@ -401,8 +486,8 @@ cancel_rollback_timer() {
 # 主 SSH 加固流程
 # ═══════════════════════════════════════════
 
-# 执行 SSH 安全加固 (快速开始模式 - 执行所有任务)
-run_ssh_hardening() {
+# 执行 SSH 安全加固 (向导模式 - 执行所有任务)
+run_ssh_wizard() {
     log_title "${MSG_SSH_START}"
 
     # 检查是否为 root
@@ -428,96 +513,6 @@ run_ssh_hardening() {
 
     # 配置其他安全参数
     configure_ssh_params || return 1
-
-    # 验证配置
-    validate_ssh_config || return 1
-
-    # 设置回滚保护
-    setup_rollback_timer
-
-    # 重启 SSH 服务
-    if restart_ssh; then
-        # SSH 重启成功，取消回滚定时器
-        cancel_rollback_timer
-    else
-        # SSH 重启失败，取消回滚定时器（避免无意义的二次回滚）
-        cancel_rollback_timer
-        return 1
-    fi
-
-    log_separator
-    log_success "${MSG_SSH_COMPLETE}"
-
-    # 提示用户
-    log_warn "${MSG_WARN_CONNECTION}"
-    log_warn "${MSG_WARN_SAVE_KEY}"
-    log_warn "${MSG_WARN_TEST_FIRST}"
-
-    # 提示手动关闭 22 端口
-    local final_port
-    final_port=$(get_ssh_port)
-    if [[ "${final_port}" != "22" ]]; then
-        echo ""
-        log_warn "${MSG_FIREWALL_SSH_PORT22_WARN}"
-        log_warn "${MSG_FIREWALL_SSH_PORT22_CLOSE}"
-    fi
-
-    return 0
-}
-
-# 执行 SSH 安全加固 (自定义模式 - 按选择执行)
-run_ssh_hardening_custom() {
-    local do_ssh_port="${1:-y}"
-    local do_ssh_key="${2:-y}"
-    local do_disable_root="${3:-y}"
-    local do_disable_passwd="${4:-y}"
-    local do_ssh_params="${5:-y}"
-
-    log_title "${MSG_SSH_START}"
-
-    # 检查是否为 root
-    if ! is_root; then
-        log_error "${MSG_ERROR_NOT_ROOT}"
-        return 1
-    fi
-
-    # 备份配置
-    backup_ssh_config || return 1
-
-    # 修改 SSH 端口
-    if [[ "${do_ssh_port}" == "y" ]]; then
-        change_ssh_port || return 1
-    else
-        log_info "跳过 SSH 端口修改"
-    fi
-
-    # 生成 SSH 密钥
-    if [[ "${do_ssh_key}" == "y" ]]; then
-        generate_ssh_key || return 1
-    else
-        log_info "跳过 SSH 密钥生成"
-    fi
-
-    # 禁止 root 远程登录
-    if [[ "${do_disable_root}" == "y" ]]; then
-        disable_root_login || return 1
-    else
-        log_info "跳过禁止 root 远程登录"
-    fi
-
-    # 禁止密码登录
-    if [[ "${do_disable_passwd}" == "y" ]]; then
-        disable_password_auth || return 1
-    else
-        log_info "跳过禁止密码登录"
-    fi
-
-    # 配置其他安全参数
-    if [[ "${do_ssh_params}" == "y" ]]; then
-        configure_ssh_params || return 1
-    else
-        log_info "跳过 SSH 安全参数配置"
-    fi
 
     # 验证配置
     validate_ssh_config || return 1
