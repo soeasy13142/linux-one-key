@@ -80,10 +80,8 @@ _bootstrap_and_reexec() {
     # 需要重新打开 stdin 以支持交互式输入
     # 注意: "$@" 包含原始参数（如 --yes），会传递给 re-exec 的脚本
     local args=("$@")
-    # curl 管道模式下如果没有任何参数且 stdin 非终端，自动启用非交互模式
-    if [[ ${#args[@]} -eq 0 ]] && [[ ! -t 0 ]]; then
-        args=("--yes")
-    fi
+    # curl pipe mode: just re-exec, user gets interactive menu
+    :
     chmod +x "${extracted_dir}/install.sh"
     if tty &>/dev/null; then
         exec bash "${extracted_dir}/install.sh" "${args[@]}" < /dev/tty
@@ -96,66 +94,50 @@ _bootstrap_and_reexec() {
 # 参数解析
 # ═══════════════════════════════════════════
 
-# 解析命令行参数
+# Parse command line arguments
 _parse_args() {
     for arg in "$@"; do
         case "${arg}" in
-            --yes|-y)
-                export AUTO_ACCEPT="yes"
-                export TARGET_MODULE="all"
-                ;;
-            --quick)
-                export AUTO_ACCEPT="yes"
-                export TARGET_MODULE="all"
-                ;;
-            --ssh)
-                export AUTO_ACCEPT="yes"
-                export TARGET_MODULE="ssh"
-                ;;
-            --firewall)
-                export AUTO_ACCEPT="yes"
-                export TARGET_MODULE="firewall"
-                ;;
-            --fail2ban)
-                export AUTO_ACCEPT="yes"
-                export TARGET_MODULE="fail2ban"
-                ;;
             --status)
-                export AUTO_ACCEPT="yes"
                 export TARGET_MODULE="status"
                 ;;
             --help|-h)
-                echo "用法: bash install.sh [选项]"
+                echo "Usage: bash install.sh [options]"
                 echo ""
-                echo "选项:"
-                echo "  --ssh          仅执行 SSH 安全加固"
-                echo "  --firewall     仅执行防火墙配置"
-                echo "  --fail2ban     仅执行 Fail2Ban 入侵防护"
-                echo "  --status       仅显示系统安全状态"
-                echo "  --quick        一键快速加固（全部执行）"
-                echo "  --yes, -y      等同于 --quick（向后兼容）"
-                echo "  --help, -h     显示帮助信息"
+                echo "Options:"
+                echo "  --status       Show system security status (read-only)"
+                echo "  --help, -h     Show this help"
                 echo ""
-                echo "无参数运行进入交互式菜单。"
+                echo "No arguments: interactive menu."
                 echo ""
-                echo "示例:"
-                echo "  bash install.sh                      # 交互式菜单"
-                echo "  bash install.sh --ssh                # 仅 SSH 加固"
-                echo "  bash install.sh --quick              # 一键全部加固"
-                echo "  curl -fsSL .../install.sh | sudo bash -s -- --yes"
+                echo "Examples:"
+                echo "  bash install.sh                      # Interactive menu"
+                echo "  bash install.sh --status             # Status check only"
+                echo "  curl -fsSL .../install.sh | sudo bash"
                 exit 0
+                ;;
+            --yes|-y|--quick|--ssh|--firewall|--fail2ban)
+                local removed_arg="${arg#--}"
+                removed_arg="${removed_arg#-}"
+                echo ""
+                echo -e "${RED}Error: --${removed_arg} has been removed.${NC}"
+                echo -e "${YELLOW}This script is now fully interactive:${NC}"
+                echo -e "${YELLOW}  sudo bash install.sh${NC}"
+                echo -e "${BLUE}Tip: --status still works for read-only:${NC}"
+                echo -e "${BLUE}  sudo bash install.sh --status${NC}"
+                echo ""
+                exit 1
+                ;;
+            *)
+                echo -e "${RED}Unknown argument: ${arg}${NC}"
+                echo "Use --help for available options"
+                exit 1
                 ;;
         esac
     done
 }
 
 _parse_args "$@"
-
-# 自动检测非交互模式：如果没有 TTY 且未显式设置 --yes，自动启用 AUTO_ACCEPT
-# curl 管道模式下 stdin 是管道（非终端），需要自动使用默认值
-if [[ ! -t 0 ]] && [[ "${AUTO_ACCEPT}" != "yes" ]]; then
-    export AUTO_ACCEPT="yes"
-fi
 
 # 检测是否通过 curl 管道执行
 # 注意: BASH_SOURCE[0] 在函数内外行为不同（管道模式下函数内返回 "main"），
@@ -570,56 +552,72 @@ view_report() {
 }
 
 # ═══════════════════════════════════════════
-# 一键快速加固
+# Full Security Configuration Wizard
 # ═══════════════════════════════════════════
 
-run_quick_hardening() {
-    log_title "${MSG_QUICK_TITLE}"
+run_full_wizard() {
+    log_title "${MSG_WIZARD_TITLE}"
 
-    # 显示任务列表
     echo ""
-    echo -e "${BOLD}即将执行以下安全配置：${NC}"
+    echo -e "${BOLD}${MSG_WIZARD_DESC}${NC}"
     echo ""
-    echo -e "  ${GREEN}[SSH 安全]${NC}"
-    echo -e "  1. SSH 端口修改 (22 → 2222)"
-    echo -e "  2. SSH 密钥生成 (Ed25519)"
-    echo -e "  3. 禁止 root 远程登录"
-    echo -e "  4. 禁止密码登录"
-    echo -e "  5. SSH 安全参数配置"
-    echo ""
-    echo -e "  ${GREEN}[防火墙]${NC}"
-    echo -e "  6. 防火墙配置 (UFW/firewalld)"
-    echo -e "     ⚠ 22 端口始终放通（防锁死），请在确认新端口后手动关闭"
-    echo ""
-    echo -e "  ${GREEN}[入侵防护]${NC}"
-    echo -e "  7. Fail2Ban 安装与配置"
-    echo ""
+    press_enter
 
-    # 确认执行
-    if ! confirm "确认执行？" "y"; then
-        log_info "已取消"
-        return 0
+    local wizard_rc=0
+
+    # ── Step 1: SSH ──
+    echo ""
+    log_title "${MSG_WIZARD_STEP_SSH}"
+
+    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+        log_info "Skipping SSH hardening"
+    else
+        run_ssh_hardening || {
+            log_warn "SSH hardening had errors, continuing"
+            wizard_rc=1
+        }
     fi
 
-    # 执行 SSH 加固
-    run_ssh_hardening || {
-        log_error "SSH 加固失败"
-        return 1
-    }
+    # ── Step 2: Firewall ──
+    echo ""
+    log_title "${MSG_WIZARD_STEP_FIREWALL}"
 
-    # 执行防火墙配置
-    run_firewall_hardening || {
-        log_error "防火墙配置失败"
-        return 1
-    }
+    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+        log_info "Skipping firewall configuration"
+    else
+        run_firewall_hardening || {
+            log_warn "Firewall configuration had errors"
+            wizard_rc=1
+        }
+    fi
 
-    # 执行 Fail2Ban 配置
-    run_fail2ban_hardening || {
-        log_error "Fail2Ban 配置失败"
-        return 1
-    }
+    # ── Step 3: Fail2Ban ──
+    echo ""
+    log_title "${MSG_WIZARD_STEP_FAIL2BAN}"
 
-    return 0
+    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+        log_info "Skipping Fail2Ban configuration"
+    else
+        run_fail2ban_hardening || {
+            log_warn "Fail2Ban configuration had errors"
+            wizard_rc=1
+        }
+    fi
+
+    # ── Step 4: Summary ──
+    echo ""
+    log_title "${MSG_WIZARD_STEP_SUMMARY}"
+
+    generate_report
+
+    if [[ ${wizard_rc} -eq 0 ]]; then
+        log_success "${MSG_WIZARD_COMPLETE}"
+    else
+        log_warn "${MSG_WIZARD_COMPLETE} (some steps had errors, check logs)"
+    fi
+
+    press_enter
+    return ${wizard_rc}
 }
 
 # ═══════════════════════════════════════════
@@ -658,7 +656,7 @@ run_main_menu_loop() {
                 press_enter
                 ;;
             5)
-                run_quick_hardening
+                run_full_wizard
                 press_enter
                 ;;
             6) view_report ;;
@@ -727,53 +725,15 @@ main() {
     # 设置错误陷阱
     setup_error_trap
 
-    # 非交互模式：根据 TARGET_MODULE 直接执行（不显示菜单）
-    if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
-        local rc=0
-        case "${TARGET_MODULE:-all}" in
-            status)
-                run_detection || true
-                print_detection_summary
-                exit 0
-                ;;
-            ssh)
-                run_detection || true
-                run_ssh_hardening || rc=$?
-                ;;
-            firewall)
-                run_detection || true
-                run_firewall_hardening || rc=$?
-                ;;
-            fail2ban)
-                run_detection || true
-                run_fail2ban_hardening || rc=$?
-                ;;
-            all|"")
-                run_detection || true
-                run_quick_hardening || rc=$?
-                ;;
-            *)
-                log_error "未知模块: ${TARGET_MODULE}"
-                exit 1
-                ;;
-        esac
-
-        if [[ ${rc} -eq 0 ]]; then
-            generate_report
-        else
-            log_error "任务执行失败（exit code: ${rc}），跳过报告生成"
-        fi
-
-        # 清理 bootstrap 临时目录
+    # --status mode: read-only detection, no system modification
+    if [[ "${TARGET_MODULE:-}" == "status" ]]; then
+        run_detection || true
+        print_detection_summary
+        # Clean up bootstrap temp dir
         if [[ -n "${_CLEANUP_DIR:-}" ]] && [[ -d "${_CLEANUP_DIR}" ]]; then
             rm -rf "${_CLEANUP_DIR}" 2>/dev/null || true
         fi
-
-        echo ""
-        log_title "${MSG_FINISH}"
-        log_info "${MSG_FINISH_HINT}"
-        echo ""
-        exit "${rc}"
+        exit 0
     fi
 
     # 交互模式：显示欢迎 → 系统检测 → 主菜单循环
