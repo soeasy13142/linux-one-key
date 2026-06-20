@@ -52,7 +52,7 @@ _bootstrap_and_reexec() {
     # 完整性校验：对比 SHA256SUMS 文件
     local checksum_url="https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/SHA256SUMS"
     local checksum_file="${tmp_dir}/SHA256SUMS"
-    if curl -fsSL "${checksum_url}" -o "${checksum_file}" 2>/dev/null; then
+    if curl -fsSL -H "Cache-Control: no-cache" "${checksum_url}" -o "${checksum_file}" 2>/dev/null; then
         local expected_hash actual_hash
         expected_hash=$(grep "install.sh" "${checksum_file}" | awk '{print $1}')
         actual_hash=$(sha256sum "${extracted_dir}/install.sh" | awk '{print $1}')
