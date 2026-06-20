@@ -215,7 +215,7 @@ get_hostname() {
 # 打印检测摘要
 print_detection_summary() {
     echo ""
-    echo -e "${BOLD}System Detection Summary:${NC}"
+    echo -e "${BOLD}${MSG_DETECTION_SUMMARY}${NC}"
     echo -e "  ${MSG_DETECT_OS}: ${DETECTED_OS} ${DETECTED_OS_VERSION}"
     echo -e "  ${MSG_DETECT_ARCH}: ${DETECTED_ARCH}"
     echo -e "  ${MSG_DETECT_USER}: ${DETECTED_CURRENT_USER}"

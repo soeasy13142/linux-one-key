@@ -111,7 +111,7 @@ _ensure_log_dir() {
 # 信息输出 (蓝色)
 log_info() {
     local msg="$1"
-    echo -e "${BLUE}[INFO]${NC} ${msg}"
+    echo -e "${BLUE}[INFO]${NC} ${msg}" >&2
     _ensure_log_dir
     echo "[INFO] $(date '+%Y-%m-%d %H:%M:%S') ${msg}" >> "${LOG_FILE}" 2>/dev/null || true
 }
@@ -119,7 +119,7 @@ log_info() {
 # 成功输出 (绿色)
 log_success() {
     local msg="$1"
-    echo -e "${GREEN}[✓]${NC} ${msg}"
+    echo -e "${GREEN}[✓]${NC} ${msg}" >&2
     _ensure_log_dir
     echo "[SUCCESS] $(date '+%Y-%m-%d %H:%M:%S') ${msg}" >> "${LOG_FILE}" 2>/dev/null || true
 }
@@ -127,7 +127,7 @@ log_success() {
 # 警告输出 (黄色)
 log_warn() {
     local msg="$1"
-    echo -e "${YELLOW}[!]${NC} ${msg}"
+    echo -e "${YELLOW}[!]${NC} ${msg}" >&2
     _ensure_log_dir
     echo "[WARN] $(date '+%Y-%m-%d %H:%M:%S') ${msg}" >> "${LOG_FILE}" 2>/dev/null || true
 }
@@ -143,7 +143,7 @@ log_error() {
 # 进行中输出 (箭头)
 log_step() {
     local msg="$1"
-    echo -e "${CYAN}[→]${NC} ${msg}"
+    echo -e "${CYAN}[→]${NC} ${msg}" >&2
     _ensure_log_dir
     echo "[STEP] $(date '+%Y-%m-%d %H:%M:%S') ${msg}" >> "${LOG_FILE}" 2>/dev/null || true
 }
@@ -151,18 +151,18 @@ log_step() {
 # 标题输出
 log_title() {
     local msg="$1"
-    echo ""
-    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
-    echo -e "${BOLD}  ${msg}${NC}"
-    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
-    echo ""
+    echo "" >&2
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}" >&2
+    echo -e "${BOLD}  ${msg}${NC}" >&2
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}" >&2
+    echo "" >&2
     _ensure_log_dir
     echo "=== ${msg} ===" >> "${LOG_FILE}" 2>/dev/null || true
 }
 
 # 分隔线
 log_separator() {
-    echo -e "${CYAN}───────────────────────────────────────────${NC}"
+    echo -e "${CYAN}───────────────────────────────────────────${NC}" >&2
     _ensure_log_dir
     echo "---" >> "${LOG_FILE}" 2>/dev/null || true
 }
@@ -544,11 +544,10 @@ schedule_rollback() {
     local callback="$2"
     local description="${3:-Scheduled rollback}"
 
-    log_info "${description} in ${delay} seconds"
+    echo -e "${BLUE}[INFO]${NC} ${description} in ${delay} seconds" >&2
 
     (
-        sleep "${delay}"
-        "${callback}"
+        sleep "${delay}" && "${callback}"
     ) &
 
     local pid=$!

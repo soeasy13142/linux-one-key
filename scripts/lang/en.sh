@@ -111,6 +111,7 @@ MSG_STATUS_ALLOWED="Allowed"
 MSG_STATUS_NOT_ALLOWED="Disabled"
 MSG_STATUS_DEFAULT_PORT="Default port, consider changing"
 MSG_STATUS_CONFIGURED="Configured"
+MSG_DETECTION_SUMMARY="System Detection Summary:"
 
 # Report
 MSG_REPORT_NOT_FOUND="No hardening report found. Please run hardening first."

@@ -3,7 +3,7 @@
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
 **最后更新**: 2026-06-20
-**当前阶段**: v0.2 已完成 + curl 管道模式 bug 修复 + Code Review 问题修复
+**当前阶段**: v0.2 已完成 + curl 管道模式 bug 修复 + Code Review 问题修复 + Ubuntu 24.04 真机测试 + 真机测试 Bug 修复（7 项）
 
 ---
 
@@ -64,8 +64,15 @@
 | 2026-06-20 | 审查代理：安全审查 | 9 项安全发现（无命令注入/硬编码密钥/路径遍历） |
 | 2026-06-20 | 审查代理：代码质量 | 12 项发现（含 RHEL 家族 OS 支持缺失 2x HIGH） |
 | 2026-06-20 | 审查代理：静默失败 | 31 项发现（核心模式：包安装/防火墙/SSH 操作无错误检查） |
+| 2026-06-20 | Ubuntu 24.04 ARM64 真机测试 | SSH 到 10.211.55.8，模拟 curl 管道模式测试全部模块，生成测试报告 |
 | 2026-06-20 | 修复 curl 管道模式无限递归 bug | `scripts/base/utils.sh` (_ensure_log_dir 防重入 + init_logging 优雅降级) ⭐ NEW |
 | 2026-06-20 | Code Review 问题修复（8 项） | SHA256SUMS 重建、install.sh 参数修复、set 选项统一、get_ssh_port 统一、独立 source 清理、README 更新 |
+| 2026-06-20 | 真机测试 Bug #1/#4 修复 | `install.sh` — SHA256SUMS URL 从 GitHub API 改为 raw URL，恢复完整性校验 |
+| 2026-06-20 | 真机测试 Bug #3 修复 | `install.sh` — grep 管道添加 `|| true` 防御 pipefail 崩溃 |
+| 2026-06-20 | 真机测试 Bug #2/#7 修复 | `scripts/base/utils.sh` — schedule_rollback 改用 echo >&2 防 PID 污染 + sleep&&callback 防回滚误触发 |
+| 2026-06-20 | 真机测试 Bug #6 修复 | `scripts/base/utils.sh` — log_info/log_success/log_warn/log_step/log_title/log_separator 统一输出到 stderr |
+| 2026-06-20 | 真机测试 Bug #5 修复 | `scripts/security/ssh.sh` — restart_ssh 自动检测 ssh vs sshd 服务名，避免 Ubuntu 误导性错误 |
+| 2026-06-20 | 真机测试 Bug #8 修复 | `scripts/lang/zh.sh`, `en.sh`, `scripts/base/detect.sh` — System Detection Summary i18n |
 
 ---
 
@@ -337,3 +344,10 @@ v0.4 (第四周)
 | 2026-06-20 | UPDATE | `SHA256SUMS` | 重新生成，补充 lang/zh.sh 和 lang/en.sh |
 | 2026-06-20 | UPDATE | `README.md` | 补充 -s -- --yes 和 --ssh 参数传递示例 |
 | 2026-06-20 | UPDATE | `scripts/base/utils.sh` | 修复 curl 管道模式无限递归 bug：_ensure_log_dir 防重入保护 + init_logging 优雅降级 |
+| 2026-06-20 | CREATE | `docs/test-report-20260620.md` | Ubuntu 24.04 ARM64 真机测试报告：发现 2 CRITICAL + 3 HIGH + 3 MEDIUM + 1 LOW，curl 管道模式不可用 + SSH 回滚失效 |
+| 2026-06-20 | UPDATE | `install.sh` | Bug #1/#3/#4: SHA256SUMS URL 改用 raw URL + grep 管道添加 \|\| true 防御 |
+| 2026-06-20 | UPDATE | `scripts/base/utils.sh` | Bug #2/#6/#7: log 函数统一输出到 stderr + schedule_rollback 防 PID 污染 + sleep&&callback |
+| 2026-06-20 | UPDATE | `scripts/security/ssh.sh` | Bug #5: restart_ssh 自动检测 ssh vs sshd 服务名，消除 Ubuntu 误导错误 |
+| 2026-06-20 | UPDATE | `scripts/base/detect.sh` | Bug #8: print_detection_summary 标题改用 MSG_DETECTION_SUMMARY i18n |
+| 2026-06-20 | UPDATE | `scripts/lang/zh.sh` | Bug #8: 新增 MSG_DETECTION_SUMMARY 翻译 |
+| 2026-06-20 | UPDATE | `scripts/lang/en.sh` | Bug #8: 新增 MSG_DETECTION_SUMMARY 翻译 |
