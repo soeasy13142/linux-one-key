@@ -3,7 +3,7 @@
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
 **最后更新**: 2026-06-20
-**当前阶段**: v0.2 已完成 + curl 管道模式 bug 修复
+**当前阶段**: v0.2 已完成 + curl 管道模式 bug 修复 + Code Review 问题修复
 
 ---
 
@@ -65,6 +65,7 @@
 | 2026-06-20 | 审查代理：代码质量 | 12 项发现（含 RHEL 家族 OS 支持缺失 2x HIGH） |
 | 2026-06-20 | 审查代理：静默失败 | 31 项发现（核心模式：包安装/防火墙/SSH 操作无错误检查） |
 | 2026-06-20 | 修复 curl 管道模式无限递归 bug | `scripts/base/utils.sh` (_ensure_log_dir 防重入 + init_logging 优雅降级) ⭐ NEW |
+| 2026-06-20 | Code Review 问题修复（8 项） | SHA256SUMS 重建、install.sh 参数修复、set 选项统一、get_ssh_port 统一、独立 source 清理、README 更新 |
 
 ---
 
@@ -327,4 +328,12 @@ v0.4 (第四周)
 | 2026-06-20 | UPDATE | `install.sh` | 重构主入口：主菜单循环、SSH/防火墙子菜单、系统状态检测、查看报告、非交互参数扩展 |
 | 2026-06-20 | UPDATE | `scripts/lang/zh.sh` | 新增主菜单、子菜单、状态检测等翻译键 (~45 条) |
 | 2026-06-20 | UPDATE | `scripts/lang/en.sh` | 新增对应英文翻译键 (~45 条) |
+| 2026-06-20 | UPDATE | `install.sh` | 移除未定义的 log_debug 调用；curl 管道模式自动追加 --yes |
+| 2026-06-20 | UPDATE | `scripts/base/utils.sh` | 新增 get_ssh_port() 公共函数 |
+| 2026-06-20 | UPDATE | `scripts/base/init.sh` | set -euo → set -eo，统一 set 选项 |
+| 2026-06-20 | UPDATE | `scripts/security/ssh.sh` | set -euo → set -eo；移除重复的 get_ssh_port() |
+| 2026-06-20 | UPDATE | `scripts/security/firewall.sh` | set -euo → set -eo；移除独立 source 逻辑和重复函数；改用 get_ssh_port() |
+| 2026-06-20 | UPDATE | `scripts/security/fail2ban.sh` | set -euo → set -eo；移除独立 source 逻辑和重复函数；改用 get_ssh_port() |
+| 2026-06-20 | UPDATE | `SHA256SUMS` | 重新生成，补充 lang/zh.sh 和 lang/en.sh |
+| 2026-06-20 | UPDATE | `README.md` | 补充 -s -- --yes 和 --ssh 参数传递示例 |
 | 2026-06-20 | UPDATE | `scripts/base/utils.sh` | 修复 curl 管道模式无限递归 bug：_ensure_log_dir 防重入保护 + init_logging 优雅降级 |

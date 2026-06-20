@@ -2,7 +2,8 @@
 # init.sh - 系统初始化模块
 # 创建必要的目录、更新系统包
 
-set -euo pipefail
+set -eo pipefail
+# 注意: 不使用 -u (nounset)，与 utils.sh 保持一致，避免未绑定变量导致脚本意外退出
 
 # 检查依赖
 if [[ "${_UTILS_LOADED:-}" != "1" ]]; then

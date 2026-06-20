@@ -2,7 +2,8 @@
 # ssh.sh - SSH 安全加固模块
 # 修改端口、生成密钥、禁止 root/密码登录、安全参数配置
 
-set -euo pipefail
+set -eo pipefail
+# 注意: 不使用 -u (nounset)，与 utils.sh 保持一致，避免未绑定变量导致脚本意外退出
 
 # 检查依赖
 if [[ "${_UTILS_LOADED:-}" != "1" ]]; then
@@ -41,13 +42,6 @@ backup_ssh_config() {
 # ═══════════════════════════════════════════
 # SSH 端口修改
 # ═══════════════════════════════════════════
-
-# 获取当前 SSH 端口
-get_ssh_port() {
-    local port
-    port=$(get_ssh_config "Port")
-    echo "${port:-22}"
-}
 
 # 验证端口号
 validate_port() {
