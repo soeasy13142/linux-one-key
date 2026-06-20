@@ -270,8 +270,8 @@ run_fail2ban_wizard() {
     # Show current info
     echo ""
     log_info "${MSG_FAIL2BAN_CONFIG_INFO}"
-    echo "  SSH Port: ${ssh_port}"
-    echo "  Auth Log: ${auth_log}"
+    echo "  SSH 端口: ${ssh_port}"
+    echo "  认证日志: ${auth_log}"
     echo ""
 
     # Prompt for customizable parameters
@@ -288,13 +288,32 @@ run_fail2ban_wizard() {
     local maxretry
     maxretry=$(prompt_input "${MSG_FAIL2BAN_MAXRETRY_PROMPT}" "5")
 
+    # Validate bantime
+    if [[ ! "${bantime}" =~ ^[0-9]+$ ]] || [[ "${bantime}" -lt 1 ]]; then
+        log_error "bantime must be a positive integer"
+        bantime="3600"
+    fi
+    # Validate findtime
+    if [[ ! "${findtime}" =~ ^[0-9]+$ ]] || [[ "${findtime}" -lt 1 ]]; then
+        log_error "findtime must be a positive integer"
+        findtime="600"
+    fi
+    # Validate maxretry
+    if [[ ! "${maxretry}" =~ ^[0-9]+$ ]] || [[ "${maxretry}" -lt 1 ]]; then
+        log_error "maxretry must be a positive integer"
+        maxretry="5"
+    fi
+
     echo ""
 
     # Configure jail with user-provided values
     _configure_fail2ban_jail "${ssh_port}" "${auth_log}" "${bantime}" "${findtime}" "${maxretry}"
 
     # Start service
-    _enable_fail2ban_service
+    _enable_fail2ban_service || {
+        log_error "${MSG_FAIL2BAN_ENABLE_FAILED}"
+        return 1
+    }
 
     # Show status
     _show_fail2ban_status
