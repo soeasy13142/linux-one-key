@@ -18,8 +18,9 @@ readonly SSH_CONFIG="/etc/ssh/sshd_config"
 readonly DEFAULT_SSH_PORT=2222
 readonly ROLLBACK_DELAY=300  # 5 分钟
 
-# 回滚定时器 PID
+# 回滚定时器 PID 和 at job ID
 ROLLBACK_PID=""
+ROLLBACK_AT_JOB=""
 
 # ═══════════════════════════════════════════
 # SSH 配置备份
@@ -56,7 +57,9 @@ validate_port() {
         return 1
     fi
 
-    if [[ "${port}" -lt 1 || "${port}" -gt 65535 ]]; then
+    # 使用 $((10#...)) 强制十进制，防止前导零被解释为八进制（如 022 → 18）
+    local port_num=$((10#${port}))
+    if [[ "${port_num}" -lt 1 || "${port_num}" -gt 65535 ]]; then
         return 1
     fi
 
@@ -143,12 +146,16 @@ generate_ssh_key() {
 
     log_success "${MSG_SSH_KEY_SUCCESS}: ${key_path}"
 
-    # 添加到 authorized_keys
+    # 添加到 authorized_keys（检查重复，避免幂等问题）
     local auth_keys="$HOME/.ssh/authorized_keys"
     if [[ -f "${key_path}.pub" ]]; then
-        cat "${key_path}.pub" >> "${auth_keys}"
-        chmod 600 "${auth_keys}"
-        log_success "${MSG_SSH_KEY_AUTHORIZED}"
+        if grep -qF "$(cat "${key_path}.pub")" "${auth_keys}" 2>/dev/null; then
+            log_info "Key already in authorized_keys, skipping"
+        else
+            cat "${key_path}.pub" >> "${auth_keys}"
+            chmod 600 "${auth_keys}"
+            log_success "${MSG_SSH_KEY_AUTHORIZED}"
+        fi
     fi
 
     log_success "${MSG_SSH_KEY_PERMS}"
@@ -165,9 +172,9 @@ check_other_users() {
     local current_user
     current_user=$(whoami)
 
-    # 获取有登录 shell 的用户
+    # 获取有登录 shell 的用户（排除 nologin/false/sync/shutdown/halt）
     local users
-    users=$(grep -E '/bin/(ba)?sh$' /etc/passwd | cut -d: -f1 | grep -v "^${current_user}$" | grep -v "^root$" || true)
+    users=$(awk -F: '$7 !~ /(nologin|false|sync|shutdown|halt)$/ && $1 != "root" && $1 != "'"${current_user}"'" {print $1}' /etc/passwd 2>/dev/null || true)
 
     if [[ -z "${users}" ]]; then
         return 1  # 没有其他用户
@@ -224,7 +231,7 @@ check_ssh_keys() {
     fi
 
     # 检查是否有有效的密钥行
-    if grep -qE '^(ssh-(rsa|ed25519)|ecdsa-sha2)' "${auth_keys}"; then
+    if grep -qE '^(ssh-(rsa|ed25519|dss)|ecdsa-sha2|sk-ssh-)' "${auth_keys}"; then
         return 0
     fi
 
@@ -258,6 +265,14 @@ disable_password_auth() {
     set_ssh_config "PasswordAuthentication" "no"
     set_ssh_config "PubkeyAuthentication" "yes"
     set_ssh_config "ChallengeResponseAuthentication" "no"
+
+    # 验证配置已正确写入（防止部分失败锁住用户）
+    local pass_auth
+    pass_auth=$(get_ssh_config "PasswordAuthentication")
+    if [[ "${pass_auth}" != "no" ]]; then
+        log_error "PasswordAuthentication 配置验证失败，当前值: ${pass_auth:-未设置}"
+        return 1
+    fi
 
     log_success "${MSG_SSH_PASSWD_SUCCESS}"
 
@@ -356,8 +371,11 @@ setup_rollback_timer() {
 
     # 使用 at 命令设置定时任务
     if command_exists at; then
-        echo "bash -c 'source ${SCRIPT_DIR}/scripts/base/utils.sh && source ${SCRIPT_DIR}/scripts/security/ssh.sh && rollback_ssh'" | at now + 5 minutes 2>/dev/null
-        log_success "${MSG_SSH_ROLLBACK_CRON}"
+        local at_output
+        at_output=$(echo "bash -c 'source ${SCRIPT_DIR}/scripts/base/utils.sh && source ${SCRIPT_DIR}/scripts/security/ssh.sh && rollback_ssh'" | at now + 5 minutes 2>&1)
+        # 提取 at job ID（兼容不同系统的输出格式）
+        ROLLBACK_AT_JOB=$(echo "${at_output}" | awk '{for(i=1;i<=NF;i++) if($i=="job") print $(i+1); exit}')
+        log_success "${MSG_SSH_ROLLBACK_CRON} (at job: ${ROLLBACK_AT_JOB:-unknown})"
     else
         # 如果 at 不可用，使用后台进程
         ROLLBACK_PID=$(schedule_rollback "${ROLLBACK_DELAY}" "rollback_ssh" "${MSG_SSH_ROLLBACK_TIMER}")
@@ -367,9 +385,13 @@ setup_rollback_timer() {
 
 # 取消回滚定时器
 cancel_rollback_timer() {
-    if [[ -n "${ROLLBACK_PID}" ]]; then
+    if [[ -n "${ROLLBACK_PID:-}" ]]; then
         cancel_scheduled_task "${ROLLBACK_PID}"
         log_success "${MSG_SSH_ROLLBACK_CANCEL}"
+    fi
+    if [[ -n "${ROLLBACK_AT_JOB:-}" ]]; then
+        atrm "${ROLLBACK_AT_JOB}" 2>/dev/null || true
+        log_success "${MSG_SSH_ROLLBACK_CANCEL} (at job: ${ROLLBACK_AT_JOB})"
     fi
 }
 
@@ -412,7 +434,12 @@ run_ssh_hardening() {
     setup_rollback_timer
 
     # 重启 SSH 服务
-    restart_ssh || return 1
+    if restart_ssh; then
+        # SSH 重启成功，取消回滚定时器
+        cancel_rollback_timer
+    else
+        return 1
+    fi
 
     log_separator
     log_success "${MSG_SSH_COMPLETE}"
@@ -486,7 +513,12 @@ run_ssh_hardening_custom() {
     setup_rollback_timer
 
     # 重启 SSH 服务
-    restart_ssh || return 1
+    if restart_ssh; then
+        # SSH 重启成功，取消回滚定时器
+        cancel_rollback_timer
+    else
+        return 1
+    fi
 
     log_separator
     log_success "${MSG_SSH_COMPLETE}"

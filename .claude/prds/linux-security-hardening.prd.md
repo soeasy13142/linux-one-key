@@ -617,7 +617,85 @@ bats tests/*.bats
 
 ---
 
-## 8. 项目结构
+## 8. 已知问题与修复记录
+
+> 记录在开发和测试过程中发现的问题及修复方案，供后续参考。
+
+### 8.1 curl 管道模式执行失败（2026-06-20 发现并修复）
+
+**严重程度**: 🔴 Critical
+**影响范围**: `curl -fsSL .../install.sh | bash` 管道执行方式完全不可用
+**发现环境**: Ubuntu 24.04 LTS (aarch64)，通过 SSH 远程测试
+
+#### 问题描述
+
+当用户通过 `curl -fsSL https://.../install.sh | bash` 方式执行脚本时，bootstrap 流程失败，报错：
+```
+错误: 未找到 scripts 目录
+```
+
+#### 根因分析
+
+该问题由 **两个独立 bug** 叠加导致：
+
+**Bug 1: `BASH_SOURCE[0]` 在函数内外行为不一致**
+
+- 管道模式下，顶层代码中 `BASH_SOURCE[0]` 为空字符串（正确）
+- 但在 `_is_curl_pipe()` 函数内部，`BASH_SOURCE[0]` 返回 `"main"`（bash 内部表示）
+- 导致 `_is_curl_pipe()` 检测失败，bootstrap 逻辑未被触发
+
+```bash
+# 问题代码
+_is_curl_pipe() {
+    local first_source="${BASH_SOURCE[0]:-}"  # 函数内返回 "main"，非空
+    [[ -z "$first_source" ]] ...              # 条件不成立，检测失败
+}
+```
+
+**Bug 2: `exec bash` 后 stdin 已关闭（EOF）**
+
+- `curl | bash` 模式下，stdin 是 curl 的输出管道
+- `_bootstrap_and_reexec()` 下载完仓库后执行 `exec bash "${extracted_dir}/install.sh"`
+- exec 后新进程继承了已关闭的管道 stdin（EOF）
+- 脚本中的 `read` 交互命令全部失败
+
+#### 修复方案
+
+```bash
+# 修复 1: 在顶层捕获 BASH_SOURCE，避免函数内外行为差异
+_SCRIPT_SOURCE="${BASH_SOURCE[0]:-}"
+_is_curl_pipe() {
+    [[ -z "${_SCRIPT_SOURCE}" ]] || \
+    [[ "${_SCRIPT_SOURCE}" == "bash" ]] || \
+    [[ "${_SCRIPT_SOURCE}" == "/dev/stdin" ]]
+}
+
+# 修复 2: exec 时重定向 stdin 到 /dev/tty（有终端时）或 /dev/null（无终端时）
+if tty &>/dev/null; then
+    exec bash "${extracted_dir}/install.sh" "$@" < /dev/tty
+else
+    exec bash "${extracted_dir}/install.sh" "$@" < /dev/null
+fi
+```
+
+#### 测试结果
+
+| 测试场景 | 修复前 | 修复后 |
+|----------|--------|--------|
+| `cat install.sh \| bash`（模拟管道） | ❌ 报错 "未找到 scripts 目录" | ✅ 正常启动 |
+| `bash install.sh`（本地执行） | ✅ 正常 | ✅ 正常 |
+| 无 TTY 环境（SSH 非交互） | ❌ 报错 | ✅ 安全退出 |
+| 有 TTY 环境（SSH 交互） | N/A | ✅ 交互正常 |
+
+#### 经验总结
+
+1. **`BASH_SOURCE` 行为差异**: 在 bash 中，`BASH_SOURCE[0]` 在脚本顶层和函数内的返回值可能不同（管道模式下顶层为空，函数内为 `"main"`）。需要在顶层捕获后传递给函数使用。
+2. **管道模式 stdin 继承**: `exec` 会继承父进程的文件描述符。`curl | bash` 的 stdin 是管道，exec 后管道已关闭（EOF），需要显式重定向。
+3. **`/dev/tty` 可用性**: `-e /dev/tty` 测试不够可靠（设备文件存在但无法打开），应使用 `tty &>/dev/null` 检测是否有可用终端。
+
+---
+
+## 9. 项目结构
 
 ```
 linux-one-key/

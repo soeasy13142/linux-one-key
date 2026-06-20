@@ -49,19 +49,50 @@ _bootstrap_and_reexec() {
         exit 1
     fi
 
+    # 完整性校验：对比 SHA256SUMS 文件
+    local checksum_url="https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/SHA256SUMS"
+    local checksum_file="${tmp_dir}/SHA256SUMS"
+    if curl -fsSL "${checksum_url}" -o "${checksum_file}" 2>/dev/null; then
+        local expected_hash actual_hash
+        expected_hash=$(grep "install.sh" "${checksum_file}" | awk '{print $1}')
+        actual_hash=$(sha256sum "${extracted_dir}/install.sh" | awk '{print $1}')
+        if [[ -n "${expected_hash}" ]] && [[ "${expected_hash}" != "${actual_hash}" ]]; then
+            echo "错误: install.sh 完整性校验失败！"
+            echo "  期待: ${expected_hash}"
+            echo "  实际: ${actual_hash}"
+            echo "  可能原因：下载不完整、网络问题或文件被篡改"
+            rm -rf "${tmp_dir}"
+            exit 1
+        fi
+        log_debug "Integrity check passed for install.sh" 2>/dev/null || true
+    else
+        echo "警告: 无法下载校验文件，跳过完整性验证"
+    fi
+
     echo "下载完成，正在启动安装脚本..."
     echo ""
 
+    # 传递临时目录路径，让 re-exec 后的脚本负责清理
+    export _CLEANUP_DIR="${tmp_dir}"
+
     # 从解压目录 re-exec 自身，传递所有参数
     # 使用 exec 替换当前进程，临时目录在脚本退出后自动清理
+    # curl 管道模式下 stdin 是管道，exec 后已关闭（EOF），
+    # 需要重新打开 stdin 以支持交互式输入
     chmod +x "${extracted_dir}/install.sh"
-    exec bash "${extracted_dir}/install.sh" "$@"
+    if tty &>/dev/null; then
+        exec bash "${extracted_dir}/install.sh" "$@" < /dev/tty
+    else
+        exec bash "${extracted_dir}/install.sh" "$@" < /dev/null
+    fi
 }
 
 # 检测是否通过 curl 管道执行
+# 注意: BASH_SOURCE[0] 在函数内外行为不同（管道模式下函数内返回 "main"），
+#       因此必须在顶层捕获，不能在函数内读取
+_SCRIPT_SOURCE="${BASH_SOURCE[0]:-}"
 _is_curl_pipe() {
-    local first_source="${BASH_SOURCE[0]:-}"
-    [[ -z "$first_source" ]] || [[ "$first_source" == "bash" ]] || [[ "$first_source" == "/dev/stdin" ]]
+    [[ -z "${_SCRIPT_SOURCE}" ]] || [[ "${_SCRIPT_SOURCE}" == "bash" ]] || [[ "${_SCRIPT_SOURCE}" == "/dev/stdin" ]]
 }
 
 # 如果是 curl 管道模式，先下载完整仓库再 re-exec
@@ -304,7 +335,7 @@ run_custom_config() {
     echo -e "${GREEN}[SSH 安全]${NC}"
 
     # SSH 端口修改
-    local do_ssh_port="y"
+    local do_ssh_port
     if confirm "1. SSH 端口修改 (22 → 2222)？"; then
         do_ssh_port="y"
     else
@@ -312,7 +343,7 @@ run_custom_config() {
     fi
 
     # SSH 密钥生成
-    local do_ssh_key="y"
+    local do_ssh_key
     if confirm "2. SSH 密钥生成 (Ed25519)？"; then
         do_ssh_key="y"
     else
@@ -320,7 +351,7 @@ run_custom_config() {
     fi
 
     # 禁止 root 登录
-    local do_disable_root="y"
+    local do_disable_root
     if confirm "3. 禁止 root 远程登录？"; then
         do_disable_root="y"
     else
@@ -328,7 +359,7 @@ run_custom_config() {
     fi
 
     # 禁止密码登录
-    local do_disable_passwd="y"
+    local do_disable_passwd
     if confirm "4. 禁止密码登录？"; then
         do_disable_passwd="y"
     else
@@ -336,7 +367,7 @@ run_custom_config() {
     fi
 
     # SSH 安全参数
-    local do_ssh_params="y"
+    local do_ssh_params
     if confirm "5. SSH 安全参数配置？"; then
         do_ssh_params="y"
     else
@@ -507,23 +538,33 @@ main() {
     log_info "Selected mode: ${mode}"
 
     # 执行任务
+    local rc=0
     case "${mode}" in
-        "quick")
-            run_quick_start
-            ;;
-        "custom")
-            run_custom_config
-            ;;
+        "quick")  run_quick_start  || rc=$? ;;
+        "custom") run_custom_config || rc=$? ;;
+        *)        log_error "未知的执行模式: ${mode}" ; rc=1 ;;
     esac
 
-    # 生成报告
-    generate_report
+    # 仅在成功时生成报告，失败时跳过
+    if [[ ${rc} -eq 0 ]]; then
+        generate_report
+    else
+        log_error "任务执行失败（exit code: ${rc}），跳过报告生成"
+    fi
+
+    # 清理 bootstrap 临时目录（如果存在）
+    if [[ -n "${_CLEANUP_DIR:-}" ]] && [[ -d "${_CLEANUP_DIR}" ]]; then
+        rm -rf "${_CLEANUP_DIR}" 2>/dev/null || true
+        log_debug "Cleaned up bootstrap temp directory: ${_CLEANUP_DIR}"
+    fi
 
     # 完成
     echo ""
     log_title "${MSG_FINISH}"
     log_info "${MSG_FINISH_HINT}"
     echo ""
+
+    exit "${rc}"
 }
 
 # ═══════════════════════════════════════════

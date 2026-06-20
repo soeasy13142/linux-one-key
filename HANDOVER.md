@@ -3,7 +3,7 @@
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
 **最后更新**: 2026-06-20
-**当前阶段**: v0.2 防火墙 + Fail2Ban 已完成
+**当前阶段**: v0.2 已完成 + Bug 全部修复（32/32）
 
 ---
 
@@ -29,6 +29,7 @@
 | 架构设计 | ✅ 完成 | 交互模式、i18n、日志、备份等技术决策已确定 |
 | v0.1 基础框架 + SSH 安全 | ✅ 完成 | utils.sh, detect.sh, init.sh, ssh.sh, install.sh, 语言文件, 测试 |
 | v0.2 防火墙 + Fail2Ban | ✅ 完成 | firewall.sh, fail2ban.sh, 语言文件更新, 菜单集成, 单元测试 |
+| Code Review | ✅ 完成 | 全面审查发现 2 CRITICAL + 7 HIGH + 14 MEDIUM + 9 LOW bug |
 | v0.3 用户管理 + 内核加固 | ⬜ 未开始 | |
 | v0.4 审计日志 + 服务管理 | ⬜ 未开始 | |
 | v1.0 测试 + 文档 + 发布 | ⬜ 未开始 | |
@@ -56,6 +57,8 @@
 | 2026-06-20 | 集成新模块到菜单 | 更新 install.sh 集成防火墙和 Fail2Ban |
 | 2026-06-20 | 创建防火墙单元测试 | `tests/unit/firewall.bats` (9个测试用例) |
 | 2026-06-20 | 创建 Fail2Ban 单元测试 | `tests/unit/fail2ban.bats` (18个测试用例) |
+| 2026-06-20 | 修复 curl 管道模式 bug | `install.sh` (BASH_SOURCE 检测 + stdin 重定向) |
+| 2026-06-20 | 全面 Code Review | `docs/bug-review-report.md` (2 CRITICAL + 7 HIGH + 14 MEDIUM + 9 LOW) |
 
 ---
 
@@ -112,6 +115,7 @@ linux-one-key/
 │   └── fail2ban/
 │       └── jail.local         # Fail2Ban 配置模板 ⭐ NEW
 ├── docs/                      # [空] 文档
+│   └── bug-review-report.md   # Code Review Bug 报告 ⭐ NEW
 ├── install.sh                 # 主入口脚本 ⭐ NEW
 ├── README.md                  # 项目说明
 └── HANDOVER.md                # 本文件
@@ -167,21 +171,27 @@ linux-one-key/
 | 依赖方式 | SCRIPT_DIR 绝对路径 | 所有 source 使用 ${SCRIPT_DIR}/scripts/xxx.sh |
 | 分发方式 | curl 管道执行 | 支持 curl -fsSL https://xxx/install.sh \| bash |
 | sed 兼容 | macOS/Linux 双平台 | 检测 uname 使用不同 sed -i 语法 |
+| curl 管道检测 | 顶层捕获 BASH_SOURCE | BASH_SOURCE[0] 在函数内返回 "main" 而非空，必须在顶层赋值给变量 |
+| curl 管道 stdin | exec 时重定向 /dev/tty | exec 后 stdin 为 EOF（原管道已关闭），需重定向到终端支持交互 |
 
 ---
 
 ## 5. 下一步工作
 
-### 立即需要做的
+### 已完成
 
-1. **实现 v0.2**：防火墙 + Fail2Ban
-   - 创建 `scripts/security/firewall.sh`（防火墙规则配置）
-   - 创建 `scripts/security/fail2ban.sh`（入侵防护配置）
-   - 更新 `install.sh` 菜单，启用防火墙和 Fail2Ban 选项
+1. ✅ **修复 Code Review 发现的全部 32 个 bug**（详见 `docs/bug-review-report.md`）
+   - **第一批（阻断性）**: C1 变量名不匹配、C2 正则无边界、H2 banaction 硬编码
+   - **第二批（逻辑错误）**: H1 回滚定时器、H4 临时目录清理、H6 报告生成
+   - **第三批（安全加固）**: M1 eval 注入、H5 完整性校验、H3 set -u 一致性、H7 os-release 污染
+   - **第四批（MEDIUM）**: M2-M14
+   - **第五批（LOW）**: L1-L9
 
-2. **开始前建议**：
-   - 阅读 PRD 第 2.2 节"防火墙配置"和第 2.3 节"Fail2Ban 入侵防护"
-   - 参考 v0.1 的代码风格和模式
+### 接下来要做
+
+1. **完善测试**：补充 shellcheck 和 bats 测试覆盖
+2. **开始 v0.3**：用户管理 + 内核加固
+3. **E2E 测试**：在 Docker 容器中各发行版验证
 
 ### 实现顺序建议
 
@@ -196,9 +206,9 @@ v0.1 ✅ 已完成
 ├── tests/unit/utils.bats       ✅
 └── install.sh                  ✅
 
-v0.2 (下一步)
-├── scripts/security/firewall.sh
-└── scripts/security/fail2ban.sh
+v0.2 ✅ 已完成 + Bug 全部修复
+├── scripts/security/firewall.sh ✅
+└── scripts/security/fail2ban.sh ✅
 
 v0.3 (第三周)
 ├── scripts/security/kernel.sh
@@ -284,3 +294,18 @@ v0.4 (第四周)
 | 2026-06-20 | UPDATE | `install.sh` | 集成防火墙和 Fail2Ban 到菜单流程 |
 | 2026-06-20 | CREATE | `tests/unit/firewall.bats` | 防火墙模块单元测试（9个用例） |
 | 2026-06-20 | CREATE | `tests/unit/fail2ban.bats` | Fail2Ban 模块单元测试（18个用例） |
+| 2026-06-20 | UPDATE | `install.sh` | 修复 curl 管道模式两个 bug：(1) BASH_SOURCE 在函数内外行为不一致导致管道检测失败，改为顶层捕获；(2) exec 后 stdin 为 EOF，添加 /dev/tty 重定向支持交互输入 |
+| 2026-06-20 | UPDATE | `HANDOVER.md` | 更新交接文档，记录 curl 管道模式修复 |
+| 2026-06-20 | UPDATE | `.claude/prds/linux-security-hardening.prd.md` | 添加"已知问题与修复记录"章节，记录 curl 管道模式两个 bug 的根因和修复方案 |
+| 2026-06-20 | UPDATE | `scripts/security/firewall.sh` | C1: 修复 DETECT_OS → DETECTED_OS 变量名不匹配（2 处），防火墙模块现已正常工作 |
+| 2026-06-20 | UPDATE | `scripts/security/fail2ban.sh` | C1: 修复 DETECT_OS → DETECTED_OS（3 处）；H2: banaction 按 OS 自动选择（ufw/firewallcmd-ipset/iptables-multiport），修复 Ubuntu/Debian 封禁失效 |
+| 2026-06-20 | UPDATE | `scripts/base/utils.sh` | C2: set_ssh_config 正则添加词边界，防止 Port 误匹配 PortForwarding 等 |
+| 2026-06-20 | UPDATE | `scripts/security/ssh.sh` | H1: 修复回滚定时器永不取消；M10: 密码认证禁用后验证；M11: check_other_users awk；M12: FIDO2/SK 密钥；M13: 密钥去重；L1: 端口八进制 |
+| 2026-06-20 | UPDATE | `install.sh` | H4: bootstrap 临时目录清理；H5: tarball 完整性校验（SHA256SUMS）；H6: 报告仅在成功时生成；L2: default 分支；L3: 移除冗余初始化 |
+| 2026-06-20 | UPDATE | `scripts/base/utils.sh` | H3: 移除 -u；M1: eval 替换；M2: fallback 警告；M3: load_lang 校验；L9: printf 替代 echo -e |
+| 2026-06-20 | UPDATE | `scripts/base/detect.sh` | H7: /etc/os-release 子 shell 隔离 |
+| 2026-06-20 | UPDATE | `scripts/base/init.sh` | M4: 移除 --only-upgrade；M5: yum-security 检查；M6: root 检查前置；M7: 更新失败不打印成功；L7: 调用 setup_timezone |
+| 2026-06-20 | UPDATE | `scripts/security/firewall.sh` | M8: 安装后启动 firewalld；M9: root 权限检查 |
+| 2026-06-20 | UPDATE | `scripts/security/fail2ban.sh` | M9: root 权限检查；M14: journald 警告；L4: 简化 _get_ssh_service_name |
+| 2026-06-20 | CREATE | `SHA256SUMS` | 关键文件 SHA-256 校验收录，用于 tarball 完整性验证 |
+| 2026-06-20 | CREATE | `docs/bug-review-report.md` | 全面 Code Review 报告，记录 2 CRITICAL + 7 HIGH + 14 MEDIUM + 9 LOW 级别 bug，含修复方案和优先级计划 |
