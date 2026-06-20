@@ -245,93 +245,64 @@ unban_ip() {
 }
 
 # ============================================================================
-# 快速开始模式
+# 交互式配置模式
 # ============================================================================
 
-# 一键配置 Fail2Ban（使用推荐配置）
-run_fail2ban_hardening() {
-    log_step "$MSG_FAIL2BAN_TITLE"
+# Interactive Fail2Ban configuration with customizable parameters
+run_fail2ban_wizard() {
+    log_step "${MSG_FAIL2BAN_TITLE}"
 
-    # 检查 root 权限
+    # Check root
     if ! is_root; then
         log_error "${MSG_ERROR_NOT_ROOT}"
         return 1
     fi
 
-    # 安装 Fail2Ban
+    # Install Fail2Ban
     _install_fail2ban
 
-    # 获取配置参数
+    # Gather config info
     local ssh_port
     ssh_port=$(get_ssh_port)
     local auth_log
     auth_log=$(_get_auth_log_path)
 
-    # 显示配置信息
+    # Show current info
     echo ""
-    log_info "$MSG_FAIL2BAN_CONFIG_INFO"
-    echo "  SSH 端口: $ssh_port"
-    echo "  认证日志: $auth_log"
-    echo "  封禁时间: 3600 秒 (1 小时)"
-    echo "  检测窗口: 600 秒 (10 分钟)"
-    echo "  最大重试: 5 次"
+    log_info "${MSG_FAIL2BAN_CONFIG_INFO}"
+    echo "  SSH Port: ${ssh_port}"
+    echo "  Auth Log: ${auth_log}"
     echo ""
 
-    # 配置 jail
-    _configure_fail2ban_jail "$ssh_port" "$auth_log"
+    # Prompt for customizable parameters
+    echo -e "${BOLD}${MSG_FAIL2BAN_CUSTOM_TITLE}${NC}"
+    echo -e "${BLUE}${MSG_FAIL2BAN_CUSTOM_PROMPT}${NC}"
+    echo ""
 
-    # 启动服务
+    local bantime
+    bantime=$(prompt_input "${MSG_FAIL2BAN_BANTIME_PROMPT}" "3600")
+
+    local findtime
+    findtime=$(prompt_input "${MSG_FAIL2BAN_FINDTIME_PROMPT}" "600")
+
+    local maxretry
+    maxretry=$(prompt_input "${MSG_FAIL2BAN_MAXRETRY_PROMPT}" "5")
+
+    echo ""
+
+    # Configure jail with user-provided values
+    _configure_fail2ban_jail "${ssh_port}" "${auth_log}" "${bantime}" "${findtime}" "${maxretry}"
+
+    # Start service
     _enable_fail2ban_service
 
-    # 显示状态
+    # Show status
     _show_fail2ban_status
 
-    # 显示管理命令提示
+    # Show tips
     _show_fail2ban_tips
 
-    log_success "$MSG_FAIL2BAN_DONE"
-}
-
-# ============================================================================
-# 自定义配置模式
-# ============================================================================
-
-# 自定义 Fail2Ban 配置
-run_fail2ban_hardening_custom() {
-    local bantime="${1:-3600}"
-    local findtime="${2:-600}"
-    local maxretry="${3:-5}"
-
-    log_step "$MSG_FAIL2BAN_TITLE"
-
-    # 检查 root 权限
-    if ! is_root; then
-        log_error "${MSG_ERROR_NOT_ROOT}"
-        return 1
-    fi
-
-    # 安装 Fail2Ban
-    _install_fail2ban
-
-    # 获取配置参数
-    local ssh_port
-    ssh_port=$(get_ssh_port)
-    local auth_log
-    auth_log=$(_get_auth_log_path)
-
-    # 使用自定义参数配置 jail
-    _configure_fail2ban_jail "$ssh_port" "$auth_log" "$bantime" "$findtime" "$maxretry"
-
-    # 启动服务
-    _enable_fail2ban_service
-
-    # 显示状态
-    _show_fail2ban_status
-
-    # 显示管理命令提示
-    _show_fail2ban_tips
-
-    log_success "$MSG_FAIL2BAN_DONE"
+    log_success "${MSG_FAIL2BAN_DONE}"
 }
 
 # 显示 Fail2Ban 管理命令提示
