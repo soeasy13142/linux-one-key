@@ -313,7 +313,7 @@ enable_firewall() {
 # ============================================================================
 
 # 一键配置防火墙（使用推荐配置）
-run_firewall_hardening() {
+run_firewall_wizard() {
     log_step "$MSG_FIREWALL_TITLE"
 
     # 检查 root 权限
@@ -367,95 +367,6 @@ run_firewall_hardening() {
     if confirm "$MSG_FIREWALL_ICMP_CONFIRM" "y"; then
         allow_icmp
     fi
-
-    # 启用防火墙
-    enable_firewall
-
-    # 显示最终状态
-    show_firewall_status
-
-    # 显示管理命令提示
-    _show_firewall_tips "$fw_type"
-
-    log_success "$MSG_FIREWALL_DONE"
-}
-
-# ============================================================================
-# 自定义配置模式
-# ============================================================================
-
-# 自定义防火墙配置
-run_firewall_hardening_custom() {
-    local do_http="${1:-n}"
-    local do_icmp="${2:-n}"
-
-    log_step "$MSG_FIREWALL_TITLE"
-
-    # 检查 root 权限
-    if ! is_root; then
-        log_error "${MSG_ERROR_NOT_ROOT}"
-        return 1
-    fi
-
-    # 检查系统兼容性
-    local fw_type
-    fw_type=$(_get_firewall_type)
-    if [[ "$fw_type" == "unknown" ]]; then
-        log_warn "$MSG_FIREWALL_UNSUPPORTED_OS"
-        return 1
-    fi
-
-    # 安装防火墙
-    _install_firewall
-
-    # 获取 SSH 端口
-    local ssh_port
-    ssh_port=$(get_ssh_port)
-
-    # 配置默认策略
-    setup_firewall_defaults
-
-    # 开放 SSH 端口（必须）
-    log_step "$MSG_FIREWALL_CONFIG_SSH"
-    # 始终放通 22 端口（安全兜底，防止端口变更后锁死）
-    open_port "22" "tcp" "SSH-default"
-    log_info "$MSG_FIREWALL_SSH_PORT22"
-    # 如果 SSH 端口不是 22，也开放新端口
-    if [[ "$ssh_port" != "22" ]]; then
-        open_port "$ssh_port" "tcp" "SSH-custom"
-    fi
-
-    # 根据参数决定是否开放 HTTP/HTTPS
-    if [[ "$do_http" == "y" ]]; then
-        open_port "80" "tcp" "HTTP"
-        open_port "443" "tcp" "HTTPS"
-    fi
-
-    # 根据参数决定是否允许 ICMP
-    if [[ "$do_icmp" == "y" ]]; then
-        allow_icmp
-    fi
-
-    # 询问是否开放其他端口（非交互模式跳过）
-    echo ""
-    log_info "$MSG_FIREWALL_CUSTOM_PORTS"
-    while true; do
-        # 非交互模式：跳过自定义端口输入
-        if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
-            log_info "非交互模式，跳过自定义端口输入"
-            break
-        fi
-        read -r -p "  > " extra_port
-        if [[ -z "$extra_port" ]]; then
-            break
-        fi
-        # 验证端口号
-        if [[ "$extra_port" =~ ^[0-9]+$ ]] && (( extra_port >= 1 && extra_port <= 65535 )); then
-            open_port "$extra_port" "tcp"
-        else
-            log_warn "$MSG_FIREWALL_INVALID_PORT"
-        fi
-    done
 
     # 启用防火墙
     enable_firewall
