@@ -323,7 +323,13 @@ validate_ssh_config() {
 restart_ssh() {
     log_step "${MSG_SSH_RESTART}"
 
-    if restart_service "sshd" || restart_service "ssh"; then
+    # 检测正确的 SSH 服务名 — Ubuntu/Debian 使用 "ssh"，CentOS/RHEL 使用 "sshd"
+    local ssh_service="ssh"
+    if systemctl list-units --type=service 2>/dev/null | grep -q "^sshd\."; then
+        ssh_service="sshd"
+    fi
+
+    if restart_service "${ssh_service}"; then
         log_success "${MSG_SSH_RESTART_SUCCESS}"
         return 0
     else
