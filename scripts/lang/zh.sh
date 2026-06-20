@@ -58,6 +58,79 @@ MSG_MODE_ADVANCED="高级加固"
 MSG_MODE_CUSTOM="自定义"
 
 # ═══════════════════════════════════════════
+# 主菜单
+# ═══════════════════════════════════════════
+
+MSG_MAIN_MENU_TITLE="主菜单"
+MSG_MAIN_MENU_STATUS="[1] 系统状态检测"
+MSG_MAIN_MENU_STATUS_DESC="查看当前系统安全状态（不修改任何配置）"
+MSG_MAIN_MENU_SSH="[2] SSH 安全加固"
+MSG_MAIN_MENU_SSH_DESC="端口修改、密钥认证、禁止root/密码登录"
+MSG_MAIN_MENU_FIREWALL="[3] 防火墙配置"
+MSG_MAIN_MENU_FIREWALL_DESC="UFW/firewalld 规则配置"
+MSG_MAIN_MENU_FAIL2BAN="[4] Fail2Ban 入侵防护"
+MSG_MAIN_MENU_FAIL2BAN_DESC="自动封禁恶意登录尝试"
+MSG_MAIN_MENU_QUICK="[5] 一键快速加固（推荐）"
+MSG_MAIN_MENU_QUICK_DESC="按顺序执行以上全部项目，每步确认"
+MSG_MAIN_MENU_REPORT="[6] 查看上次加固报告"
+MSG_MAIN_MENU_EXIT="[0] 退出"
+MSG_MAIN_MENU_PROMPT="请输入选项"
+MSG_MAIN_MENU_CHOICE="请选择操作"
+MSG_MAIN_MENU_SYSTEM_INFO="系统"
+
+# SSH 子菜单
+MSG_SSH_MENU_TITLE="SSH 安全加固"
+MSG_SSH_MENU_PORT="[1] 修改 SSH 端口"
+MSG_SSH_MENU_KEY="[2] 生成 SSH 密钥对"
+MSG_SSH_MENU_ROOT="[3] 禁止 root 远程登录"
+MSG_SSH_MENU_PASSWD="[4] 禁止密码登录"
+MSG_SSH_MENU_PARAMS="[5] 配置 SSH 安全参数"
+MSG_SSH_MENU_ALL="[6] 执行以上全部"
+MSG_SSH_MENU_BACK="[0] 返回主菜单"
+
+# 防火墙子菜单
+MSG_FIREWALL_MENU_TITLE="防火墙配置"
+MSG_FIREWALL_MENU_ENABLE="[1] 启用防火墙并配置基础规则"
+MSG_FIREWALL_MENU_HTTP="[2] 开放 HTTP/HTTPS 端口"
+MSG_FIREWALL_MENU_ICMP="[3] 允许 ICMP ping"
+MSG_FIREWALL_MENU_BACK="[0] 返回主菜单"
+
+# 系统状态检测
+MSG_STATUS_TITLE="系统安全状态检测"
+MSG_STATUS_SSH_PORT="SSH 端口"
+MSG_STATUS_SSH_ROOT="root 远程登录"
+MSG_STATUS_SSH_PASSWD="密码认证"
+MSG_STATUS_SSH_KEY="密钥认证"
+MSG_STATUS_FIREWALL="防火墙"
+MSG_STATUS_FAIL2BAN="Fail2Ban"
+MSG_STATUS_ENABLED="已启用"
+MSG_STATUS_DISABLED="未启用"
+MSG_STATUS_INSTALLED="已安装"
+MSG_STATUS_NOT_INSTALLED="未安装"
+MSG_STATUS_ALLOWED="允许"
+MSG_STATUS_NOT_ALLOWED="禁止"
+MSG_STATUS_DEFAULT_PORT="默认端口，建议修改"
+MSG_STATUS_CONFIGURED="已配置"
+
+# 报告查看
+MSG_REPORT_NOT_FOUND="暂无加固报告，请先执行安全加固"
+
+# 操作确认
+MSG_CONFIRM_SSH_PORT="确认修改 SSH 端口？"
+MSG_CONFIRM_SSH_KEY="确认生成 SSH 密钥对？"
+MSG_CONFIRM_SSH_ROOT="确认禁止 root 远程登录？"
+MSG_CONFIRM_SSH_PASSWD="确认禁止密码登录？"
+MSG_CONFIRM_SSH_PARAMS="确认配置 SSH 安全参数？"
+MSG_CONFIRM_SSH_ALL="确认执行全部 SSH 加固？"
+MSG_CONFIRM_FIREWALL_ENABLE="确认启用防火墙？"
+MSG_CONFIRM_FIREWALL_HTTP="确认开放 HTTP/HTTPS 端口？"
+MSG_CONFIRM_FIREWALL_ICMP="确认允许 ICMP ping？"
+MSG_CONFIRM_FAIL2BAN="确认安装并配置 Fail2Ban？"
+
+# 快速加固
+MSG_QUICK_TITLE="一键快速加固"
+
+# ═══════════════════════════════════════════
 # 任务描述
 # ═══════════════════════════════════════════
 
