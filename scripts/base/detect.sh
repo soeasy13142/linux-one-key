@@ -7,7 +7,8 @@ if [[ "${_DETECT_LOADED:-}" == "1" ]]; then
     return 0 2>/dev/null || true
 fi
 
-set -euo pipefail
+set -eo pipefail
+# 注意: 不使用 -u (nounset)，与 utils.sh 保持一致，避免未绑定变量导致脚本意外退出
 
 # 检查 utils.sh 是否已加载
 if [[ "${_UTILS_LOADED:-}" != "1" ]]; then

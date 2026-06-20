@@ -36,10 +36,13 @@ _install_fail2ban() {
         ubuntu|debian)
             apt-get install -y fail2ban >> "$LOG_FILE" 2>&1
             ;;
-        centos)
-            # CentOS 需要 EPEL 源
+        centos|rhel|rocky|almalinux)
+            # CentOS/RHEL 需要 EPEL 源
             yum install -y epel-release >> "$LOG_FILE" 2>&1
             yum install -y fail2ban >> "$LOG_FILE" 2>&1
+            ;;
+        fedora)
+            dnf install -y fail2ban >> "$LOG_FILE" 2>&1
             ;;
         *)
             log_error "$MSG_FAIL2BAN_UNSUPPORTED_OS"
@@ -109,7 +112,7 @@ _configure_fail2ban_jail() {
     local banaction
     case "${DETECTED_OS}" in
         ubuntu|debian)           banaction="ufw" ;;
-        centos|rhel|rocky|almalinux) banaction="firewallcmd-ipset" ;;
+        centos|rhel|rocky|almalinux|fedora) banaction="firewallcmd-ipset" ;;
         *)                       banaction="iptables-multiport" ;;
     esac
 
@@ -308,6 +311,12 @@ run_fail2ban_hardening_custom() {
     local maxretry="${3:-5}"
 
     log_step "$MSG_FAIL2BAN_TITLE"
+
+    # 检查 root 权限
+    if ! is_root; then
+        log_error "${MSG_ERROR_NOT_ROOT}"
+        return 1
+    fi
 
     # 安装 Fail2Ban
     _install_fail2ban

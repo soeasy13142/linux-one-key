@@ -31,6 +31,9 @@ readonly TIMESTAMP
 # 日志文件
 LOG_FILE="${LOG_DIR}/hardening_${TIMESTAMP}.log"
 
+# 非交互模式标志 (由 --yes/-y 参数设置)
+AUTO_ACCEPT="${AUTO_ACCEPT:-no}"
+
 # 语言设置 (默认中文)
 LANG_CODE="${LANG_CODE:-zh}"
 
@@ -167,10 +170,18 @@ log_debug() {
 # ═══════════════════════════════════════════
 
 # 确认操作 (y/N)
+# 当 AUTO_ACCEPT=yes 时自动使用默认值
 confirm() {
     local prompt="${1:-${MSG_CONFIRM}}"
     local default="${2:-n}"
     local reply
+
+    # 非交互模式：直接使用默认值
+    if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
+        log_info "${prompt} [auto: ${default}]"
+        [[ "${default}" =~ ^[Yy]$ ]]
+        return $?
+    fi
 
     if [[ "${default}" == "y" || "${default}" == "Y" ]]; then
         prompt="${prompt} [Y/n] "
@@ -185,16 +196,30 @@ confirm() {
 }
 
 # 按任意键继续
+# 当 AUTO_ACCEPT=yes 时跳过等待
 press_enter() {
     local msg="${1:-${MSG_PRESS_ENTER}}"
+    # 非交互模式：跳过等待
+    if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
+        return 0
+    fi
     read -r -p "$(echo -e "${BLUE}${msg}${NC}")"
 }
 
 # 读取用户输入 (带默认值)
+# 当 AUTO_ACCEPT=yes 时自动使用默认值
 prompt_input() {
     local prompt="$1"
     local default="${2:-}"
     local result
+
+    # 非交互模式：直接使用默认值
+    if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
+        result="${default}"
+        log_info "${prompt} [auto: ${result:-<empty>}]"
+        echo "${result}"
+        return 0
+    fi
 
     if [[ -n "${default}" ]]; then
         read -r -p "$(echo -e "${BLUE}${prompt}${NC} [${default}]: ")" result
@@ -207,9 +232,17 @@ prompt_input() {
 }
 
 # 读取密码 (不显示)
+# 当 AUTO_ACCEPT=yes 时返回空密码
 prompt_password() {
     local prompt="$1"
     local password
+
+    # 非交互模式：返回空密码
+    if [[ "${AUTO_ACCEPT}" == "yes" ]]; then
+        log_info "${prompt} [auto: <empty>]"
+        echo ""
+        return 0
+    fi
 
     read -r -s -p "$(echo -e "${BLUE}${prompt}${NC}: ")" password
     echo "" # 换行
