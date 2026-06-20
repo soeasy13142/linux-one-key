@@ -570,10 +570,10 @@ run_full_wizard() {
     log_title "${MSG_WIZARD_STEP_SSH}"
 
     if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
-        log_info "Skipping SSH hardening"
+        log_info "${MSG_WIZARD_SKIPPED_SSH}"
     else
         run_ssh_hardening || {
-            log_warn "SSH hardening had errors, continuing"
+            log_warn "${MSG_WIZARD_ERR_SSH}"
             wizard_rc=1
         }
     fi
@@ -583,10 +583,10 @@ run_full_wizard() {
     log_title "${MSG_WIZARD_STEP_FIREWALL}"
 
     if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
-        log_info "Skipping firewall configuration"
+        log_info "${MSG_WIZARD_SKIPPED_FIREWALL}"
     else
         run_firewall_hardening || {
-            log_warn "Firewall configuration had errors"
+            log_warn "${MSG_WIZARD_ERR_FIREWALL}"
             wizard_rc=1
         }
     fi
@@ -596,10 +596,10 @@ run_full_wizard() {
     log_title "${MSG_WIZARD_STEP_FAIL2BAN}"
 
     if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
-        log_info "Skipping Fail2Ban configuration"
+        log_info "${MSG_WIZARD_SKIPPED_FAIL2BAN}"
     else
         run_fail2ban_hardening || {
-            log_warn "Fail2Ban configuration had errors"
+            log_warn "${MSG_WIZARD_ERR_FAIL2BAN}"
             wizard_rc=1
         }
     fi
@@ -613,7 +613,7 @@ run_full_wizard() {
     if [[ ${wizard_rc} -eq 0 ]]; then
         log_success "${MSG_WIZARD_COMPLETE}"
     else
-        log_warn "${MSG_WIZARD_COMPLETE} (some steps had errors, check logs)"
+        log_warn "${MSG_WIZARD_COMPLETE} ${MSG_WIZARD_ERR_HINT}"
     fi
 
     press_enter
