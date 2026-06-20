@@ -378,7 +378,9 @@ setup_rollback_timer() {
         log_success "${MSG_SSH_ROLLBACK_CRON} (at job: ${ROLLBACK_AT_JOB:-unknown})"
     else
         # 如果 at 不可用，使用后台进程
-        ROLLBACK_PID=$(schedule_rollback "${ROLLBACK_DELAY}" "rollback_ssh" "${MSG_SSH_ROLLBACK_TIMER}")
+        # 注意：不使用命令替换捕获 PID（避免子 shell 竞态），通过全局变量 _SCHEDULED_PID 传递
+        schedule_rollback "${ROLLBACK_DELAY}" "rollback_ssh" "${MSG_SSH_ROLLBACK_TIMER}"
+        ROLLBACK_PID="${_SCHEDULED_PID:-}"
         log_success "${MSG_SSH_ROLLBACK_CRON} (PID: ${ROLLBACK_PID})"
     fi
 }
