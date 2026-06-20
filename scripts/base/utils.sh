@@ -371,6 +371,13 @@ get_ssh_config() {
     grep "^${key}" "${config_file}" 2>/dev/null | awk '{print $2}' | tail -1
 }
 
+# 获取当前 SSH 端口
+get_ssh_port() {
+    local port
+    port=$(get_ssh_config "Port")
+    echo "${port:-22}"
+}
+
 # ═══════════════════════════════════════════
 # 系统服务函数
 # ═══════════════════════════════════════════

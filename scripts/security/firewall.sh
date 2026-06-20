@@ -3,14 +3,13 @@
 # 防火墙配置模块
 # 支持 UFW (Ubuntu/Debian) 和 firewalld (CentOS/RHEL)
 # ============================================================================
-set -euo pipefail
-
-# 获取本脚本所在目录（不覆盖外部 SCRIPT_DIR）
-_FIREWALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+set -eo pipefail
+# 注意: 不使用 -u (nounset)，与 utils.sh 保持一致，避免未绑定变量导致脚本意外退出
 
 # 检查依赖
 if [[ "${_UTILS_LOADED:-}" != "1" ]]; then
-    source "${_FIREWALL_DIR}/../base/utils.sh"
+    echo "Error: utils.sh must be loaded before firewall.sh"
+    exit 1
 fi
 
 # ============================================================================
@@ -62,13 +61,6 @@ _get_firewall_type() {
         centos|rhel|rocky|almalinux|fedora)     echo "firewalld" ;;
         *)                                      echo "unknown" ;;
     esac
-}
-
-# 获取当前 SSH 端口
-_get_current_ssh_port() {
-    local port
-    port=$(grep -E "^Port\s+" /etc/ssh/sshd_config 2>/dev/null | awk '{print $2}' | head -1)
-    echo "${port:-22}"
 }
 
 # ============================================================================
@@ -343,7 +335,7 @@ run_firewall_hardening() {
 
     # 获取 SSH 端口
     local ssh_port
-    ssh_port=$(_get_current_ssh_port)
+    ssh_port=$(get_ssh_port)
 
     # 显示当前状态
     show_firewall_status
@@ -418,7 +410,7 @@ run_firewall_hardening_custom() {
 
     # 获取 SSH 端口
     local ssh_port
-    ssh_port=$(_get_current_ssh_port)
+    ssh_port=$(get_ssh_port)
 
     # 配置默认策略
     setup_firewall_defaults
@@ -501,8 +493,3 @@ _show_firewall_tips() {
     esac
     echo ""
 }
-
-# 允许脚本被直接执行或被 source
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    run_firewall_hardening
-fi

@@ -3,14 +3,13 @@
 # Fail2Ban 入侵防护配置模块
 # 自动安装并配置 SSH 防护 jail
 # ============================================================================
-set -euo pipefail
-
-# 获取本脚本所在目录（不覆盖外部 SCRIPT_DIR）
-_FAIL2BAN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+set -eo pipefail
+# 注意: 不使用 -u (nounset)，与 utils.sh 保持一致，避免未绑定变量导致脚本意外退出
 
 # 检查依赖
 if [[ "${_UTILS_LOADED:-}" != "1" ]]; then
-    source "${_FAIL2BAN_DIR}/../base/utils.sh"
+    echo "Error: utils.sh must be loaded before fail2ban.sh"
+    exit 1
 fi
 
 # ============================================================================
@@ -51,13 +50,6 @@ _install_fail2ban() {
     esac
 
     log_success "$MSG_FAIL2BAN_INSTALL_DONE"
-}
-
-# 获取当前 SSH 端口
-_get_ssh_port() {
-    local port
-    port=$(grep -E "^Port\s+" /etc/ssh/sshd_config 2>/dev/null | awk '{print $2}' | head -1)
-    echo "${port:-22}"
 }
 
 # 获取认证日志路径
@@ -215,7 +207,7 @@ show_fail2ban_status() {
 # 获取 Fail2Ban 配置信息
 get_fail2ban_info() {
     local ssh_port
-    ssh_port=$(_get_ssh_port)
+    ssh_port=$(get_ssh_port)
     local auth_log
     auth_log=$(_get_auth_log_path)
 
@@ -271,7 +263,7 @@ run_fail2ban_hardening() {
 
     # 获取配置参数
     local ssh_port
-    ssh_port=$(_get_ssh_port)
+    ssh_port=$(get_ssh_port)
     local auth_log
     auth_log=$(_get_auth_log_path)
 
@@ -323,7 +315,7 @@ run_fail2ban_hardening_custom() {
 
     # 获取配置参数
     local ssh_port
-    ssh_port=$(_get_ssh_port)
+    ssh_port=$(get_ssh_port)
     local auth_log
     auth_log=$(_get_auth_log_path)
 
@@ -354,8 +346,3 @@ _show_fail2ban_tips() {
     echo -e "  ${MSG_FAIL2BAN_TIPS_5}"
     echo ""
 }
-
-# 允许脚本被直接执行或被 source
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    run_fail2ban_hardening
-fi

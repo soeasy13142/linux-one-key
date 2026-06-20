@@ -64,7 +64,6 @@ _bootstrap_and_reexec() {
             rm -rf "${tmp_dir}"
             exit 1
         fi
-        log_debug "Integrity check passed for install.sh" 2>/dev/null || true
     else
         echo "警告: 无法下载校验文件，跳过完整性验证"
     fi
@@ -80,11 +79,16 @@ _bootstrap_and_reexec() {
     # curl 管道模式下 stdin 是管道，exec 后已关闭（EOF），
     # 需要重新打开 stdin 以支持交互式输入
     # 注意: "$@" 包含原始参数（如 --yes），会传递给 re-exec 的脚本
+    local args=("$@")
+    # curl 管道模式下如果没有任何参数且 stdin 非终端，自动启用非交互模式
+    if [[ ${#args[@]} -eq 0 ]] && [[ ! -t 0 ]]; then
+        args=("--yes")
+    fi
     chmod +x "${extracted_dir}/install.sh"
     if tty &>/dev/null; then
-        exec bash "${extracted_dir}/install.sh" "$@" < /dev/tty
+        exec bash "${extracted_dir}/install.sh" "${args[@]}" < /dev/tty
     else
-        exec bash "${extracted_dir}/install.sh" "$@" < /dev/null
+        exec bash "${extracted_dir}/install.sh" "${args[@]}" < /dev/null
     fi
 }
 
