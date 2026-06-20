@@ -366,18 +366,38 @@ configure_ssh_params() {
     local val
 
     val=$(prompt_input "${MSG_SSH_PARAMS_MAXAUTHTRIES}" "3")
+    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
+        log_error "Invalid MaxAuthTries value, using default 3"
+        val="3"
+    fi
     set_ssh_config "MaxAuthTries" "${val}"
 
     val=$(prompt_input "${MSG_SSH_PARAMS_LOGINGRACETIME}" "60")
+    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
+        log_error "Invalid LoginGraceTime value, using default 60"
+        val="60"
+    fi
     set_ssh_config "LoginGraceTime" "${val}"
 
     val=$(prompt_input "${MSG_SSH_PARAMS_CLIENTALIVEINTERVAL}" "300")
+    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
+        log_error "Invalid ClientAliveInterval value, using default 300"
+        val="300"
+    fi
     set_ssh_config "ClientAliveInterval" "${val}"
 
     val=$(prompt_input "${MSG_SSH_PARAMS_CLIENTALIVECOUNTMAX}" "2")
+    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
+        log_error "Invalid ClientAliveCountMax value, using default 2"
+        val="2"
+    fi
     set_ssh_config "ClientAliveCountMax" "${val}"
 
     val=$(prompt_input "${MSG_SSH_PARAMS_MAXSESSIONS}" "2")
+    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
+        log_error "Invalid MaxSessions value, using default 2"
+        val="2"
+    fi
     set_ssh_config "MaxSessions" "${val}"
 
     # X11Forwarding always disabled (no need to ask)

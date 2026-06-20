@@ -493,12 +493,14 @@ run_firewall_submenu_loop() {
                 press_enter
                 ;;
             2)
-                _install_firewall
-                setup_firewall_defaults
-                open_port "80" "tcp" "HTTP"
-                open_port "443" "tcp" "HTTPS"
-                enable_firewall
-                log_success "HTTP/HTTPS ports opened"
+                if confirm "${MSG_CONFIRM_FIREWALL_HTTP}" "y"; then
+                    _install_firewall
+                    setup_firewall_defaults
+                    open_port "80" "tcp" "HTTP"
+                    open_port "443" "tcp" "HTTPS"
+                    enable_firewall
+                    log_success "HTTP/HTTPS ports opened"
+                fi
                 press_enter
                 ;;
             3)

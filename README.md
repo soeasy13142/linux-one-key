@@ -5,14 +5,8 @@ Linux 云服务器安全加固一键脚本。
 ## 快速开始
 
 ```bash
-# 一键执行（推荐）
+# 交互执行（推荐）
 curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash
-
-# 非交互模式（自动确认所有步骤）
-curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash -s -- --yes
-
-# 仅执行 SSH 加固
-curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash -s -- --ssh
 
 # 或者下载后执行
 wget https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh
