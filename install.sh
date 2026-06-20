@@ -430,39 +430,27 @@ run_ssh_submenu_loop() {
 
         case "${choice}" in
             1)
-                if confirm "${MSG_CONFIRM_SSH_PORT}" "y"; then
-                    run_ssh_hardening_custom "y" "n" "n" "n" "n" || log_error "SSH 端口修改失败"
-                fi
+                change_ssh_port || log_error "SSH port change failed"
                 press_enter
                 ;;
             2)
-                if confirm "${MSG_CONFIRM_SSH_KEY}" "y"; then
-                    run_ssh_hardening_custom "n" "y" "n" "n" "n" || log_error "SSH 密钥生成失败"
-                fi
+                generate_ssh_key || log_error "SSH key generation failed"
                 press_enter
                 ;;
             3)
-                if confirm "${MSG_CONFIRM_SSH_ROOT}" "y"; then
-                    run_ssh_hardening_custom "n" "n" "y" "n" "n" || log_error "禁止 root 登录失败"
-                fi
+                disable_root_login || log_error "Disable root login failed"
                 press_enter
                 ;;
             4)
-                if confirm "${MSG_CONFIRM_SSH_PASSWD}" "y"; then
-                    run_ssh_hardening_custom "n" "n" "n" "y" "n" || log_error "禁止密码登录失败"
-                fi
+                disable_password_auth || log_error "Disable password login failed"
                 press_enter
                 ;;
             5)
-                if confirm "${MSG_CONFIRM_SSH_PARAMS}" "y"; then
-                    run_ssh_hardening_custom "n" "n" "n" "n" "y" || log_error "SSH 参数配置失败"
-                fi
+                configure_ssh_params || log_error "SSH params config failed"
                 press_enter
                 ;;
             6)
-                if confirm "${MSG_CONFIRM_SSH_ALL}" "y"; then
-                    run_ssh_hardening_custom "y" "y" "y" "y" "y" || log_error "SSH 加固失败"
-                fi
+                run_ssh_wizard || log_error "SSH wizard failed"
                 press_enter
                 ;;
             0)
@@ -501,21 +489,20 @@ run_firewall_submenu_loop() {
 
         case "${choice}" in
             1)
-                if confirm "${MSG_CONFIRM_FIREWALL_ENABLE}" "y"; then
-                    run_firewall_hardening_custom "n" "n" || log_error "防火墙配置失败"
-                fi
+                run_firewall_wizard || log_error "Firewall config failed"
                 press_enter
                 ;;
             2)
-                if confirm "${MSG_CONFIRM_FIREWALL_HTTP}" "y"; then
-                    run_firewall_hardening_custom "y" "n" || log_error "HTTP/HTTPS 端口开放失败"
-                fi
+                _install_firewall
+                setup_firewall_defaults
+                open_port "80" "tcp" "HTTP"
+                open_port "443" "tcp" "HTTPS"
+                enable_firewall
+                log_success "HTTP/HTTPS ports opened"
                 press_enter
                 ;;
             3)
-                if confirm "${MSG_CONFIRM_FIREWALL_ICMP}" "y"; then
-                    run_firewall_hardening_custom "n" "y" || log_error "ICMP 配置失败"
-                fi
+                allow_icmp
                 press_enter
                 ;;
             0)
@@ -572,7 +559,7 @@ run_full_wizard() {
     if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
         log_info "${MSG_WIZARD_SKIPPED_SSH}"
     else
-        run_ssh_hardening || {
+        run_ssh_wizard || {
             log_warn "${MSG_WIZARD_ERR_SSH}"
             wizard_rc=1
         }
@@ -585,7 +572,7 @@ run_full_wizard() {
     if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
         log_info "${MSG_WIZARD_SKIPPED_FIREWALL}"
     else
-        run_firewall_hardening || {
+        run_firewall_wizard || {
             log_warn "${MSG_WIZARD_ERR_FIREWALL}"
             wizard_rc=1
         }
@@ -598,7 +585,7 @@ run_full_wizard() {
     if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
         log_info "${MSG_WIZARD_SKIPPED_FAIL2BAN}"
     else
-        run_fail2ban_hardening || {
+        run_fail2ban_wizard || {
             log_warn "${MSG_WIZARD_ERR_FAIL2BAN}"
             wizard_rc=1
         }
@@ -650,9 +637,7 @@ run_main_menu_loop() {
             2) run_ssh_submenu_loop ;;
             3) run_firewall_submenu_loop ;;
             4)
-                if confirm "${MSG_CONFIRM_FAIL2BAN}" "y"; then
-                    run_fail2ban_hardening || log_error "Fail2Ban 配置失败"
-                fi
+                run_fail2ban_wizard || log_error "Fail2Ban config failed"
                 press_enter
                 ;;
             5)
