@@ -31,7 +31,7 @@ _bootstrap_and_reexec() {
     echo ""
 
     # 下载 tarball 并解压
-    if ! curl -fsSL "${GITHUB_TARBALL_URL}" | tar xz -C "${tmp_dir}"; then
+    if ! curl -fsSL -H "Cache-Control: no-cache" "${GITHUB_TARBALL_URL}" | tar xz -C "${tmp_dir}"; then
         echo "错误: 下载或解压失败"
         echo "请检查网络连接，或手动克隆仓库:"
         echo "  git clone https://github.com/${GITHUB_REPO}"
