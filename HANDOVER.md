@@ -3,7 +3,7 @@
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
 **最后更新**: 2026-06-20
-**当前阶段**: v0.2 已完成 + curl 管道模式 bug 修复 + Code Review 问题修复 + Ubuntu 24.04 真机测试 + 真机测试 Bug 修复（7 项）+ 交互式重构（删除一键模式，改为逐步向导）
+**当前阶段**: v0.2 已完成 + curl 管道模式 bug 修复 + Code Review 问题修复 + Ubuntu 24.04 真机测试 + 真机测试 Bug 修复（7 项）+ 交互式重构（删除一键模式，改为逐步向导）+ VM 综合测试（curl 方式，发现 8 个新问题）
 
 ---
 
@@ -217,19 +217,21 @@ linux-one-key/
    - Fail2Ban 参数可自定义（封禁时间/重试次数/检测窗口）
    - 统一函数命名：`run_ssh_wizard` / `run_firewall_wizard` / `run_fail2ban_wizard`
 
-3. ✅ **真机测试（Ubuntu 24.04 ARM64）**：发现并修复 8 个 bug
-   - Bug #1/#4: SHA256SUMS URL 改用 raw URL
-   - Bug #2/#7: schedule_rollback 防 PID 污染 + sleep&&callback
-   - Bug #5: restart_ssh 自动检测 ssh vs sshd
+3. ✅ **VM 综合测试（curl 方式）**：15 个测试用例，发现 8 个新问题（详见 `docs/vm-test-report-20260620.md`）
+   - Issue #2 (HIGH): `generate_report()` 报告硬编码，与实际执行结果不一致
+   - Issue #4 (MEDIUM): 非 TTY curl pipe 模式无限循环
+   - Issue #6 (MEDIUM): 非 root 用户执行日志 Permission denied
+   - Issue #8 (HIGH): Bats 测试 27/46 失败，模块依赖加载顺序问题
 
 ### 接下来要做
 
-1. **⚠️ VM 验证交互式流程**：在 Ubuntu/CentOS/Debian VM 中运行 `sudo bash install.sh`，验证逐步向导完整流程
-   - SSH 端口三种选项均正常工作
-   - 防火墙规则正确应用
-   - Fail2Ban 自定义参数生效
-2. **完善测试**：补充 bats 测试覆盖向导函数
-   - `generate_random_port()` 端口范围验证
+1. **🔴 修复 P0 问题**：
+   - `generate_report()` 根据实际执行状态动态生成报告（不硬编码）
+   - 修复 Bats 测试 setup 的 utils.sh 预加载（fail2ban.bats / firewall.bats）
+2. **🟡 修复 P1 问题**：
+   - 非 root 用户自动 fallback 日志目录
+   - 非 TTY curl pipe 模式优雅退出
+3. **📋 验证其他发行版**：在 CentOS/Debian VM 中运行完整向导流程
    - SSH 端口交互逻辑
    - Fail2Ban 参数验证
 3. **开始 v0.3**：用户管理 + 内核加固
@@ -375,3 +377,9 @@ v0.4 (第四周)
 | 2026-06-20 | UPDATE | `scripts/lang/zh.sh` | Bug #8: 新增 MSG_DETECTION_SUMMARY 翻译 |
 | 2026-06-20 | UPDATE | `scripts/lang/en.sh` | Bug #8: 新增 MSG_DETECTION_SUMMARY 翻译 |
 | 2026-06-20 | UPDATE | install.sh, scripts/security/*.sh, scripts/base/utils.sh, scripts/lang/*.sh | 删除一键模式(--yes/--quick)，改为逐步交互式配置；新增随机端口生成；SSH端口支持3选1交互(自定义/随机/保持)；Fail2Ban参数可自定义；新增完整安全配置向导 |
+| 2026-06-20 | CREATE | `docs/vm-test-report-20260620.md` | curl 方式综合测试报告：15 个测试用例、8 个新问题（1 HIGH + 4 MEDIUM + 3 LOW），含报告硬编码 bug、Bats 27/46 失败等 |
+| 2026-06-20 | UPDATE | `install.sh` | P0 Issue #2 修复：generate_report() 动态生成，根据 _WIZARD_*_DONE 标志和实际系统状态，跳过步骤显示 [⊘] |
+| 2026-06-20 | UPDATE | `tests/unit/fail2ban.bats` | P0 Issue #8 修复：source utils.sh + load_lang；修复 DETECT_OS→DETECTED_OS；修复 run_fail2ban_hardening_custom→run_fail2ban_wizard；添加 get_ssh_port mock |
+| 2026-06-20 | UPDATE | `tests/unit/firewall.bats` | P0 Issue #8 修复：source utils.sh + load_lang；修复 DETECT_OS→DETECTED_OS |
+| 2026-06-20 | UPDATE | `scripts/lang/zh.sh` | 新增 MSG_WIZARD_SKIPPED="已跳过" |
+| 2026-06-20 | UPDATE | `scripts/lang/en.sh` | 新增 MSG_WIZARD_SKIPPED="Skipped" |

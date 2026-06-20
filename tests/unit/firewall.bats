@@ -12,14 +12,16 @@ setup() {
 
     mkdir -p "${LOG_DIR}" "${BACKUP_DIR}" "${REPORT_DIR}"
 
-    # 只 source firewall.sh，它会自动 source utils.sh
+    # 先加载依赖模块，再 source 被测模块
+    source "${SCRIPT_DIR}/scripts/base/utils.sh"
+    load_lang "${SCRIPT_DIR}"
     source "${SCRIPT_DIR}/scripts/security/firewall.sh"
 
     # 覆盖 LOG_FILE 使用测试目录
     LOG_FILE="${TEST_DIR}/test.log"
 
     # Mock system commands
-    export DETECT_OS="ubuntu"
+    export DETECTED_OS="ubuntu"
 }
 
 teardown() {
@@ -28,25 +30,25 @@ teardown() {
 
 # 测试 _get_firewall_type 函数
 @test "_get_firewall_type returns ufw for ubuntu" {
-    export DETECT_OS="ubuntu"
+    export DETECTED_OS="ubuntu"
     result=$(_get_firewall_type)
     [[ "${result}" == "ufw" ]]
 }
 
 @test "_get_firewall_type returns ufw for debian" {
-    export DETECT_OS="debian"
+    export DETECTED_OS="debian"
     result=$(_get_firewall_type)
     [[ "${result}" == "ufw" ]]
 }
 
 @test "_get_firewall_type returns firewalld for centos" {
-    export DETECT_OS="centos"
+    export DETECTED_OS="centos"
     result=$(_get_firewall_type)
     [[ "${result}" == "firewalld" ]]
 }
 
 @test "_get_firewall_type returns unknown for unsupported OS" {
-    export DETECT_OS="unsupported"
+    export DETECTED_OS="unsupported"
     result=$(_get_firewall_type)
     [[ "${result}" == "unknown" ]]
 }
@@ -84,7 +86,7 @@ teardown() {
 
 # 测试 deny_icmp 函数
 @test "deny_icmp warns for ubuntu" {
-    export DETECT_OS="ubuntu"
+    export DETECTED_OS="ubuntu"
 
     run deny_icmp
     [[ "${status}" -eq 0 ]]
@@ -93,16 +95,16 @@ teardown() {
 
 # 测试 _get_firewall_type 函数组合
 @test "_get_firewall_type returns correct type for each OS" {
-    export DETECT_OS="ubuntu"
+    export DETECTED_OS="ubuntu"
     [[ "$(_get_firewall_type)" == "ufw" ]]
 
-    export DETECT_OS="debian"
+    export DETECTED_OS="debian"
     [[ "$(_get_firewall_type)" == "ufw" ]]
 
-    export DETECT_OS="centos"
+    export DETECTED_OS="centos"
     [[ "$(_get_firewall_type)" == "firewalld" ]]
 
-    export DETECT_OS="unsupported"
+    export DETECTED_OS="unsupported"
     [[ "$(_get_firewall_type)" == "unknown" ]]
 }
 

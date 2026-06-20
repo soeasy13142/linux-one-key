@@ -554,6 +554,11 @@ run_full_wizard() {
 
     local wizard_rc=0
 
+    # Track which modules were executed (not skipped)
+    export _WIZARD_SSH_DONE=0
+    export _WIZARD_FIREWALL_DONE=0
+    export _WIZARD_FAIL2BAN_DONE=0
+
     # ── Step 1: SSH ──
     echo ""
     log_title "${MSG_WIZARD_STEP_SSH}"
@@ -561,10 +566,12 @@ run_full_wizard() {
     if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
         log_info "${MSG_WIZARD_SKIPPED_SSH}"
     else
-        run_ssh_wizard || {
+        if run_ssh_wizard; then
+            _WIZARD_SSH_DONE=1
+        else
             log_warn "${MSG_WIZARD_ERR_SSH}"
             wizard_rc=1
-        }
+        fi
     fi
 
     # ── Step 2: Firewall ──
@@ -574,10 +581,12 @@ run_full_wizard() {
     if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
         log_info "${MSG_WIZARD_SKIPPED_FIREWALL}"
     else
-        run_firewall_wizard || {
+        if run_firewall_wizard; then
+            _WIZARD_FIREWALL_DONE=1
+        else
             log_warn "${MSG_WIZARD_ERR_FIREWALL}"
             wizard_rc=1
-        }
+        fi
     fi
 
     # ── Step 3: Fail2Ban ──
@@ -587,10 +596,12 @@ run_full_wizard() {
     if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
         log_info "${MSG_WIZARD_SKIPPED_FAIL2BAN}"
     else
-        run_fail2ban_wizard || {
+        if run_fail2ban_wizard; then
+            _WIZARD_FAIL2BAN_DONE=1
+        else
             log_warn "${MSG_WIZARD_ERR_FAIL2BAN}"
             wizard_rc=1
-        }
+        fi
     fi
 
     # ── Step 4: Summary ──
@@ -662,38 +673,121 @@ generate_report() {
 
     log_step "Generating report..."
 
-    cat > "${report_path}" << EOF
-═══════════════════════════════════════════════════════════════
-                ${MSG_REPORT_TITLE}
-═══════════════════════════════════════════════════════════════
+    # Helper: format a task line with done/skipped/failed status
+    _report_task_line() {
+        local done_flag="${1:-0}"
+        local task_name="${2}"
+        if [[ "${done_flag}" == "1" ]]; then
+            echo "[✓] ${task_name}"
+        else
+            echo "[⊘] ${task_name} — ${MSG_WIZARD_SKIPPED}"
+        fi
+    }
 
-${MSG_REPORT_SYSTEM}:
-  - ${MSG_DETECT_OS}: $(get_detected_os) $(get_detected_os_version)
-  - ${MSG_DETECT_ARCH}: $(get_detected_arch)
-  - ${MSG_DETECT_USER}: $(whoami)
-  - Hostname: $(get_hostname)
+    # Build report
+    {
+        echo "═══════════════════════════════════════════════════════════════"
+        echo "                ${MSG_REPORT_TITLE}"
+        echo "═══════════════════════════════════════════════════════════════"
+        echo ""
+        echo "${MSG_REPORT_SYSTEM}:"
+        echo "  - ${MSG_DETECT_OS}: $(get_detected_os) $(get_detected_os_version)"
+        echo "  - ${MSG_DETECT_ARCH}: $(get_detected_arch)"
+        echo "  - ${MSG_DETECT_USER}: $(whoami)"
+        echo "  - Hostname: $(get_hostname)"
+        echo ""
 
-${MSG_REPORT_TASKS}:
-  [✓] ${MSG_TASK_SSH}
-    - Port: $(get_ssh_port)
-    - Key authentication: enabled
-    - Root login: disabled
-    - Password auth: disabled
+        # ── Tasks section — dynamic per module ──
+        echo "${MSG_REPORT_TASKS}:"
 
-${MSG_REPORT_CONFIGS}:
-  - ${SSH_CONFIG}
-    Backup: ${BACKUP_DIR}/sshd_config.bak.${TIMESTAMP}
+        # SSH
+        _report_task_line "${_WIZARD_SSH_DONE:-0}" "${MSG_TASK_SSH}"
+        if [[ "${_WIZARD_SSH_DONE:-0}" == "1" ]]; then
+            echo "    - Port: $(get_ssh_port)"
+            local root_login
+            root_login=$(get_ssh_config "PermitRootLogin" 2>/dev/null || echo "unknown")
+            echo "    - Root login: ${root_login}"
+            local pass_auth
+            pass_auth=$(get_ssh_config "PasswordAuthentication" 2>/dev/null || echo "unknown")
+            echo "    - Password auth: ${pass_auth}"
+            local pubkey_auth
+            pubkey_auth=$(get_ssh_config "PubkeyAuthentication" 2>/dev/null || echo "unknown")
+            echo "    - Key authentication: ${pubkey_auth}"
+        fi
 
-${MSG_REPORT_WARNINGS}:
-  ⚠ ${MSG_WARN_CONNECTION}
-  ⚠ ${MSG_WARN_SAVE_KEY}
-  ⚠ ${MSG_WARN_TEST_FIRST}
-  ⚠ 防火墙已保留放通 22 端口，确认新 SSH 端口可用后请手动关闭: sudo ufw deny 22/tcp
+        # Firewall
+        _report_task_line "${_WIZARD_FIREWALL_DONE:-0}" "${MSG_TASK_FIREWALL}"
+        if [[ "${_WIZARD_FIREWALL_DONE:-0}" == "1" ]]; then
+            local fw_status="${MSG_STATUS_DISABLED}"
+            if command -v ufw &>/dev/null; then
+                if ufw status 2>/dev/null | grep -q "Status: active"; then
+                    fw_status="${MSG_STATUS_ENABLED}"
+                fi
+            elif command -v firewall-cmd &>/dev/null; then
+                if firewall-cmd --state &>/dev/null; then
+                    fw_status="${MSG_STATUS_ENABLED}"
+                fi
+            fi
+            echo "    - ${MSG_STATUS_FIREWALL}: ${fw_status}"
+        fi
 
-${MSG_REPORT_SAVED}: ${report_path}
+        # Fail2Ban
+        _report_task_line "${_WIZARD_FAIL2BAN_DONE:-0}" "${MSG_TASK_FAIL2BAN}"
+        if [[ "${_WIZARD_FAIL2BAN_DONE:-0}" == "1" ]]; then
+            local f2b_status="${MSG_STATUS_NOT_INSTALLED}"
+            if command -v fail2ban-client &>/dev/null; then
+                if systemctl is-active fail2ban &>/dev/null; then
+                    f2b_status="${MSG_STATUS_ENABLED}"
+                else
+                    f2b_status="${MSG_STATUS_DISABLED}"
+                fi
+            fi
+            echo "    - ${MSG_STATUS_FAIL2BAN}: ${f2b_status}"
+        fi
 
-═══════════════════════════════════════════════════════════════
-EOF
+        echo ""
+
+        # ── Config files modified ──
+        echo "${MSG_REPORT_CONFIGS}:"
+        if [[ "${_WIZARD_SSH_DONE:-0}" == "1" ]]; then
+            local latest_ssh_backup
+            latest_ssh_backup=$(find "${BACKUP_DIR}" -name "sshd_config.bak.*" -type f 2>/dev/null | sort -r | head -1)
+            echo "  - ${SSH_CONFIG}"
+            if [[ -n "${latest_ssh_backup}" ]]; then
+                echo "    Backup: ${latest_ssh_backup}"
+            fi
+        fi
+        if [[ "${_WIZARD_FAIL2BAN_DONE:-0}" == "1" ]]; then
+            if [[ -n "${FAIL2BAN_JAIL_LOCAL:-}" ]]; then
+                echo "  - ${FAIL2BAN_JAIL_LOCAL}"
+            fi
+        fi
+        echo ""
+
+        # ── Warnings — only for executed modules ──
+        echo "${MSG_REPORT_WARNINGS}:"
+        if [[ "${_WIZARD_SSH_DONE:-0}" == "1" ]]; then
+            echo "  ⚠ ${MSG_WARN_CONNECTION}"
+            echo "  ⚠ ${MSG_WARN_SAVE_KEY}"
+            echo "  ⚠ ${MSG_WARN_TEST_FIRST}"
+            local final_port
+            final_port=$(get_ssh_port)
+            if [[ "${final_port}" != "22" ]]; then
+                echo "  ⚠ 防火墙已保留放通 22 端口，确认新 SSH 端口可用后请手动关闭: sudo ufw deny 22/tcp"
+            fi
+        fi
+        if [[ "${_WIZARD_FIREWALL_DONE:-0}" == "1" ]]; then
+            echo "  ⚠ 防火墙已启用，请确保已正确放通所需端口"
+        fi
+        if [[ "${_WIZARD_FAIL2BAN_DONE:-0}" == "1" ]]; then
+            echo "  ⚠ 请定期检查 Fail2Ban 日志: sudo tail -f /var/log/fail2ban.log"
+        fi
+
+        echo ""
+        echo "${MSG_REPORT_SAVED}: ${report_path}"
+        echo ""
+        echo "═══════════════════════════════════════════════════════════════"
+    } > "${report_path}"
 
     log_success "${MSG_REPORT_SAVED}: ${report_path}"
 }
