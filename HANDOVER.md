@@ -3,7 +3,7 @@
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
 **最后更新**: 2026-06-20
-**当前阶段**: v0.2 已完成 + curl 管道模式 bug 修复 + Code Review 问题修复 + Ubuntu 24.04 真机测试 + 真机测试 Bug 修复（7 项）
+**当前阶段**: v0.2 已完成 + curl 管道模式 bug 修复 + Code Review 问题修复 + Ubuntu 24.04 真机测试 + 真机测试 Bug 修复（7 项）+ 交互式重构（删除一键模式，改为逐步向导）
 
 ---
 
@@ -73,6 +73,15 @@
 | 2026-06-20 | 真机测试 Bug #6 修复 | `scripts/base/utils.sh` — log_info/log_success/log_warn/log_step/log_title/log_separator 统一输出到 stderr |
 | 2026-06-20 | 真机测试 Bug #5 修复 | `scripts/security/ssh.sh` — restart_ssh 自动检测 ssh vs sshd 服务名，避免 Ubuntu 误导性错误 |
 | 2026-06-20 | 真机测试 Bug #8 修复 | `scripts/lang/zh.sh`, `en.sh`, `scripts/base/detect.sh` — System Detection Summary i18n |
+| 2026-06-20 | 创建交互式重构设计文档 | `.superpowers/specs/2026-06-20-interactive-setup-design.md` — 交互式安装流程规范 |
+| 2026-06-20 | 创建交互式重构实施计划 | `.superpowers/plans/2026-06-20-interactive-setup.md` — 交互式重构实施计划 |
+| 2026-06-20 | 删除一键模式，改为完整交互式向导 | `install.sh` — 移除 --yes/--quick 参数，改为逐步交互式配置 |
+| 2026-06-20 | 新增随机端口生成函数 | `scripts/base/utils.sh` — 新增 generate_random_port() 函数 |
+| 2026-06-20 | 重构 SSH 向导为逐步交互模式 | `scripts/security/ssh.sh` — 端口支持 3 选 1（自定义/随机/保持），每参数逐步提示 |
+| 2026-06-20 | 重构防火墙向导为逐步交互模式 | `scripts/security/firewall.sh` — 重命名为 run_firewall_wizard，移除自定义变体 |
+| 2026-06-20 | 重构 Fail2Ban 向导为逐步交互模式 | `scripts/security/fail2ban.sh` — 参数可自定义，重命名为 run_fail2ban_wizard |
+| 2026-06-20 | 添加验证和 i18n 标签 | `scripts/security/fail2ban.sh`, `scripts/lang/zh.sh`, `scripts/lang/en.sh` — Fail2Ban 向导验证和翻译 |
+| 2026-06-20 | 集成向导函数并更新所有引用 | `install.sh`, `scripts/base/utils.sh`, `scripts/base/init.sh`, `scripts/base/detect.sh` — 统一向导调用 |
 
 ---
 
@@ -202,13 +211,27 @@ linux-one-key/
    - **第四批（MEDIUM）**: M2-M14
    - **第五批（LOW）**: L1-L9
 
+2. ✅ **交互式重构完成**：删除一键模式（--yes/--quick），改为逐步交互式向导配置
+   - `generate_random_port()` 随机端口生成
+   - SSH 端口 3 选 1（自定义/随机/保持），每参数逐步提示
+   - Fail2Ban 参数可自定义（封禁时间/重试次数/检测窗口）
+   - 统一函数命名：`run_ssh_wizard` / `run_firewall_wizard` / `run_fail2ban_wizard`
+
+3. ✅ **真机测试（Ubuntu 24.04 ARM64）**：发现并修复 8 个 bug
+   - Bug #1/#4: SHA256SUMS URL 改用 raw URL
+   - Bug #2/#7: schedule_rollback 防 PID 污染 + sleep&&callback
+   - Bug #5: restart_ssh 自动检测 ssh vs sshd
+
 ### 接下来要做
 
-1. **⚠️ 优先修复 Round 2 审查发现**：详见 `docs/code-review-report-20260620.md`
-   - **P0（阻断）**: 10 CRITICAL — 关键命令添加返回值检查（包安装/防火墙/SSH/Fail2Ban）
-   - **P1（高优）**: 15 HIGH — RHEL 家族支持、回滚定时器加固、SSH 配置写入验证
-   - **P2（中优）**: 13 MEDIUM — 密钥短语安全、subshell 隔离、配置验证完善
-2. **完善测试**：补充 shellcheck 和 bats 测试覆盖
+1. **⚠️ VM 验证交互式流程**：在 Ubuntu/CentOS/Debian VM 中运行 `sudo bash install.sh`，验证逐步向导完整流程
+   - SSH 端口三种选项均正常工作
+   - 防火墙规则正确应用
+   - Fail2Ban 自定义参数生效
+2. **完善测试**：补充 bats 测试覆盖向导函数
+   - `generate_random_port()` 端口范围验证
+   - SSH 端口交互逻辑
+   - Fail2Ban 参数验证
 3. **开始 v0.3**：用户管理 + 内核加固
 4. **E2E 测试**：在 Docker 容器中各发行版验证
 
@@ -351,3 +374,4 @@ v0.4 (第四周)
 | 2026-06-20 | UPDATE | `scripts/base/detect.sh` | Bug #8: print_detection_summary 标题改用 MSG_DETECTION_SUMMARY i18n |
 | 2026-06-20 | UPDATE | `scripts/lang/zh.sh` | Bug #8: 新增 MSG_DETECTION_SUMMARY 翻译 |
 | 2026-06-20 | UPDATE | `scripts/lang/en.sh` | Bug #8: 新增 MSG_DETECTION_SUMMARY 翻译 |
+| 2026-06-20 | UPDATE | install.sh, scripts/security/*.sh, scripts/base/utils.sh, scripts/lang/*.sh | 删除一键模式(--yes/--quick)，改为逐步交互式配置；新增随机端口生成；SSH端口支持3选1交互(自定义/随机/保持)；Fail2Ban参数可自定义；新增完整安全配置向导 |
