@@ -80,7 +80,8 @@ _bootstrap_and_reexec() {
     :
     chmod +x "${extracted_dir}/install.sh"
     # curl 管道下 stdin 是管道，但控制终端 /dev/tty 仍然存在
-    if [[ -c /dev/tty ]]; then
+    # 尝试打开控制终端；-c 只检查设备节点存在，需实际打开才能确认可用
+    if ( : < /dev/tty ) 2>/dev/null; then
         exec bash "${extracted_dir}/install.sh" "${args[@]}" < /dev/tty
     else
         echo "错误: 未检测到交互式终端"
