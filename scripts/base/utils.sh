@@ -315,13 +315,13 @@ set_ssh_config() {
     local value="$2"
     local config_file="${3:-/etc/ssh/sshd_config}"
 
-    # 使用词边界防止误匹配：Port 不会匹配 PortForwarding
-    if grep -qE "^#*${key}(\s|$)" "${config_file}" 2>/dev/null; then
+    # 使用 POSIX 字符类 [[:space:]] 确保跨平台兼容（BSD/macOS + GNU/Linux）
+    if grep -qE "^#*${key}([[:space:]]|$)" "${config_file}" 2>/dev/null; then
         # 参数存在，修改它 (兼容 macOS 和 Linux)
         if [[ "$(uname)" == "Darwin" ]]; then
-            sed -i '' "s|^#*${key}\s.*|${key} ${value}|" "${config_file}"
+            sed -i '' "s|^#*${key}[[:space:]].*|${key} ${value}|" "${config_file}"
         else
-            sed -i "s|^#*${key}\s.*|${key} ${value}|" "${config_file}"
+            sed -i "s|^#*${key}[[:space:]].*|${key} ${value}|" "${config_file}"
         fi
     else
         # 参数不存在，添加它
@@ -461,9 +461,7 @@ command_exists() {
 # 获取操作系统类型
 get_os_type() {
     if [[ -f /etc/os-release ]]; then
-        # shellcheck source=/dev/null
-        source /etc/os-release
-        echo "${ID}"
+        (. /etc/os-release && echo "${ID}")
     elif [[ -f /etc/redhat-release ]]; then
         echo "centos"
     elif [[ -f /etc/debian_version ]]; then
@@ -476,9 +474,7 @@ get_os_type() {
 # 获取操作系统版本
 get_os_version() {
     if [[ -f /etc/os-release ]]; then
-        # shellcheck source=/dev/null
-        source /etc/os-release
-        echo "${VERSION_ID}"
+        (. /etc/os-release && echo "${VERSION_ID}")
     else
         echo "unknown"
     fi
