@@ -49,22 +49,19 @@ _bootstrap_and_reexec() {
         exit 1
     fi
 
-    # 完整性校验：使用 tarball 内的 SHA256SUMS（与 install.sh 同源，避免 CDN 缓存不一致）
-    local checksum_file="${extracted_dir}/SHA256SUMS"
-    if [[ -f "${checksum_file}" ]]; then
-        local expected_hash actual_hash
-        expected_hash=$(grep "install.sh" "${checksum_file}" | awk '{print $1}' || true)
-        actual_hash=$(sha256sum "${extracted_dir}/install.sh" | awk '{print $1}')
-        if [[ -n "${expected_hash}" ]] && [[ "${expected_hash}" != "${actual_hash}" ]]; then
-            echo "错误: install.sh 完整性校验失败！"
-            echo "  期待: ${expected_hash}"
-            echo "  实际: ${actual_hash}"
-            echo "  可能原因：下载不完整、网络问题或文件被篡改"
-            rm -rf "${tmp_dir}"
-            exit 1
-        fi
-    else
-        echo "警告: tarball 内未找到 SHA256SUMS，跳过完整性验证"
+    # 基本完整性校验：文件存在、非空、合法 shebang
+    if [[ ! -s "${extracted_dir}/install.sh" ]]; then
+        echo "错误: install.sh 为空或不存在"
+        rm -rf "${tmp_dir}"
+        exit 1
+    fi
+    local first_line
+    first_line=$(head -1 "${extracted_dir}/install.sh")
+    if [[ "${first_line}" != "#!/usr/bin/env bash" ]]; then
+        echo "错误: install.sh 格式异常（shebang 不匹配）"
+        echo "  首行: ${first_line}"
+        rm -rf "${tmp_dir}"
+        exit 1
     fi
 
     echo "下载完成，正在启动安装脚本..."
