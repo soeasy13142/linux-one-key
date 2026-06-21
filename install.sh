@@ -83,10 +83,15 @@ _bootstrap_and_reexec() {
     # curl pipe mode: just re-exec, user gets interactive menu
     :
     chmod +x "${extracted_dir}/install.sh"
-    if tty &>/dev/null; then
+    # curl 管道下 stdin 是管道，但控制终端 /dev/tty 仍然存在
+    if [[ -c /dev/tty ]]; then
         exec bash "${extracted_dir}/install.sh" "${args[@]}" < /dev/tty
     else
-        exec bash "${extracted_dir}/install.sh" "${args[@]}" < /dev/null
+        echo "错误: 未检测到交互式终端"
+        echo "非交互环境请使用 --status 模式:"
+        echo "  curl -fsSL .../install.sh | bash -s -- --status"
+        rm -rf "${tmp_dir}"
+        exit 1
     fi
 }
 
@@ -389,6 +394,12 @@ get_main_menu_choice() {
     local choice
     while true; do
         choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-6]" "")
+        # EOF / non-interactive stdin: exit gracefully
+        if [[ -z "${choice}" ]]; then
+            echo ""
+            log_error "未检测到输入，非交互环境请使用 --status 模式"
+            exit 1
+        fi
         case "${choice}" in
             [0-6])
                 echo "${choice}"
