@@ -49,10 +49,9 @@ _bootstrap_and_reexec() {
         exit 1
     fi
 
-    # 完整性校验：对比 SHA256SUMS 文件
-    local checksum_url="https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/SHA256SUMS"
-    local checksum_file="${tmp_dir}/SHA256SUMS"
-    if curl -fsSL "${checksum_url}" -o "${checksum_file}" 2>/dev/null; then
+    # 完整性校验：使用 tarball 内的 SHA256SUMS（与 install.sh 同源，避免 CDN 缓存不一致）
+    local checksum_file="${extracted_dir}/SHA256SUMS"
+    if [[ -f "${checksum_file}" ]]; then
         local expected_hash actual_hash
         expected_hash=$(grep "install.sh" "${checksum_file}" | awk '{print $1}' || true)
         actual_hash=$(sha256sum "${extracted_dir}/install.sh" | awk '{print $1}')
@@ -65,7 +64,7 @@ _bootstrap_and_reexec() {
             exit 1
         fi
     else
-        echo "警告: 无法下载校验文件，跳过完整性验证"
+        echo "警告: tarball 内未找到 SHA256SUMS，跳过完整性验证"
     fi
 
     echo "下载完成，正在启动安装脚本..."
