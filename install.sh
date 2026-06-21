@@ -267,18 +267,22 @@ load_dependencies() {
 
 show_welcome() {
     clear 2>/dev/null || true
+    echo "=================================="
+    echo "   _____ _     _       _     "
+    echo "  / ____| |   (_)     | |    "
+    echo " | |    | |__  _ _ __ | |__  "
+    echo " | |    | '_ \| | '_ \| '_ \ "
+    echo " | |____| | | | | | | | | | |"
+    echo "  \_____|_| |_|_|_| |_|_| |_|"
+    echo "        Author: Charlie       "
+    echo "=================================="
     echo ""
-    echo -e "${BOLD}╔═══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BOLD}║                                                           ║${NC}"
-    echo -e "${BOLD}║       Linux 云服务器安全加固脚本                          ║${NC}"
-    echo -e "${BOLD}║       Linux Server Security Hardening Script              ║${NC}"
-    echo -e "${BOLD}║                                                           ║${NC}"
-    echo -e "${BOLD}║       ${MSG_VERSION}: ${SCRIPT_VERSION}                                        ║${NC}"
-    echo -e "${BOLD}║                                                           ║${NC}"
-    echo -e "${BOLD}╚═══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "  ${BOLD}Linux 云服务器安全加固脚本${NC}"
+    echo -e "  ${BOLD}Linux Server Security Hardening Script${NC}"
+    echo -e "  ${BOLD}${MSG_VERSION}: ${SCRIPT_VERSION}  |  Author: Charlie${NC}"
     echo ""
-    echo -e "${BLUE}${MSG_WELCOME}${NC}"
-    echo -e "${BLUE}${MSG_DESCRIPTION}${NC}"
+    echo -e "  ${BLUE}${MSG_WELCOME}${NC}"
+    echo -e "  ${BLUE}${MSG_DESCRIPTION}${NC}"
     echo ""
 }
 
