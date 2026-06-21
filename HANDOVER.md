@@ -2,8 +2,8 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-20
-**当前阶段**: v0.2 已完成 + curl 管道模式 bug 修复 + Code Review 问题修复 + Ubuntu 24.04 真机测试 + 真机测试 Bug 修复（7 项）+ 交互式重构（删除一键模式，改为逐步向导）+ VM 综合测试（curl 方式，发现 8 个新问题）
+**最后更新**: 2026-06-21
+**当前阶段**: v0.2 已完成 + curl 管道模式 bug 修复 + Code Review 问题修复 + Ubuntu 24.04 真机测试 + 真机测试 Bug 修复（7 项）+ 交互式重构（删除一键模式，改为逐步向导）+ VM 综合测试（curl 方式，发现 8 个新问题）+ Code Review 问题修复 (2026-06-21)
 
 ---
 
@@ -383,3 +383,10 @@ v0.4 (第四周)
 | 2026-06-20 | UPDATE | `tests/unit/firewall.bats` | P0 Issue #8 修复：source utils.sh + load_lang；修复 DETECT_OS→DETECTED_OS |
 | 2026-06-20 | UPDATE | `scripts/lang/zh.sh` | 新增 MSG_WIZARD_SKIPPED="已跳过" |
 | 2026-06-20 | UPDATE | `scripts/lang/en.sh` | 新增 MSG_WIZARD_SKIPPED="Skipped" |
+| 2026-06-21 | UPDATE | `scripts/base/utils.sh` | 修复 get_os_type()/get_os_version() 环境变量污染：source → 子 shell (. /etc/os-release && echo) |
+| 2026-06-21 | UPDATE | `scripts/base/utils.sh` | 修复 set_ssh_config() grep/sed \s → POSIX [[:space:]]，提升 BSD/macOS 兼容性 |
+| 2026-06-21 | DELETE | `./.DS_Store`, `./config/.DS_Store`, `./tests/.DS_Store` | 清理 macOS .DS_Store 文件 |
+| 2026-06-21 | UPDATE | `install.sh` | 修复 ShellCheck SC2012：view_report() 中 ls -t → find -printf |
+| 2026-06-21 | CREATE | `scripts/base/bootstrap.sh` | 从 install.sh 提取 bootstrap 逻辑（_bootstrap_and_reexec + _is_curl_pipe） |
+| 2026-06-21 | UPDATE | `install.sh` | 提取 bootstrap 逻辑到 bootstrap.sh，缩减至 ~760 行 |
+| 2026-06-21 | CREATE | `.claude/reviews/local-review-20260621.md` | 代码审查报告：0 CRITICAL + 0 HIGH + 4 MEDIUM + 4 LOW |
