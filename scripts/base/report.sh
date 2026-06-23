@@ -126,14 +126,14 @@ generate_report() {
             local final_port
             final_port=$(get_ssh_port)
             if [[ "${final_port}" != "22" ]]; then
-                echo "  ⚠ 防火墙已保留放通 22 端口，确认新 SSH 端口可用后请手动关闭: sudo ufw deny 22/tcp"
+                echo "  ⚠ ${MSG_REPORT_WARN_SSH_PORT22}"
             fi
         fi
         if [[ "${_WIZARD_FIREWALL_DONE:-0}" == "1" ]]; then
-            echo "  ⚠ 防火墙已启用，请确保已正确放通所需端口"
+            echo "  ⚠ ${MSG_REPORT_WARN_FIREWALL}"
         fi
         if [[ "${_WIZARD_FAIL2BAN_DONE:-0}" == "1" ]]; then
-            echo "  ⚠ 请定期检查 Fail2Ban 日志: sudo tail -f /var/log/fail2ban.log"
+            echo "  ⚠ ${MSG_REPORT_WARN_FAIL2BAN}"
         fi
 
         echo ""

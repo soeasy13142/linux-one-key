@@ -76,8 +76,6 @@ _bootstrap_and_reexec() {
     # 需要重新打开 stdin 以支持交互式输入
     # 注意: "$@" 包含原始参数（如 --yes），会传递给 re-exec 的脚本
     local args=("$@")
-    # curl pipe mode: just re-exec, user gets interactive menu
-    :
     chmod +x "${extracted_dir}/install.sh"
     # curl 管道下 stdin 是管道，但控制终端 /dev/tty 仍然存在
     # 尝试打开控制终端；-c 只检查设备节点存在，需实际打开才能确认可用
@@ -138,8 +136,6 @@ _parse_args() {
         esac
     done
 }
-
-_parse_args "$@"
 
 # 检测是否通过 curl 管道执行
 # 注意: BASH_SOURCE[0] 在函数内外行为不同（管道模式下函数内返回 "main"），
@@ -546,7 +542,8 @@ view_report() {
     local latest_report
 
     if [[ -d "${report_dir}" ]]; then
-        latest_report=$(find "${report_dir}" -maxdepth 1 -name 'report_*.txt' -type f -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+        # 使用 ls -t 替代 find -printf，兼容 macOS (BSD find)
+        latest_report=$(ls -t "${report_dir}"/report_*.txt 2>/dev/null | head -1)
     fi
 
     if [[ -n "${latest_report}" ]] && [[ -f "${latest_report}" ]]; then
@@ -690,6 +687,9 @@ run_main_menu_loop() {
 main() {
     # 加载依赖
     load_dependencies
+
+    # 解析参数（需要在 load_dependencies 之后，因为引用了颜色变量）
+    _parse_args "$@"
 
     # 初始化日志
     init_logging

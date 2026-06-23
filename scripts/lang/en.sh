@@ -363,6 +363,9 @@ MSG_REPORT_TASKS="Completed Tasks"
 MSG_REPORT_CONFIGS="Modified Configuration Files"
 MSG_REPORT_WARNINGS="Important Reminders"
 MSG_REPORT_SAVED="Report saved to"
+MSG_REPORT_WARN_SSH_PORT22="Firewall kept port 22 open. After confirming new SSH port works, close it: sudo ufw deny 22/tcp"
+MSG_REPORT_WARN_FIREWALL="Firewall enabled. Ensure all required ports are properly opened."
+MSG_REPORT_WARN_FAIL2BAN="Check Fail2Ban logs regularly: sudo tail -f /var/log/fail2ban.log"
 
 # ═══════════════════════════════════════════
 # Log

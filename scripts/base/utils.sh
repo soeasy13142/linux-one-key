@@ -86,7 +86,7 @@ _ensure_log_dir() {
     if [[ "${_ENSURING_LOG_DIR:-}" == "1" ]]; then
         return 0
     fi
-    export _ENSURING_LOG_DIR=1
+    _ENSURING_LOG_DIR=1
 
     if [[ -n "${LOG_FILE}" ]] && [[ ! -d "$(dirname "${LOG_FILE}")" ]]; then
         if ! mkdir -p "$(dirname "${LOG_FILE}")" 2>/dev/null; then
@@ -506,6 +506,9 @@ get_package_manager() {
 # 注意：不使用命令替换捕获 PID（命令替换子 shell 中的后台进程
 # 会继承子 shell 的 stdout pipe，pipe 关闭后可能导致后台进程异常），
 # 而是通过全局变量 _SCHEDULED_PID 传递 PID
+#
+# 安全约束：callback 参数仅接受本项目内部硬编码的函数名（如 "rollback_ssh"），
+# 禁止传入用户输入或外部数据，以防命令注入。
 schedule_rollback() {
     local delay="$1"
     local callback="$2"

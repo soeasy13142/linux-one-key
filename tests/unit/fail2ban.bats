@@ -88,17 +88,9 @@ teardown() {
     [[ "${result}" == "/var/log/auth.log" ]]
 }
 
-# 测试 _get_ssh_service_name 函数
-@test "_get_ssh_service_name returns sshd for ubuntu" {
-    export DETECTED_OS="ubuntu"
-    result=$(_get_ssh_service_name)
-    [[ "${result}" == "sshd" ]]
-}
-
-@test "_get_ssh_service_name returns sshd for centos" {
-    export DETECTED_OS="centos"
-    result=$(_get_ssh_service_name)
-    [[ "${result}" == "sshd" ]]
+# 测试 SSH_SERVICE_NAME 常量
+@test "SSH_SERVICE_NAME is set to sshd" {
+    [[ "${SSH_SERVICE_NAME}" == "sshd" ]]
 }
 
 # 测试 _configure_fail2ban_jail 函数
