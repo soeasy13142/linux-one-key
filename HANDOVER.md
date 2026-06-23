@@ -2,8 +2,8 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-23
-**当前阶段**: v0.2 已完成 + Code Review Round 3 修复完成（2026-06-23，3 HIGH + 4 MEDIUM + 4 LOW 已修复，H2 延后）
+**最后更新**: 2026-06-23（文档归类整理）
+**当前阶段**: v0.2 已完成 + Code Review Round 3 部分修复（2026-06-23，2 HIGH + 4 MEDIUM + 3 LOW 已修复，H2 延后，L4 未修复）
 
 ---
 
@@ -30,7 +30,8 @@
 | v0.1 基础框架 + SSH 安全 | ✅ 完成 | utils.sh, detect.sh, init.sh, ssh.sh, install.sh, 语言文件, 测试 |
 | v0.2 防火墙 + Fail2Ban | ✅ 完成 | firewall.sh, fail2ban.sh, 语言文件更新, 菜单集成, 单元测试 |
 | Code Review (Round 1) | ✅ 完成 | 全面审查发现 2 CRITICAL + 7 HIGH + 14 MEDIUM + 9 LOW bug |
-| Code Review (Round 2) | ✅ 完成 | 3 代理并行审查，发现 10 CRITICAL + 15 HIGH + 13 MEDIUM + 12 LOW，共 50 个问题 ⭐ NEW |
+| Code Review (Round 2) | ✅ 完成 | 3 代理并行审查，发现 10 CRITICAL + 15 HIGH + 13 MEDIUM + 12 LOW，共 50 个问题 |
+| Code Review (Round 3) | 🔄 部分修复 | 0 CRITICAL + 3 HIGH + 4 MEDIUM + 4 LOW；H1,H3,M1-M4,L1-L3 已修复，H2 延后，L4 未修复 |
 | v0.3 用户管理 + 内核加固 | ⬜ 未开始 | |
 | v0.4 审计日志 + 服务管理 | ⬜ 未开始 | |
 | v1.0 测试 + 文档 + 发布 | ⬜ 未开始 | |
@@ -60,7 +61,7 @@
 | 2026-06-20 | 创建 Fail2Ban 单元测试 | `tests/unit/fail2ban.bats` (18个测试用例) |
 | 2026-06-20 | 修复 curl 管道模式 bug | `install.sh` (BASH_SOURCE 检测 + stdin 重定向) |
 | 2026-06-20 | 全面 Code Review Round 1 | `docs/bug-review-report.md` (2 CRITICAL + 7 HIGH + 14 MEDIUM + 9 LOW) |
-| 2026-06-20 | 全面 Code Review Round 2 | `docs/code-review-report-20260620.md` (10 CRITICAL + 15 HIGH + 13 MEDIUM + 12 LOW, 3 代理并行) ⭐ NEW |
+| 2026-06-20 | 全面 Code Review Round 2 | `docs/code-review-report-20260620.md` (10 CRITICAL + 15 HIGH + 13 MEDIUM + 12 LOW, 3 代理并行) |
 | 2026-06-20 | 审查代理：安全审查 | 9 项安全发现（无命令注入/硬编码密钥/路径遍历） |
 | 2026-06-20 | 审查代理：代码质量 | 12 项发现（含 RHEL 家族 OS 支持缺失 2x HIGH） |
 | 2026-06-20 | 审查代理：静默失败 | 31 项发现（核心模式：包安装/防火墙/SSH 操作无错误检查） |
@@ -73,8 +74,8 @@
 | 2026-06-20 | 真机测试 Bug #6 修复 | `scripts/base/utils.sh` — log_info/log_success/log_warn/log_step/log_title/log_separator 统一输出到 stderr |
 | 2026-06-20 | 真机测试 Bug #5 修复 | `scripts/security/ssh.sh` — restart_ssh 自动检测 ssh vs sshd 服务名，避免 Ubuntu 误导性错误 |
 | 2026-06-20 | 真机测试 Bug #8 修复 | `scripts/lang/zh.sh`, `en.sh`, `scripts/base/detect.sh` — System Detection Summary i18n |
-| 2026-06-20 | 创建交互式重构设计文档 | `.superpowers/specs/2026-06-20-interactive-setup-design.md` — 交互式安装流程规范 |
-| 2026-06-20 | 创建交互式重构实施计划 | `.superpowers/plans/2026-06-20-interactive-setup.md` — 交互式重构实施计划 |
+| 2026-06-20 | 创建交互式重构设计文档 | `docs/superpowers/specs/2026-06-20-interactive-setup-design.md` — 交互式安装流程规范 |
+| 2026-06-20 | 创建交互式重构实施计划 | `docs/superpowers/plans/2026-06-20-interactive-setup.md` — 交互式重构实施计划 |
 | 2026-06-20 | 删除一键模式，改为完整交互式向导 | `install.sh` — 移除 --yes/--quick 参数，改为逐步交互式配置 |
 | 2026-06-20 | 新增随机端口生成函数 | `scripts/base/utils.sh` — 新增 generate_random_port() 函数 |
 | 2026-06-20 | 重构 SSH 向导为逐步交互模式 | `scripts/security/ssh.sh` — 端口支持 3 选 1（自定义/随机/保持），每参数逐步提示 |
@@ -94,57 +95,110 @@ linux-one-key/
 ├── .claude/
 │   ├── CLAUDE.md              # Claude Code 项目指令
 │   ├── prds/
-│   │   └── linux-security-hardening.prd.md  # PRD 需求文档 ⭐
+│   │   ├── linux-security-hardening.prd.md  # PRD 需求文档
+│   │   └── main-menu-redesign.prd.md        # 主菜单重设计 PRD
+│   ├── plans/
+│   │   └── main-menu-redesign.plan.md       # 主菜单重设计实施计划
 │   ├── commands/
 │   │   ├── feature-development.md  # 功能开发命令
 │   │   ├── database-migration.md   # 数据库迁移命令
 │   │   └── add-language-rules.md   # 添加语言规则命令
 │   ├── research/
-│   │   └── research-playbook.md    # 研究工作流指南
+│   │   └── everything-claude-code-research-playbook.md  # 研究工作流指南
+│   ├── reviews/
+│   │   └── local-review-20260621.md  # 代码审查报告
 │   └── rules/
 │       ├── common/            # 通用规则
-│       │   ├── coding-style.md
-│       │   ├── git-workflow.md
-│       │   ├── testing.md
-│       │   ├── performance.md
-│       │   ├── patterns.md
-│       │   ├── hooks.md
 │       │   ├── agents.md
-│       │   ├── security.md
-│       │   ├── handover.md    # 交接文档规则 ⭐
+│       │   ├── code-review.md
+│       │   ├── coding-style.md
+│       │   ├── development-workflow.md
+│       │   ├── git-workflow.md
 │       │   ├── guardrails.md  # 安全防护规则
-│       │   └── node.md        # Node.js 规则
-│       └── typescript/        # TS 规则（本项目未使用）
+│       │   ├── handover.md    # 交接文档规则
+│       │   ├── hooks.md
+│       │   ├── node.md        # Node.js 规则
+│       │   ├── patterns.md
+│       │   ├── performance.md
+│       │   ├── security.md
+│       │   └── testing.md
+│       └── typescript/        # TS 规则（来自 ECC，本项目未使用）
+│           ├── coding-style.md
+│           ├── hooks.md
+│           ├── patterns.md
+│           ├── security.md
+│           └── testing.md
 ├── scripts/
 │   ├── base/
 │   │   ├── utils.sh           # 工具函数库
 │   │   ├── detect.sh          # 系统检测
-│   │   └── init.sh            # 系统初始化
+│   │   ├── init.sh            # 系统初始化
+│   │   └── report.sh          # 报告生成
 │   ├── security/
 │   │   ├── ssh.sh             # SSH 安全加固
-│   │   ├── firewall.sh        # 防火墙配置 ⭐ NEW
-│   │   └── fail2ban.sh        # Fail2Ban 入侵防护 ⭐ NEW
+│   │   ├── firewall.sh        # 防火墙配置
+│   │   └── fail2ban.sh        # Fail2Ban 入侵防护
 │   ├── lang/
 │   │   ├── zh.sh              # 中文翻译
 │   │   └── en.sh              # 英文翻译
 │   ├── dev/                   # [空] 开发工具安装
-│   └── server/                # [空] 服务器软件安装
+│   ├── server/                # [空] 服务器软件安装
+│   └── utils/                 # [空] 通用工具
 ├── tests/
 │   └── unit/
 │       ├── utils.bats         # 工具函数测试
 │       ├── firewall.bats      # 防火墙测试
 │       ├── fail2ban.bats      # Fail2Ban 测试
-│       └── ssh.bats           # SSH 模块测试 ⭐ NEW
+│       └── ssh.bats           # SSH 模块测试
 ├── config/
 │   └── fail2ban/
-│       └── jail.local         # Fail2Ban 配置模板 ⭐ NEW
+│       └── jail.local         # Fail2Ban 配置模板
 ├── docs/                      # 文档目录
-│   ├── bug-review-report.md   # Code Review Round 1 Bug 报告
-│   ├── code-review-report-20260620.md  # Code Review Round 2 综合报告
-│   └── code-review-handover-20260623.md  # Code Review Round 3 交接文档（已修复）
-├── install.sh                 # 主入口脚本 ⭐ NEW
+│   ├── README.md                           # 文档目录总览
+│   ├── code-reviews/                       # Code Review 报告
+│   │   ├── README.md
+│   │   ├── round-1-bug-report.md           # Round 1 Bug 报告
+│   │   ├── round-2-code-review.md          # Round 2 综合报告
+│   │   └── round-3-handover.md             # Round 3 交接文档
+│   ├── test-reports/                       # 测试报告
+│   │   ├── README.md
+│   │   ├── ubuntu-arm64-test.md            # Ubuntu ARM64 真机测试
+│   │   └── vm-curl-test.md                 # VM 综合测试
+│   └── design/                             # 设计文档 & 实施计划
+│       ├── README.md
+│       ├── interactive-setup-spec.md       # 交互式配置设计文档
+│       ├── interactive-setup-plan.md       # 交互式配置实施计划
+│       ├── linux-security-hardening-prd.md # 安全加固 PRD（副本）
+│       ├── main-menu-redesign-prd.md       # 主菜单重设计 PRD（副本）
+│       └── main-menu-redesign-plan.md      # 主菜单重设计计划（副本）
+├── everything-claude-code/    # ECC 配置参考
+├── .gitignore
+├── install.sh                 # 主入口脚本
 ├── README.md                  # 项目说明
 └── HANDOVER.md                # 本文件
+```
+
+### 计划文件（待创建，v0.3+）
+
+```
+├── scripts/
+│   ├── security/
+│   │   ├── kernel.sh          # 内核安全参数
+│   │   ├── filesystem.sh      # 文件系统安全
+│   │   ├── audit.sh           # 审计日志配置
+│   │   └── services.sh        # 服务管理
+│   └── utils/
+│       ├── backup.sh          # 备份工具
+│       ├── rollback.sh        # 回滚工具
+│       ├── report.sh          # 报告生成（已移至 scripts/base/report.sh）
+│       └── check.sh           # 检查工具
+├── config/
+│   ├── ssh/                   # SSH 配置模板
+│   ├── sysctl/                # 内核参数模板
+│   └── audit/                 # 审计规则模板
+└── tests/
+    ├── unit/                  # 单元测试
+    └── integration/           # 集成测试
 ```
 
 ### 计划文件（待创建）
@@ -220,20 +274,29 @@ linux-one-key/
    - 统一函数命名：`run_ssh_wizard` / `run_firewall_wizard` / `run_fail2ban_wizard`
 
 3. ✅ **VM 综合测试（curl 方式）**：15 个测试用例，发现 8 个新问题（详见 `docs/vm-test-report-20260620.md`）
-   - Issue #2 (HIGH): `generate_report()` 报告硬编码，与实际执行结果不一致
-   - Issue #4 (MEDIUM): 非 TTY curl pipe 模式无限循环
+   - Issue #2 (HIGH): `generate_report()` 报告硬编码，与实际执行结果不一致 → ✅ 已修复
+   - Issue #4 (MEDIUM): 非 TTY curl pipe 模式无限循环 → ✅ 已修复
    - Issue #6 (MEDIUM): 非 root 用户执行日志 Permission denied
-   - Issue #8 (HIGH): Bats 测试 27/46 失败，模块依赖加载顺序问题
+   - Issue #8 (HIGH): Bats 测试 27/46 失败，模块依赖加载顺序问题 → ✅ 已修复
+
+4. ✅ **Code Review Round 3 部分修复**（2026-06-23，详见 `docs/code-review-handover-20260623.md`）
+   - ✅ H1: `_parse_args` 移入 `main()` 解决颜色变量未初始化
+   - ✅ H3: `report.sh` 3 处硬编码中文替换为 i18n 变量
+   - ✅ M1: `_ENSURING_LOG_DIR` 移除 `export`
+   - ✅ M2: 创建 `tests/unit/ssh.bats`（16 个测试用例）
+   - ✅ M3: `fail2ban.sh` sleep 2 改为轮询等待（最多 10 秒）
+   - ✅ M4: `schedule_rollback` 添加安全约束注释
+   - ✅ L1: `firewall.sh` 统一引号风格
+   - ✅ L2: `_get_ssh_service_name` 替换为 `SSH_SERVICE_NAME` 常量
+   - ✅ L3: 移除 `install.sh` 残留 `:` 占位符
 
 ### 接下来要做
 
-1. **🔴 修复 P0 问题**：
-   - `generate_report()` 根据实际执行状态动态生成报告（不硬编码）
-   - 修复 Bats 测试 setup 的 utils.sh 预加载（fail2ban.bats / firewall.bats）
-2. **🟡 修复 P1 问题**：
+1. **🟡 修复剩余问题**：
+   - H2: `init.sh` 已加载但 `run_init()` 从未调用
+   - L4: `view_report()` 中 `find -printf` 改为 macOS 兼容方案
    - 非 root 用户自动 fallback 日志目录
-   - 非 TTY curl pipe 模式优雅退出
-3. **📋 验证其他发行版**：在 CentOS/Debian VM 中运行完整向导流程
+2. **📋 验证其他发行版**：在 CentOS/Debian VM 中运行完整向导流程
    - SSH 端口交互逻辑
    - Fail2Ban 参数验证
 3. **开始 v0.3**：用户管理 + 内核加固
@@ -246,6 +309,7 @@ v0.1 ✅ 已完成
 ├── scripts/base/utils.sh       ✅
 ├── scripts/base/detect.sh      ✅
 ├── scripts/base/init.sh        ✅
+├── scripts/base/report.sh      ✅
 ├── scripts/security/ssh.sh     ✅
 ├── scripts/lang/zh.sh          ✅
 ├── scripts/lang/en.sh          ✅
@@ -254,7 +318,8 @@ v0.1 ✅ 已完成
 
 v0.2 ✅ 已完成 + Bug 全部修复
 ├── scripts/security/firewall.sh ✅
-└── scripts/security/fail2ban.sh ✅
+├── scripts/security/fail2ban.sh ✅
+└── tests/unit/ssh.bats         ✅
 
 v0.3 (第三周)
 ├── scripts/security/kernel.sh
@@ -389,8 +454,6 @@ v0.4 (第四周)
 | 2026-06-21 | UPDATE | `scripts/base/utils.sh` | 修复 set_ssh_config() grep/sed \s → POSIX [[:space:]]，提升 BSD/macOS 兼容性 |
 | 2026-06-21 | DELETE | `./.DS_Store`, `./config/.DS_Store`, `./tests/.DS_Store` | 清理 macOS .DS_Store 文件 |
 | 2026-06-21 | UPDATE | `install.sh` | 修复 ShellCheck SC2012：view_report() 中 ls -t → find -printf |
-| 2026-06-21 | CREATE | `scripts/base/bootstrap.sh` | 从 install.sh 提取 bootstrap 逻辑（_bootstrap_and_reexec + _is_curl_pipe） |
-| 2026-06-21 | UPDATE | `install.sh` | 提取 bootstrap 逻辑到 bootstrap.sh，缩减至 ~760 行 |
 | 2026-06-21 | CREATE | `.claude/reviews/local-review-20260621.md` | 代码审查报告：0 CRITICAL + 0 HIGH + 4 MEDIUM + 4 LOW |
 | 2026-06-23 | CREATE | `docs/code-review-handover-20260623.md` | 全项目 Code Review Round 3 交接文档：0 CRITICAL + 3 HIGH + 4 MEDIUM + 4 LOW，含待办修复方案 |
 | 2026-06-23 | UPDATE | `HANDOVER.md` | 更新当前阶段、添加变更日志 |
@@ -403,3 +466,18 @@ v0.4 (第四周)
 | 2026-06-23 | UPDATE | `scripts/security/firewall.sh` | L1: 统一引号风格 $VAR → ${VAR} |
 | 2026-06-23 | UPDATE | `tests/unit/fail2ban.bats` | L2: 更新测试用例适配 SSH_SERVICE_NAME 常量 |
 | 2026-06-23 | CREATE | `tests/unit/ssh.bats` | M2: SSH 模块单元测试（16 个用例：validate_port/check_other_users/check_ssh_keys） |
+| 2026-06-23 | DELETE | `SHA256SUMS` | 完整性校验简化为基本检查，不再需要独立校验文件（commit 33dc7e1） |
+| 2026-06-23 | UPDATE | `HANDOVER.md` | 全面核对修正：更新文件树（添加缺失文件、移除不存在的 bootstrap.sh）、修正 Code Review Round 3 状态、添加 SHA256SUMS 删除记录、更新下一步工作 |
+| 2026-06-23 | MOVE | `docs/bug-review-report.md` → `docs/code-reviews/round-1-bug-report.md` | 文档归类：Code Review 报告移入 code-reviews/ |
+| 2026-06-23 | MOVE | `docs/code-review-report-20260620.md` → `docs/code-reviews/round-2-code-review.md` | 文档归类：Code Review 报告移入 code-reviews/ |
+| 2026-06-23 | MOVE | `docs/code-review-handover-20260623.md` → `docs/code-reviews/round-3-handover.md` | 文档归类：Code Review 报告移入 code-reviews/ |
+| 2026-06-23 | MOVE | `docs/test-report-20260620.md` → `docs/test-reports/ubuntu-arm64-test.md` | 文档归类：测试报告移入 test-reports/ |
+| 2026-06-23 | MOVE | `docs/vm-test-report-20260620.md` → `docs/test-reports/vm-curl-test.md` | 文档归类：测试报告移入 test-reports/ |
+| 2026-06-23 | MOVE | `docs/superpowers/specs/...` → `docs/design/interactive-setup-spec.md` | 文档归类：设计文档移入 design/ |
+| 2026-06-23 | MOVE | `docs/superpowers/plans/...` → `docs/design/interactive-setup-plan.md` | 文档归类：实施计划移入 design/ |
+| 2026-06-23 | COPY | `.claude/prds/*.prd.md` → `docs/design/` | PRD 副本归入 design/，原件保留供 Claude Code 工作流使用 |
+| 2026-06-23 | COPY | `.claude/plans/*.plan.md` → `docs/design/` | 实施计划副本归入 design/，原件保留供 Claude Code 工作流使用 |
+| 2026-06-23 | CREATE | `docs/README.md` | 文档目录总览 |
+| 2026-06-23 | CREATE | `docs/code-reviews/README.md` | Code Review 目录说明 |
+| 2026-06-23 | CREATE | `docs/test-reports/README.md` | 测试报告目录说明 |
+| 2026-06-23 | CREATE | `docs/design/README.md` | 设计文档目录说明 |
