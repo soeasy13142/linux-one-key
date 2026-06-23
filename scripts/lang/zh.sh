@@ -363,6 +363,9 @@ MSG_REPORT_TASKS="完成的任务"
 MSG_REPORT_CONFIGS="修改的配置文件"
 MSG_REPORT_WARNINGS="重要提醒"
 MSG_REPORT_SAVED="报告已保存到"
+MSG_REPORT_WARN_SSH_PORT22="防火墙已保留放通 22 端口，确认新 SSH 端口可用后请手动关闭: sudo ufw deny 22/tcp"
+MSG_REPORT_WARN_FIREWALL="防火墙已启用，请确保已正确放通所需端口"
+MSG_REPORT_WARN_FAIL2BAN="请定期检查 Fail2Ban 日志: sudo tail -f /var/log/fail2ban.log"
 
 # ═══════════════════════════════════════════
 # 日志

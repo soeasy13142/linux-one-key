@@ -2,8 +2,8 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-21
-**当前阶段**: v0.2 已完成 + curl 管道模式 bug 修复 + Code Review 问题修复 + Ubuntu 24.04 真机测试 + 真机测试 Bug 修复（7 项）+ 交互式重构（删除一键模式，改为逐步向导）+ VM 综合测试（curl 方式，发现 8 个新问题）+ Code Review 问题修复 (2026-06-21)
+**最后更新**: 2026-06-23
+**当前阶段**: v0.2 已完成 + Code Review Round 3 修复完成（2026-06-23，3 HIGH + 4 MEDIUM + 4 LOW 已修复，H2 延后）
 
 ---
 
@@ -132,14 +132,16 @@ linux-one-key/
 ├── tests/
 │   └── unit/
 │       ├── utils.bats         # 工具函数测试
-│       ├── firewall.bats      # 防火墙测试 ⭐ NEW
-│       └── fail2ban.bats      # Fail2Ban 测试 ⭐ NEW
+│       ├── firewall.bats      # 防火墙测试
+│       ├── fail2ban.bats      # Fail2Ban 测试
+│       └── ssh.bats           # SSH 模块测试 ⭐ NEW
 ├── config/
 │   └── fail2ban/
 │       └── jail.local         # Fail2Ban 配置模板 ⭐ NEW
 ├── docs/                      # 文档目录
 │   ├── bug-review-report.md   # Code Review Round 1 Bug 报告
-│   └── code-review-report-20260620.md  # Code Review Round 2 综合报告 ⭐ NEW
+│   ├── code-review-report-20260620.md  # Code Review Round 2 综合报告
+│   └── code-review-handover-20260623.md  # Code Review Round 3 交接文档（已修复）
 ├── install.sh                 # 主入口脚本 ⭐ NEW
 ├── README.md                  # 项目说明
 └── HANDOVER.md                # 本文件
@@ -390,3 +392,14 @@ v0.4 (第四周)
 | 2026-06-21 | CREATE | `scripts/base/bootstrap.sh` | 从 install.sh 提取 bootstrap 逻辑（_bootstrap_and_reexec + _is_curl_pipe） |
 | 2026-06-21 | UPDATE | `install.sh` | 提取 bootstrap 逻辑到 bootstrap.sh，缩减至 ~760 行 |
 | 2026-06-21 | CREATE | `.claude/reviews/local-review-20260621.md` | 代码审查报告：0 CRITICAL + 0 HIGH + 4 MEDIUM + 4 LOW |
+| 2026-06-23 | CREATE | `docs/code-review-handover-20260623.md` | 全项目 Code Review Round 3 交接文档：0 CRITICAL + 3 HIGH + 4 MEDIUM + 4 LOW，含待办修复方案 |
+| 2026-06-23 | UPDATE | `HANDOVER.md` | 更新当前阶段、添加变更日志 |
+| 2026-06-23 | UPDATE | `install.sh` | H1: 将 _parse_args 移入 main()（load_dependencies 之后），解决颜色变量未初始化问题；L3: 移除残留 `:` 占位符；L4: find -printf → ls -t 兼容 macOS |
+| 2026-06-23 | UPDATE | `scripts/base/utils.sh` | M1: _ENSURING_LOG_DIR 移除 export；M4: schedule_rollback 添加安全约束注释 |
+| 2026-06-23 | UPDATE | `scripts/base/report.sh` | H3: 3 处硬编码中文替换为 MSG_REPORT_WARN_* i18n 变量 |
+| 2026-06-23 | UPDATE | `scripts/lang/zh.sh` | H3: 新增 MSG_REPORT_WARN_SSH_PORT22/FIREWALL/FAIL2BAN 翻译 |
+| 2026-06-23 | UPDATE | `scripts/lang/en.sh` | H3: 新增 MSG_REPORT_WARN_SSH_PORT22/FIREWALL/FAIL2BAN 翻译 |
+| 2026-06-23 | UPDATE | `scripts/security/fail2ban.sh` | M3: sleep 2 改为轮询等待（最多 10 秒）；L2: _get_ssh_service_name 函数替换为 SSH_SERVICE_NAME 常量 |
+| 2026-06-23 | UPDATE | `scripts/security/firewall.sh` | L1: 统一引号风格 $VAR → ${VAR} |
+| 2026-06-23 | UPDATE | `tests/unit/fail2ban.bats` | L2: 更新测试用例适配 SSH_SERVICE_NAME 常量 |
+| 2026-06-23 | CREATE | `tests/unit/ssh.bats` | M2: SSH 模块单元测试（16 个用例：validate_port/check_other_users/check_ssh_keys） |

@@ -19,3 +19,7 @@ tmp/
 # Test output
 test-results/
 everything-claude-code/
+
+# Claude Code
+.claude/reviews/
+.claude/settings.local.json

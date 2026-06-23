@@ -18,45 +18,45 @@ fi
 
 # 安装防火墙工具
 _install_firewall() {
-    log_step "$MSG_FIREWALL_INSTALL"
+    log_step "${MSG_FIREWALL_INSTALL}"
 
-    case "$DETECTED_OS" in
+    case "${DETECTED_OS}" in
         ubuntu|debian)
             if command_exists ufw; then
-                log_info "$MSG_FIREWALL_ALREADY_INSTALLED (UFW)"
+                log_info "${MSG_FIREWALL_ALREADY_INSTALLED} (UFW)"
                 return 0
             fi
-            apt-get install -y ufw >> "$LOG_FILE" 2>&1
+            apt-get install -y ufw >> "${LOG_FILE}" 2>&1
             ;;
         centos|rhel|rocky|almalinux)
             if command_exists firewall-cmd; then
-                log_info "$MSG_FIREWALL_ALREADY_INSTALLED (firewalld)"
+                log_info "${MSG_FIREWALL_ALREADY_INSTALLED} (firewalld)"
                 return 0
             fi
-            yum install -y firewalld >> "$LOG_FILE" 2>&1
+            yum install -y firewalld >> "${LOG_FILE}" 2>&1
             # 安装后启动 firewalld 服务
-            systemctl enable --now firewalld >> "$LOG_FILE" 2>&1 || true
+            systemctl enable --now firewalld >> "${LOG_FILE}" 2>&1 || true
             ;;
         fedora)
             if command_exists firewall-cmd; then
-                log_info "$MSG_FIREWALL_ALREADY_INSTALLED (firewalld)"
+                log_info "${MSG_FIREWALL_ALREADY_INSTALLED} (firewalld)"
                 return 0
             fi
-            dnf install -y firewalld >> "$LOG_FILE" 2>&1
-            systemctl enable --now firewalld >> "$LOG_FILE" 2>&1 || true
+            dnf install -y firewalld >> "${LOG_FILE}" 2>&1
+            systemctl enable --now firewalld >> "${LOG_FILE}" 2>&1 || true
             ;;
         *)
-            log_error "$MSG_FIREWALL_UNSUPPORTED_OS"
+            log_error "${MSG_FIREWALL_UNSUPPORTED_OS}"
             return 1
             ;;
     esac
 
-    log_success "$MSG_FIREWALL_INSTALL_DONE"
+    log_success "${MSG_FIREWALL_INSTALL_DONE}"
 }
 
 # 获取防火墙类型
 _get_firewall_type() {
-    case "$DETECTED_OS" in
+    case "${DETECTED_OS}" in
         ubuntu|debian)                          echo "ufw" ;;
         centos|rhel|rocky|almalinux|fedora)     echo "firewalld" ;;
         *)                                      echo "unknown" ;;
@@ -69,17 +69,17 @@ _get_firewall_type() {
 
 # 重置 UFW 规则（可选）
 _ufw_reset() {
-    log_step "$MSG_FIREWALL_RESET"
-    ufw --force reset >> "$LOG_FILE" 2>&1
-    log_success "$MSG_FIREWALL_RESET_DONE"
+    log_step "${MSG_FIREWALL_RESET}"
+    ufw --force reset >> "${LOG_FILE}" 2>&1
+    log_success "${MSG_FIREWALL_RESET_DONE}"
 }
 
 # 配置 UFW 默认策略
 _ufw_set_defaults() {
-    log_step "$MSG_FIREWALL_DEFAULT_POLICY"
-    ufw default deny incoming >> "$LOG_FILE" 2>&1
-    ufw default allow outgoing >> "$LOG_FILE" 2>&1
-    log_success "$MSG_FIREWALL_DEFAULT_POLICY_DONE"
+    log_step "${MSG_FIREWALL_DEFAULT_POLICY}"
+    ufw default deny incoming >> "${LOG_FILE}" 2>&1
+    ufw default allow outgoing >> "${LOG_FILE}" 2>&1
+    log_success "${MSG_FIREWALL_DEFAULT_POLICY_DONE}"
 }
 
 # UFW 开放端口
@@ -89,38 +89,38 @@ _ufw_allow_port() {
     local comment="${3:-}"
 
     if [[ -n "$comment" ]]; then
-        ufw allow "${port}/${proto}" comment "$comment" >> "$LOG_FILE" 2>&1
+        ufw allow "${port}/${proto}" comment "$comment" >> "${LOG_FILE}" 2>&1
     else
-        ufw allow "${port}/${proto}" >> "$LOG_FILE" 2>&1
+        ufw allow "${port}/${proto}" >> "${LOG_FILE}" 2>&1
     fi
-    log_info "$MSG_FIREWALL_PORT_OPENED: $port/$proto"
+    log_info "${MSG_FIREWALL_PORT_OPENED}: $port/$proto"
 }
 
 # UFW 关闭端口
 _ufw_deny_port() {
     local port="$1"
     local proto="${2:-tcp}"
-    ufw deny "${port}/${proto}" >> "$LOG_FILE" 2>&1
-    log_info "$MSG_FIREWALL_PORT_CLOSED: $port/$proto"
+    ufw deny "${port}/${proto}" >> "${LOG_FILE}" 2>&1
+    log_info "${MSG_FIREWALL_PORT_CLOSED}: $port/$proto"
 }
 
 # UFW 允许 ICMP (ping)
 _ufw_allow_icmp() {
     # UFW 默认允许 ICMP，需要手动禁止才需配置
-    log_info "$MSG_FIREWALL_ICMP_DEFAULT"
+    log_info "${MSG_FIREWALL_ICMP_DEFAULT}"
 }
 
 # 启用 UFW
 _ufw_enable() {
-    log_step "$MSG_FIREWALL_ENABLE"
-    ufw --force enable >> "$LOG_FILE" 2>&1
-    log_success "$MSG_FIREWALL_ENABLE_DONE"
+    log_step "${MSG_FIREWALL_ENABLE}"
+    ufw --force enable >> "${LOG_FILE}" 2>&1
+    log_success "${MSG_FIREWALL_ENABLE_DONE}"
 }
 
 # 显示 UFW 状态
 _ufw_show_status() {
     echo ""
-    log_step "$MSG_FIREWALL_STATUS"
+    log_step "${MSG_FIREWALL_STATUS}"
     ufw status verbose
     echo ""
 }
@@ -131,19 +131,19 @@ _ufw_show_status() {
 
 # 启动 firewalld 服务
 _firewalld_start() {
-    log_step "$MSG_FIREWALL_INSTALL"
-    systemctl start firewalld >> "$LOG_FILE" 2>&1
-    systemctl enable firewalld >> "$LOG_FILE" 2>&1
-    log_success "$MSG_FIREWALL_INSTALL_DONE"
+    log_step "${MSG_FIREWALL_INSTALL}"
+    systemctl start firewalld >> "${LOG_FILE}" 2>&1
+    systemctl enable firewalld >> "${LOG_FILE}" 2>&1
+    log_success "${MSG_FIREWALL_INSTALL_DONE}"
 }
 
 # 配置 firewalld 默认策略
 _firewalld_set_defaults() {
-    log_step "$MSG_FIREWALL_DEFAULT_POLICY"
+    log_step "${MSG_FIREWALL_DEFAULT_POLICY}"
     # firewalld 默认 zone 就是 drop，已经是拒绝入站
-    firewall-cmd --set-default-zone=drop >> "$LOG_FILE" 2>&1
-    firewall-cmd --zone=drop --set-target=DROP >> "$LOG_FILE" 2>&1
-    log_success "$MSG_FIREWALL_DEFAULT_POLICY_DONE"
+    firewall-cmd --set-default-zone=drop >> "${LOG_FILE}" 2>&1
+    firewall-cmd --zone=drop --set-target=DROP >> "${LOG_FILE}" 2>&1
+    log_success "${MSG_FIREWALL_DEFAULT_POLICY_DONE}"
 }
 
 # firewalld 开放端口
@@ -152,39 +152,39 @@ _firewalld_allow_port() {
     local proto="${2:-tcp}"
     local comment="${3:-}"
 
-    firewall-cmd --permanent --zone=drop --add-port="${port}/${proto}" >> "$LOG_FILE" 2>&1
-    log_info "$MSG_FIREWALL_PORT_OPENED: $port/$proto"
+    firewall-cmd --permanent --zone=drop --add-port="${port}/${proto}" >> "${LOG_FILE}" 2>&1
+    log_info "${MSG_FIREWALL_PORT_OPENED}: $port/$proto"
 }
 
 # firewalld 关闭端口
 _firewalld_deny_port() {
     local port="$1"
     local proto="${2:-tcp}"
-    firewall-cmd --permanent --zone=drop --remove-port="${port}/${proto}" >> "$LOG_FILE" 2>&1
-    log_info "$MSG_FIREWALL_PORT_CLOSED: $port/$proto"
+    firewall-cmd --permanent --zone=drop --remove-port="${port}/${proto}" >> "${LOG_FILE}" 2>&1
+    log_info "${MSG_FIREWALL_PORT_CLOSED}: $port/$proto"
 }
 
 # firewalld 允许 ICMP (ping)
 _firewalld_allow_icmp() {
-    firewall-cmd --permanent --zone=drop --add-protocol=icmp >> "$LOG_FILE" 2>&1
-    log_info "$MSG_FIREWALL_ICMP_ALLOWED"
+    firewall-cmd --permanent --zone=drop --add-protocol=icmp >> "${LOG_FILE}" 2>&1
+    log_info "${MSG_FIREWALL_ICMP_ALLOWED}"
 }
 
 # firewalld 禁止 ICMP
 _firewalld_deny_icmp() {
-    firewall-cmd --permanent --zone=drop --remove-protocol=icmp >> "$LOG_FILE" 2>&1
-    log_info "$MSG_FIREWALL_ICMP_DENIED"
+    firewall-cmd --permanent --zone=drop --remove-protocol=icmp >> "${LOG_FILE}" 2>&1
+    log_info "${MSG_FIREWALL_ICMP_DENIED}"
 }
 
 # 重新加载 firewalld 规则
 _firewalld_reload() {
-    firewall-cmd --reload >> "$LOG_FILE" 2>&1
+    firewall-cmd --reload >> "${LOG_FILE}" 2>&1
 }
 
 # 显示 firewalld 状态
 _firewalld_show_status() {
     echo ""
-    log_step "$MSG_FIREWALL_STATUS"
+    log_step "${MSG_FIREWALL_STATUS}"
     firewall-cmd --list-all
     echo ""
 }
@@ -206,7 +206,7 @@ show_firewall_status() {
             _firewalld_show_status
             ;;
         *)
-            log_warn "$MSG_FIREWALL_UNSUPPORTED_OS"
+            log_warn "${MSG_FIREWALL_UNSUPPORTED_OS}"
             ;;
     esac
 }
@@ -269,7 +269,7 @@ deny_icmp() {
     case "$fw_type" in
         ufw)
             # UFW 默认允许，需要修改 /etc/ufw/before.rules
-            log_warn "$MSG_FIREWALL_ICMP_UFW_NOTE"
+            log_warn "${MSG_FIREWALL_ICMP_UFW_NOTE}"
             ;;
         firewalld)
             _firewalld_deny_icmp
@@ -303,7 +303,7 @@ enable_firewall() {
             ;;
         firewalld)
             _firewalld_reload
-            log_success "$MSG_FIREWALL_ENABLE_DONE"
+            log_success "${MSG_FIREWALL_ENABLE_DONE}"
             ;;
     esac
 }
@@ -314,7 +314,7 @@ enable_firewall() {
 
 # 一键配置防火墙（使用推荐配置）
 run_firewall_wizard() {
-    log_step "$MSG_FIREWALL_TITLE"
+    log_step "${MSG_FIREWALL_TITLE}"
 
     # 检查 root 权限
     if ! is_root; then
@@ -326,7 +326,7 @@ run_firewall_wizard() {
     local fw_type
     fw_type=$(_get_firewall_type)
     if [[ "$fw_type" == "unknown" ]]; then
-        log_warn "$MSG_FIREWALL_UNSUPPORTED_OS"
+        log_warn "${MSG_FIREWALL_UNSUPPORTED_OS}"
         return 1
     fi
 
@@ -344,10 +344,10 @@ run_firewall_wizard() {
     setup_firewall_defaults
 
     # 开放 SSH 端口
-    log_step "$MSG_FIREWALL_CONFIG_SSH"
+    log_step "${MSG_FIREWALL_CONFIG_SSH}"
     # 始终放通 22 端口（安全兜底，防止端口变更后锁死）
     open_port "22" "tcp" "SSH-default"
-    log_info "$MSG_FIREWALL_SSH_PORT22"
+    log_info "${MSG_FIREWALL_SSH_PORT22}"
     # 如果 SSH 端口不是 22，也开放新端口
     if [[ "$ssh_port" != "22" ]]; then
         open_port "$ssh_port" "tcp" "SSH-custom"
@@ -355,16 +355,16 @@ run_firewall_wizard() {
 
     # 询问是否开放 HTTP/HTTPS
     echo ""
-    log_info "$MSG_FIREWALL_HTTP_PROMPT"
-    if confirm "$MSG_FIREWALL_HTTP_CONFIRM" "y"; then
+    log_info "${MSG_FIREWALL_HTTP_PROMPT}"
+    if confirm "${MSG_FIREWALL_HTTP_CONFIRM}" "y"; then
         open_port "80" "tcp" "HTTP"
         open_port "443" "tcp" "HTTPS"
     fi
 
     # 询问是否允许 ping
     echo ""
-    log_info "$MSG_FIREWALL_ICMP_PROMPT"
-    if confirm "$MSG_FIREWALL_ICMP_CONFIRM" "y"; then
+    log_info "${MSG_FIREWALL_ICMP_PROMPT}"
+    if confirm "${MSG_FIREWALL_ICMP_CONFIRM}" "y"; then
         allow_icmp
     fi
 
@@ -377,7 +377,7 @@ run_firewall_wizard() {
     # 显示管理命令提示
     _show_firewall_tips "$fw_type"
 
-    log_success "$MSG_FIREWALL_DONE"
+    log_success "${MSG_FIREWALL_DONE}"
 }
 
 # 显示防火墙管理命令提示

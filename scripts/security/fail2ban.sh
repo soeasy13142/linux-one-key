@@ -24,32 +24,32 @@ FAIL2BAN_JAIL_LOCAL="/etc/fail2ban/jail.local"
 
 # 安装 Fail2Ban
 _install_fail2ban() {
-    log_step "$MSG_FAIL2BAN_INSTALL"
+    log_step "${MSG_FAIL2BAN_INSTALL}"
 
     if command_exists fail2ban-client; then
-        log_info "$MSG_FAIL2BAN_ALREADY_INSTALLED"
+        log_info "${MSG_FAIL2BAN_ALREADY_INSTALLED}"
         return 0
     fi
 
-    case "$DETECTED_OS" in
+    case "${DETECTED_OS}" in
         ubuntu|debian)
-            apt-get install -y fail2ban >> "$LOG_FILE" 2>&1
+            apt-get install -y fail2ban >> "${LOG_FILE}" 2>&1
             ;;
         centos|rhel|rocky|almalinux)
             # CentOS/RHEL 需要 EPEL 源
-            yum install -y epel-release >> "$LOG_FILE" 2>&1
-            yum install -y fail2ban >> "$LOG_FILE" 2>&1
+            yum install -y epel-release >> "${LOG_FILE}" 2>&1
+            yum install -y fail2ban >> "${LOG_FILE}" 2>&1
             ;;
         fedora)
-            dnf install -y fail2ban >> "$LOG_FILE" 2>&1
+            dnf install -y fail2ban >> "${LOG_FILE}" 2>&1
             ;;
         *)
-            log_error "$MSG_FAIL2BAN_UNSUPPORTED_OS"
+            log_error "${MSG_FAIL2BAN_UNSUPPORTED_OS}"
             return 1
             ;;
     esac
 
-    log_success "$MSG_FAIL2BAN_INSTALL_DONE"
+    log_success "${MSG_FAIL2BAN_INSTALL_DONE}"
 }
 
 # 获取认证日志路径
@@ -75,15 +75,13 @@ _get_auth_log_path() {
     echo "${auth_log}"
 }
 
-# 获取 SSH 服务名称
-_get_ssh_service_name() {
-    echo "sshd"
-}
+# SSH 服务名称（Ubuntu/Debian 使用 "ssh"，CentOS/RHEL 使用 "sshd"，此处统一用 "sshd"）
+readonly SSH_SERVICE_NAME="sshd"
 
 # 备份现有 Fail2Ban 配置
 _backup_fail2ban_config() {
-    if [[ -f "$FAIL2BAN_JAIL_LOCAL" ]]; then
-        backup_file "$FAIL2BAN_JAIL_LOCAL"
+    if [[ -f "${FAIL2BAN_JAIL_LOCAL}" ]]; then
+        backup_file "${FAIL2BAN_JAIL_LOCAL}"
     fi
 }
 
@@ -95,7 +93,7 @@ _configure_fail2ban_jail() {
     local findtime="${4:-600}"
     local maxretry="${5:-5}"
 
-    log_step "$MSG_FAIL2BAN_CONFIGURE"
+    log_step "${MSG_FAIL2BAN_CONFIGURE}"
 
     # 备份现有配置
     _backup_fail2ban_config
@@ -109,7 +107,7 @@ _configure_fail2ban_jail() {
     esac
 
     # 生成 jail.local 配置
-    cat > "$FAIL2BAN_JAIL_LOCAL" << EOF
+    cat > "${FAIL2BAN_JAIL_LOCAL}" << EOF
 # ============================================================================
 # Fail2Ban jail 配置
 # 由 linux-one-key 自动生成
@@ -146,24 +144,31 @@ bantime = ${bantime}
 findtime = ${findtime}
 EOF
 
-    log_success "$MSG_FAIL2BAN_CONFIGURE_DONE"
+    log_success "${MSG_FAIL2BAN_CONFIGURE_DONE}"
 }
 
 # 启动 Fail2Ban 服务
 _enable_fail2ban_service() {
-    log_step "$MSG_FAIL2BAN_ENABLE"
+    log_step "${MSG_FAIL2BAN_ENABLE}"
 
-    systemctl enable fail2ban >> "$LOG_FILE" 2>&1
-    systemctl restart fail2ban >> "$LOG_FILE" 2>&1
+    systemctl enable fail2ban >> "${LOG_FILE}" 2>&1
+    systemctl restart fail2ban >> "${LOG_FILE}" 2>&1
 
-    # 等待服务启动
-    sleep 2
+    # 等待服务启动（轮询，最多 10 秒）
+    local attempts=0
+    while [[ ${attempts} -lt 10 ]]; do
+        if systemctl is-active --quiet fail2ban; then
+            break
+        fi
+        sleep 1
+        ((attempts++))
+    done
 
     # 检查服务状态
     if systemctl is-active --quiet fail2ban; then
-        log_success "$MSG_FAIL2BAN_ENABLE_DONE"
+        log_success "${MSG_FAIL2BAN_ENABLE_DONE}"
     else
-        log_error "$MSG_FAIL2BAN_ENABLE_FAILED"
+        log_error "${MSG_FAIL2BAN_ENABLE_FAILED}"
         systemctl status fail2ban --no-pager
         return 1
     fi
@@ -172,7 +177,7 @@ _enable_fail2ban_service() {
 # 显示 Fail2Ban 状态
 _show_fail2ban_status() {
     echo ""
-    log_step "$MSG_FAIL2BAN_STATUS"
+    log_step "${MSG_FAIL2BAN_STATUS}"
     echo ""
 
     # 服务状态
@@ -182,7 +187,7 @@ _show_fail2ban_status() {
 
     # jail 状态
     echo -e "${BOLD}${MSG_FAIL2BAN_JAIL_STATUS}${NC}"
-    fail2ban-client status sshd 2>/dev/null || log_warn "$MSG_FAIL2BAN_JAIL_NOT_FOUND"
+    fail2ban-client status sshd 2>/dev/null || log_warn "${MSG_FAIL2BAN_JAIL_NOT_FOUND}"
     echo ""
 
     # 封禁列表
@@ -198,7 +203,7 @@ _show_fail2ban_status() {
 # 显示 Fail2Ban 状态
 show_fail2ban_status() {
     if ! command_exists fail2ban-client; then
-        log_warn "$MSG_FAIL2BAN_NOT_INSTALLED"
+        log_warn "${MSG_FAIL2BAN_NOT_INSTALLED}"
         return 1
     fi
     _show_fail2ban_status
@@ -213,7 +218,7 @@ get_fail2ban_info() {
 
     echo "SSH 端口: $ssh_port"
     echo "认证日志: $auth_log"
-    echo "配置文件: $FAIL2BAN_JAIL_LOCAL"
+    echo "配置文件: ${FAIL2BAN_JAIL_LOCAL}"
 }
 
 # 手动封禁 IP
@@ -222,12 +227,12 @@ ban_ip() {
     local jail="${2:-sshd}"
 
     if ! command_exists fail2ban-client; then
-        log_error "$MSG_FAIL2BAN_NOT_INSTALLED"
+        log_error "${MSG_FAIL2BAN_NOT_INSTALLED}"
         return 1
     fi
 
-    fail2ban-client set "$jail" banip "$ip" >> "$LOG_FILE" 2>&1
-    log_success "$MSG_FAIL2BAN_IP_BANNED: $ip"
+    fail2ban-client set "$jail" banip "$ip" >> "${LOG_FILE}" 2>&1
+    log_success "${MSG_FAIL2BAN_IP_BANNED}: $ip"
 }
 
 # 手动解封 IP
@@ -236,12 +241,12 @@ unban_ip() {
     local jail="${2:-sshd}"
 
     if ! command_exists fail2ban-client; then
-        log_error "$MSG_FAIL2BAN_NOT_INSTALLED"
+        log_error "${MSG_FAIL2BAN_NOT_INSTALLED}"
         return 1
     fi
 
-    fail2ban-client set "$jail" unbanip "$ip" >> "$LOG_FILE" 2>&1
-    log_success "$MSG_FAIL2BAN_IP_UNBANNED: $ip"
+    fail2ban-client set "$jail" unbanip "$ip" >> "${LOG_FILE}" 2>&1
+    log_success "${MSG_FAIL2BAN_IP_UNBANNED}: $ip"
 }
 
 # ============================================================================
