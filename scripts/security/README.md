@@ -10,9 +10,10 @@
 | `firewall.sh` | 防火墙配置 | ✅ 完成 |
 | `fail2ban.sh` | Fail2Ban 入侵防护 | ✅ 完成 |
 | `audit.sh` | 审计日志配置 | ✅ 完成 |
-| `kernel.sh` | 内核安全参数 | ⬜ 规划中 (v0.3) |
-| `filesystem.sh` | 文件系统安全 | ⬜ 规划中 (v0.3) |
-| `services.sh` | 服务管理 | ⬜ 规划中 (v0.4) |
+| `users.sh` | 用户管理 | ✅ 完成 |
+| `kernel.sh` | 内核安全加固（sysctl） | ✅ 完成 |
+| `filesystem.sh` | 文件系统安全 | ✅ 完成 |
+| `services.sh` | 服务管理 | ⬜ 规划中 (v0.5) |
 
 ## 模块说明
 
@@ -60,6 +61,35 @@
 
 可自定义 auditd 参数：日志大小、保留份数。
 
+### users.sh — 用户管理
+
+交互式用户创建和管理向导：
+
+- 创建新用户并设置密码
+- 为用户生成 SSH Ed25519 密钥对
+- 配置 sudo NOPASSWD 权限
+- 创建前自动检查用户名冲突和密码强度
+
+### kernel.sh — 内核安全加固
+
+基于 CIS Benchmark 的 sysctl 安全参数配置：
+
+- 网络协议安全（禁用 IP 转发、SYN cookies、反向路径过滤等）
+- 内存保护（ASLR、禁止 core dump、dmesg 限制）
+- 日志记录（内核 panic 自动重启、BPF 限制）
+- 禁用不必要的内核模块（cramfs、freevxfs、hfs、udf 等）
+- 配置前自动备份原始参数，支持一键回滚
+
+### filesystem.sh — 文件系统安全
+
+文件系统安全检查和加固：
+
+- 全局 SUID/SGID 文件审计（扫描 /usr、/bin、/sbin 等）
+- 扫描无主文件和目录（无有效 owner 的文件）
+- 检查关键目录权限（/etc/passwd、/etc/shadow、/etc/gshadow 等）
+- 发现问题后提供修复建议
+- 结果写入日志文件，支持后续审计
+
 ## 通用模式
 
 所有安全模块遵循统一的向导模式：
@@ -76,6 +106,16 @@ run_xxx_wizard() {
 }
 ```
 
-## 依赖
+## 依赖关系
 
-所有模块都依赖 `scripts/base/utils.sh`（通过 source guard 检查）。
+| 模块 | 依赖 |
+|------|------|
+| `ssh.sh` | `utils.sh` |
+| `firewall.sh` | `utils.sh` |
+| `fail2ban.sh` | `utils.sh` |
+| `audit.sh` | `utils.sh` |
+| `users.sh` | `utils.sh` |
+| `kernel.sh` | `utils.sh` |
+| `filesystem.sh` | `utils.sh` |
+
+所有模块都依赖 `scripts/base/utils.sh`（通过 source guard 检查）。模块之间无相互依赖，可独立运行。

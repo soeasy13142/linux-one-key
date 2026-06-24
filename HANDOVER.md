@@ -577,3 +577,10 @@ v0.4 🔄 进行中
 | 2026-06-24 | UPDATE | `scripts/lang/en.sh` | 同上英文翻译 |
 | 2026-06-24 | UPDATE | `HANDOVER.md` | 更新 Code Review Round 3 状态为 ✅ 完成，更新下一步工作 |
 | 2026-06-24 | UPDATE | `README.md` | 更新功能特性列表：用户管理/内核加固/文件系统安全标记为 ✅，新增文件系统安全条目 |
+| 2026-06-24 | UPDATE | `README.md` | 重写为专业版：添加徽章、详细功能分类、3 种安装方式、支持系统表格、项目架构、交互式向导流程、开发指南、安全注意事项、参考资料、版本历史、致谢 |
+| 2026-06-24 | UPDATE | `scripts/security/README.md` | 更新模块状态：kernel/filesystem/users 标记为 ✅ 完成，补充详细说明 |
+| 2026-06-24 | UPDATE | `scripts/lang/README.md` | 更新翻译覆盖范围：添加用户管理/内核/文件系统翻译数量 |
+| 2026-06-24 | UPDATE | `config/README.md` | 添加 sysctl 目录，移除规划中状态 |
+| 2026-06-24 | UPDATE | `tests/README.md`, `tests/unit/README.md` | 添加 users/kernel/filesystem 测试文件，更新总数 107→183 |
+| 2026-06-24 | UPDATE | `docs/README.md`, `docs/code-reviews/README.md` | 丰富文档描述，添加 Round 4 审查记录 |
+| 2026-06-24 | UPDATE | `scripts/README.md` | 更新依赖表和目录结构 |
