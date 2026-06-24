@@ -70,9 +70,11 @@ MSG_MAIN_MENU_FIREWALL="[3] Firewall Configuration"
 MSG_MAIN_MENU_FIREWALL_DESC="UFW/firewalld rule configuration"
 MSG_MAIN_MENU_FAIL2BAN="[4] Fail2Ban Intrusion Prevention"
 MSG_MAIN_MENU_FAIL2BAN_DESC="Auto-ban malicious login attempts"
-MSG_MAIN_MENU_QUICK="[5] Full Security Wizard"
+MSG_MAIN_MENU_AUDIT="[5] Audit Logging"
+MSG_MAIN_MENU_AUDIT_DESC="Configure auditd system auditing, monitor security events"
+MSG_MAIN_MENU_QUICK="[6] Full Security Wizard"
 MSG_MAIN_MENU_QUICK_DESC="Step-by-step guided configuration, choose at each step"
-MSG_MAIN_MENU_REPORT="[6] View Last Report"
+MSG_MAIN_MENU_REPORT="[7] View Last Report"
 MSG_MAIN_MENU_EXIT="[0] Exit"
 MSG_MAIN_MENU_PROMPT="Enter option"
 MSG_MAIN_MENU_CHOICE="Please select an action"
@@ -103,6 +105,7 @@ MSG_STATUS_SSH_PASSWD="Password Authentication"
 MSG_STATUS_SSH_KEY="Key Authentication"
 MSG_STATUS_FIREWALL="Firewall"
 MSG_STATUS_FAIL2BAN="Fail2Ban"
+MSG_STATUS_AUDIT="Audit Logging"
 MSG_STATUS_ENABLED="Enabled"
 MSG_STATUS_DISABLED="Disabled"
 MSG_STATUS_INSTALLED="Installed"
@@ -198,10 +201,11 @@ MSG_FAIL2BAN_MAXRETRY_PROMPT="Max failure attempts (maxretry)"
 # Full Wizard
 MSG_WIZARD_TITLE="Full Security Configuration Wizard"
 MSG_WIZARD_DESC="This wizard will guide you through all security configurations step by step. Each step: confirm / modify / skip."
-MSG_WIZARD_STEP_SSH="[1/4] SSH Security Hardening"
-MSG_WIZARD_STEP_FIREWALL="[2/4] Firewall Configuration"
-MSG_WIZARD_STEP_FAIL2BAN="[3/4] Fail2Ban Intrusion Prevention"
-MSG_WIZARD_STEP_SUMMARY="[4/4] Change Summary & Confirmation"
+MSG_WIZARD_STEP_SSH="[1/5] SSH Security Hardening"
+MSG_WIZARD_STEP_FIREWALL="[2/5] Firewall Configuration"
+MSG_WIZARD_STEP_FAIL2BAN="[3/5] Fail2Ban Intrusion Prevention"
+MSG_WIZARD_STEP_AUDIT="[4/5] Audit Logging Configuration"
+MSG_WIZARD_STEP_SUMMARY="[5/5] Change Summary & Confirmation"
 MSG_WIZARD_SKIP_STEP="Skip this step? (y/N)"
 MSG_WIZARD_COMPLETE="Wizard complete"
 MSG_WIZARD_SKIPPED="Skipped"
@@ -211,6 +215,8 @@ MSG_WIZARD_SKIPPED_FIREWALL="Skipping firewall configuration"
 MSG_WIZARD_ERR_FIREWALL="Firewall configuration had errors"
 MSG_WIZARD_SKIPPED_FAIL2BAN="Skipping Fail2Ban configuration"
 MSG_WIZARD_ERR_FAIL2BAN="Fail2Ban configuration had errors"
+MSG_WIZARD_SKIPPED_AUDIT="Skipping audit logging configuration"
+MSG_WIZARD_ERR_AUDIT="Audit logging configuration had errors"
 MSG_WIZARD_ERR_HINT="(some steps had errors, check logs)"
 
 # SSH Key
@@ -340,6 +346,66 @@ MSG_FAIL2BAN_TIPS_4="Unban IP: fail2ban-client set sshd unbanip <ip>"
 MSG_FAIL2BAN_TIPS_5="Restart service: systemctl restart fail2ban"
 
 # ═══════════════════════════════════════════
+# Audit Logging
+# ═══════════════════════════════════════════
+
+MSG_AUDIT_TITLE="Audit Logging Configuration"
+MSG_AUDIT_INSTALL="Installing auditd..."
+MSG_AUDIT_INSTALL_DONE="auditd installed"
+MSG_AUDIT_INSTALL_FAILED="auditd installation failed"
+MSG_AUDIT_ALREADY_INSTALLED="auditd already installed"
+MSG_AUDIT_UNSUPPORTED_OS="Unsupported operating system, skipping audit configuration"
+MSG_AUDIT_BACKUP_RULES="Backing up audit rules file"
+MSG_AUDIT_BACKUP_CONF="Backing up auditd configuration file"
+MSG_AUDIT_CONFIGURE_RULES="Generating audit rules..."
+MSG_AUDIT_CONFIGURE_RULES_DONE="Audit rules generated"
+MSG_AUDIT_CONFIGURE_CONF="Configuring auditd..."
+MSG_AUDIT_CONFIGURE_CONF_DONE="auditd configured"
+MSG_AUDIT_LOAD_RULES="Loading audit rules..."
+MSG_AUDIT_LOAD_RULES_DONE="Audit rules loaded"
+MSG_AUDIT_LOAD_RULES_WARN="Some rules failed to load (may be incompatible with kernel version)"
+MSG_AUDIT_ENABLE="Enabling auditd service..."
+MSG_AUDIT_ENABLE_DONE="auditd service enabled"
+MSG_AUDIT_ENABLE_FAILED="auditd service failed to enable"
+MSG_AUDIT_STATUS="Audit Status"
+MSG_AUDIT_SERVICE_STATUS="Service Status:"
+MSG_AUDIT_RULES_COUNT="Rules Count:"
+MSG_AUDIT_LOG_INFO="Log File:"
+MSG_AUDIT_LOG_NOT_FOUND="Not yet generated"
+MSG_AUDIT_CONFIG_INFO="Current audit configuration:"
+MSG_AUDIT_DONE="Audit logging configuration complete!"
+MSG_AUDIT_NOT_INSTALLED="auditd not installed"
+
+# Audit Wizard - Rule Level
+MSG_AUDIT_RULES_LEVEL_TITLE="Select audit rule level"
+MSG_AUDIT_RULES_BASIC="[1] Basic - Identity, SSH, sudo monitoring"
+MSG_AUDIT_RULES_STANDARD="[2] Standard - Basic + network, cron, log tampering (Recommended)"
+MSG_AUDIT_RULES_FULL="[3] Full - All security event monitoring"
+MSG_AUDIT_RULES_LEVEL_PROMPT="Select rule level"
+
+# Audit Wizard - Custom Parameters
+MSG_AUDIT_CUSTOM_TITLE="auditd Parameter Configuration"
+MSG_AUDIT_CUSTOM_PROMPT="Each parameter shows its default; press Enter to accept or type a new value"
+MSG_AUDIT_LOG_SIZE_PROMPT="Max log file size (MB)"
+MSG_AUDIT_LOG_COUNT_PROMPT="Number of log files to keep"
+MSG_AUDIT_INVALID_CHOICE="Invalid option, using default (standard rules)"
+MSG_AUDIT_INVALID_NUMBER="Please enter a valid positive integer"
+
+# Audit Search/Report
+MSG_AUDIT_SEARCH="Searching audit log (key={key})..."
+MSG_AUDIT_REPORT="Generating audit report..."
+MSG_AUDIT_REPORT_SUMMARY="Audit Report Summary:"
+MSG_AUDIT_REPORT_AUTH="Authentication Audit Summary:"
+
+# Audit Tips
+MSG_AUDIT_TIPS_TITLE="Audit log management commands:"
+MSG_AUDIT_TIPS_1="View rules: auditctl -l"
+MSG_AUDIT_TIPS_2="Search log: ausearch -k <key> -i"
+MSG_AUDIT_TIPS_3="Audit report: aureport --summary"
+MSG_AUDIT_TIPS_4="Live log: tail -f /var/log/audit/audit.log"
+MSG_AUDIT_TIPS_5="Service status: systemctl status auditd"
+
+# ═══════════════════════════════════════════
 # User Management
 # ═══════════════════════════════════════════
 
@@ -366,6 +432,7 @@ MSG_REPORT_SAVED="Report saved to"
 MSG_REPORT_WARN_SSH_PORT22="Firewall kept port 22 open. After confirming new SSH port works, close it: sudo ufw deny 22/tcp"
 MSG_REPORT_WARN_FIREWALL="Firewall enabled. Ensure all required ports are properly opened."
 MSG_REPORT_WARN_FAIL2BAN="Check Fail2Ban logs regularly: sudo tail -f /var/log/fail2ban.log"
+MSG_REPORT_WARN_AUDIT="Check audit logs regularly: sudo aureport --summary or sudo ausearch -k identity"
 
 # ═══════════════════════════════════════════
 # Log

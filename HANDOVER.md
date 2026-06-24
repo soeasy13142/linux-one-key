@@ -2,8 +2,8 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-23（文档归类整理）
-**当前阶段**: v0.2 已完成 + Code Review Round 3 部分修复（2026-06-23，2 HIGH + 4 MEDIUM + 3 LOW 已修复，H2 延后，L4 未修复）
+**最后更新**: 2026-06-23（v0.4 审计日志模块实现）
+**当前阶段**: v0.4 审计日志模块已完成（2026-06-23）
 
 ---
 
@@ -21,7 +21,7 @@
 
 ## 2. 当前进度
 
-### 总体状态：🟢 v0.2 已完成
+### 总体状态：🟢 v0.4 审计日志模块已完成
 
 | 阶段 | 状态 | 说明 |
 |------|------|------|
@@ -33,7 +33,8 @@
 | Code Review (Round 2) | ✅ 完成 | 3 代理并行审查，发现 10 CRITICAL + 15 HIGH + 13 MEDIUM + 12 LOW，共 50 个问题 |
 | Code Review (Round 3) | 🔄 部分修复 | 0 CRITICAL + 3 HIGH + 4 MEDIUM + 4 LOW；H1,H3,M1-M4,L1-L3 已修复，H2 延后，L4 未修复 |
 | v0.3 用户管理 + 内核加固 | ⬜ 未开始 | |
-| v0.4 审计日志 + 服务管理 | ⬜ 未开始 | |
+| v0.4 审计日志模块 | ✅ 完成 | audit.sh, audit.bats, config/audit/, i18n 更新, 菜单集成, 44 个测试用例 |
+| v0.4 服务管理 | ⬜ 未开始 | |
 | v1.0 测试 + 文档 + 发布 | ⬜ 未开始 | |
 
 ### 已完成的工作
@@ -83,6 +84,12 @@
 | 2026-06-20 | 重构 Fail2Ban 向导为逐步交互模式 | `scripts/security/fail2ban.sh` — 参数可自定义，重命名为 run_fail2ban_wizard |
 | 2026-06-20 | 添加验证和 i18n 标签 | `scripts/security/fail2ban.sh`, `scripts/lang/zh.sh`, `scripts/lang/en.sh` — Fail2Ban 向导验证和翻译 |
 | 2026-06-20 | 集成向导函数并更新所有引用 | `install.sh`, `scripts/base/utils.sh`, `scripts/base/init.sh`, `scripts/base/detect.sh` — 统一向导调用 |
+| 2026-06-23 | 创建审计日志模块 | `scripts/security/audit.sh` — auditd 安装、规则生成（3级）、配置、服务管理、向导 |
+| 2026-06-23 | 创建审计配置模板 | `config/audit/audit.rules`, `config/audit/auditd.conf` — 参考模板 |
+| 2026-06-23 | 添加审计模块 i18n | `scripts/lang/zh.sh`, `scripts/lang/en.sh` — ~40 条 MSG_AUDIT_* 翻译 |
+| 2026-06-23 | 集成审计模块到主菜单 | `install.sh` — load_dependencies、菜单[5]、状态检测、full_wizard Step 4 |
+| 2026-06-23 | 更新报告模块 | `scripts/base/report.sh` — 添加审计状态、配置文件、警告信息 |
+| 2026-06-23 | 创建审计模块单元测试 | `tests/unit/audit.bats` — 44 个测试用例，覆盖常量、规则生成、配置、函数存在性 |
 
 ---
 
@@ -137,7 +144,8 @@ linux-one-key/
 │   ├── security/
 │   │   ├── ssh.sh             # SSH 安全加固
 │   │   ├── firewall.sh        # 防火墙配置
-│   │   └── fail2ban.sh        # Fail2Ban 入侵防护
+│   │   ├── fail2ban.sh        # Fail2Ban 入侵防护
+│   │   └── audit.sh           # 审计日志配置 (v0.4)
 │   ├── lang/
 │   │   ├── zh.sh              # 中文翻译
 │   │   └── en.sh              # 英文翻译
@@ -149,10 +157,14 @@ linux-one-key/
 │       ├── utils.bats         # 工具函数测试
 │       ├── firewall.bats      # 防火墙测试
 │       ├── fail2ban.bats      # Fail2Ban 测试
-│       └── ssh.bats           # SSH 模块测试
+│       ├── ssh.bats           # SSH 模块测试
+│       └── audit.bats         # 审计模块测试 (v0.4, 44个用例)
 ├── config/
-│   └── fail2ban/
-│       └── jail.local         # Fail2Ban 配置模板
+│   ├── fail2ban/
+│   │   └── jail.local         # Fail2Ban 配置模板
+│   └── audit/
+│       ├── audit.rules        # 审计规则模板 (v0.4)
+│       └── auditd.conf        # auditd 配置模板 (v0.4)
 ├── docs/                      # 文档目录
 │   ├── README.md                           # 文档目录总览
 │   ├── code-reviews/                       # Code Review 报告
@@ -185,7 +197,6 @@ linux-one-key/
 │   ├── security/
 │   │   ├── kernel.sh          # 内核安全参数
 │   │   ├── filesystem.sh      # 文件系统安全
-│   │   ├── audit.sh           # 审计日志配置
 │   │   └── services.sh        # 服务管理
 │   └── utils/
 │       ├── backup.sh          # 备份工具
@@ -194,8 +205,7 @@ linux-one-key/
 │       └── check.sh           # 检查工具
 ├── config/
 │   ├── ssh/                   # SSH 配置模板
-│   ├── sysctl/                # 内核参数模板
-│   └── audit/                 # 审计规则模板
+│   └── sysctl/                # 内核参数模板
 └── tests/
     ├── unit/                  # 单元测试
     └── integration/           # 集成测试
@@ -326,11 +336,11 @@ v0.3 (第三周)
 ├── scripts/security/filesystem.sh
 └── 用户创建功能
 
-v0.4 (第四周)
-├── scripts/security/audit.sh
-├── scripts/security/services.sh
-├── scripts/utils/report.sh
-└── scripts/utils/backup.sh / rollback.sh
+v0.4 🔄 进行中
+├── scripts/security/audit.sh       ✅ (44 个测试用例)
+├── scripts/security/services.sh    ⬜
+├── scripts/utils/report.sh         ⬜ (已移至 scripts/base/report.sh)
+└── scripts/utils/backup.sh / rollback.sh ⬜
 ```
 
 ---
@@ -481,3 +491,12 @@ v0.4 (第四周)
 | 2026-06-23 | CREATE | `docs/code-reviews/README.md` | Code Review 目录说明 |
 | 2026-06-23 | CREATE | `docs/test-reports/README.md` | 测试报告目录说明 |
 | 2026-06-23 | CREATE | `docs/design/README.md` | 设计文档目录说明 |
+| 2026-06-23 | CREATE | `scripts/security/audit.sh` | v0.4 审计日志模块：auditd 安装、3 级规则生成、配置、服务管理、交互式向导 |
+| 2026-06-23 | CREATE | `config/audit/audit.rules` | 审计规则参考模板（全面规则示例） |
+| 2026-06-23 | CREATE | `config/audit/auditd.conf` | auditd 配置参考模板 |
+| 2026-06-23 | UPDATE | `scripts/lang/zh.sh` | 添加 ~40 条 MSG_AUDIT_* 中文翻译，更新菜单编号，添加向导步骤 |
+| 2026-06-23 | UPDATE | `scripts/lang/en.sh` | 添加 ~40 条 MSG_AUDIT_* 英文翻译，更新菜单编号，添加向导步骤 |
+| 2026-06-23 | UPDATE | `install.sh` | 集成 audit.sh：load_dependencies、菜单[5]、状态检测、full_wizard Step 4 |
+| 2026-06-23 | UPDATE | `scripts/base/report.sh` | 添加审计状态、配置文件路径、警告信息到报告 |
+| 2026-06-23 | CREATE | `tests/unit/audit.bats` | 审计模块单元测试：44 个用例（常量、规则生成、配置、函数存在性） |
+| 2026-06-23 | UPDATE | `HANDOVER.md` | 更新进度状态、文件清单、变更日志 |

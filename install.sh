@@ -248,6 +248,14 @@ load_dependencies() {
     # shellcheck source=/dev/null
     source "${SCRIPT_DIR}/scripts/security/fail2ban.sh"
 
+    # 加载 audit.sh
+    if [[ ! -f "${SCRIPT_DIR}/scripts/security/audit.sh" ]]; then
+        echo "Error: Cannot find audit.sh at ${SCRIPT_DIR}/scripts/security/audit.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/scripts/security/audit.sh"
+
     # 加载 report.sh (generate_report 函数)
     if [[ ! -f "${SCRIPT_DIR}/scripts/base/report.sh" ]]; then
         echo "Error: Cannot find report.sh at ${SCRIPT_DIR}/scripts/base/report.sh"
@@ -355,6 +363,20 @@ show_system_status() {
     echo -e "  ${MSG_STATUS_FAIL2BAN}: ${f2b_status}"
 
     echo ""
+
+    # 审计日志状态
+    echo -e "${GREEN}[${MSG_STATUS_AUDIT}]${NC}"
+    local audit_status="${MSG_STATUS_NOT_INSTALLED}"
+    if command -v auditctl &>/dev/null; then
+        if systemctl is-active auditd &>/dev/null; then
+            audit_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_ENABLED})"
+        else
+            audit_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_DISABLED})"
+        fi
+    fi
+    echo -e "  ${MSG_STATUS_AUDIT}: ${audit_status}"
+
+    echo ""
     press_enter
 }
 
@@ -385,6 +407,9 @@ show_main_menu() {
     echo -e "  ${GREEN}${MSG_MAIN_MENU_FAIL2BAN}${NC}"
     echo -e "      ${MSG_MAIN_MENU_FAIL2BAN_DESC}"
     echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_AUDIT}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_AUDIT_DESC}"
+    echo ""
     echo -e "  ${GREEN}${MSG_MAIN_MENU_QUICK}${NC}"
     echo -e "      ${MSG_MAIN_MENU_QUICK_DESC}"
     echo ""
@@ -398,7 +423,7 @@ show_main_menu() {
 get_main_menu_choice() {
     local choice
     while true; do
-        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-6]" "")
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-7]" "")
         # EOF / non-interactive stdin: exit gracefully
         if [[ -z "${choice}" ]]; then
             echo ""
@@ -406,7 +431,7 @@ get_main_menu_choice() {
             exit 1
         fi
         case "${choice}" in
-            [0-6])
+            [0-7])
                 echo "${choice}"
                 return 0
                 ;;
@@ -575,6 +600,7 @@ run_full_wizard() {
     export _WIZARD_SSH_DONE=0
     export _WIZARD_FIREWALL_DONE=0
     export _WIZARD_FAIL2BAN_DONE=0
+    export _WIZARD_AUDIT_DONE=0
 
     # ── Step 1: SSH ──
     echo ""
@@ -621,7 +647,22 @@ run_full_wizard() {
         fi
     fi
 
-    # ── Step 4: Summary ──
+    # ── Step 4: Audit ──
+    echo ""
+    log_title "${MSG_WIZARD_STEP_AUDIT}"
+
+    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+        log_info "${MSG_WIZARD_SKIPPED_AUDIT}"
+    else
+        if run_audit_wizard; then
+            _WIZARD_AUDIT_DONE=1
+        else
+            log_warn "${MSG_WIZARD_ERR_AUDIT}"
+            wizard_rc=1
+        fi
+    fi
+
+    # ── Step 5: Summary ──
     echo ""
     log_title "${MSG_WIZARD_STEP_SUMMARY}"
 
@@ -671,10 +712,14 @@ run_main_menu_loop() {
                 press_enter
                 ;;
             5)
+                run_audit_wizard || log_error "Audit config failed"
+                press_enter
+                ;;
+            6)
                 run_full_wizard
                 press_enter
                 ;;
-            6) view_report ;;
+            7) view_report ;;
             0) cleanup_and_exit ;;
         esac
     done

@@ -1,0 +1,62 @@
+## ============================================
+## 审计规则模板 - linux-one-key
+## 此文件仅作参考，实际规则由 audit.sh 自动生成
+## ============================================
+
+## 清除所有现有规则
+-D
+-b 8192
+
+## ===== 身份认证文件监控 =====
+-w /etc/passwd -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/group -p wa -k identity
+-w /etc/gshadow -p wa -k identity
+-w /etc/sudoers -p wa -k identity
+-w /etc/sudoers.d/ -p wa -k identity
+
+## ===== SSH 配置监控 =====
+-w /etc/ssh/sshd_config -p wa -k sshd_config
+-w /etc/ssh/sshd_config.d/ -p wa -k sshd_config
+
+## ===== sudo 命令使用 =====
+-a always,exit -F arch=b64 -S execve -C uid!=euid -F euid=0 -k sudo_cmd
+-a always,exit -F arch=b32 -S execve -C uid!=euid -F euid=0 -k sudo_cmd
+
+## ===== 网络配置监控 =====
+-w /etc/hosts -p wa -k network
+-w /etc/hostname -p wa -k network
+-w /etc/resolv.conf -p wa -k network
+-w /etc/sysconfig/network -p wa -k network
+
+## ===== cron 定时任务监控 =====
+-w /etc/crontab -p wa -k cron
+-w /etc/cron.d/ -p wa -k cron
+-w /var/spool/cron/ -p wa -k cron
+
+## ===== 日志文件防篡改 =====
+-w /var/log/ -p wa -k log_tamper
+
+## ===== 权限/所有权变更 =====
+-a always,exit -F arch=b64 -S chmod -S fchmod -S fchmodat -k perm_change
+-a always,exit -F arch=b64 -S chown -S fchown -S fchownat -S lchown -k owner_change
+
+## ===== 内核模块操作 =====
+-w /sbin/insmod -p x -k modules
+-w /sbin/rmmod -p x -k modules
+-w /sbin/modprobe -p x -k modules
+-a always,exit -F arch=b64 -S init_module -S delete_module -k modules
+
+## ===== 时间修改 =====
+-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time_change
+-a always,exit -F arch=b64 -S clock_settime -k time_change
+-w /etc/localtime -p wa -k time_change
+
+## ===== 挂载操作 =====
+-a always,exit -F arch=b64 -S mount -S umount2 -k mount
+
+## ===== 文件删除 =====
+-a always,exit -F arch=b64 -S unlink -S unlinkat -S rename -S renameat -k file_delete
+
+## ===== 使规则不可变 =====
+-e 2

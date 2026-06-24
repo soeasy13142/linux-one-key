@@ -98,6 +98,25 @@ generate_report() {
             echo "    - ${MSG_STATUS_FAIL2BAN}: ${f2b_status}"
         fi
 
+        # Audit
+        _report_task_line "${_WIZARD_AUDIT_DONE:-0}" "${MSG_TASK_AUDIT}"
+        if [[ "${_WIZARD_AUDIT_DONE:-0}" == "1" ]]; then
+            local audit_status="${MSG_STATUS_NOT_INSTALLED}"
+            if command -v auditctl &>/dev/null; then
+                if systemctl is-active auditd &>/dev/null; then
+                    audit_status="${MSG_STATUS_ENABLED}"
+                else
+                    audit_status="${MSG_STATUS_DISABLED}"
+                fi
+            fi
+            echo "    - ${MSG_STATUS_AUDIT}: ${audit_status}"
+            if command -v auditctl &>/dev/null; then
+                local rule_count
+                rule_count=$(auditctl -l 2>/dev/null | wc -l | tr -d ' ')
+                echo "    - ${MSG_AUDIT_RULES_COUNT:-Rules}: ${rule_count}"
+            fi
+        fi
+
         echo ""
 
         # ── Config files modified ──
@@ -114,6 +133,10 @@ generate_report() {
             if [[ -n "${FAIL2BAN_JAIL_LOCAL:-}" ]]; then
                 echo "  - ${FAIL2BAN_JAIL_LOCAL}"
             fi
+        fi
+        if [[ "${_WIZARD_AUDIT_DONE:-0}" == "1" ]]; then
+            echo "  - ${AUDIT_RULES_FILE:-/etc/audit/rules.d/audit.rules}"
+            echo "  - ${AUDITD_CONF:-/etc/audit/auditd.conf}"
         fi
         echo ""
 
@@ -134,6 +157,9 @@ generate_report() {
         fi
         if [[ "${_WIZARD_FAIL2BAN_DONE:-0}" == "1" ]]; then
             echo "  ⚠ ${MSG_REPORT_WARN_FAIL2BAN}"
+        fi
+        if [[ "${_WIZARD_AUDIT_DONE:-0}" == "1" ]]; then
+            echo "  ⚠ ${MSG_REPORT_WARN_AUDIT}"
         fi
 
         echo ""
