@@ -78,9 +78,11 @@ MSG_MAIN_MENU_KERNEL="[7] Kernel Security Hardening"
 MSG_MAIN_MENU_KERNEL_DESC="sysctl security parameters, kernel module restrictions"
 MSG_MAIN_MENU_FILESYSTEM="[8] Filesystem Security"
 MSG_MAIN_MENU_FILESYSTEM_DESC="Permission check, SUID audit, orphan file check"
-MSG_MAIN_MENU_QUICK="[9] Full Security Wizard"
+MSG_MAIN_MENU_SERVICES="[9] Service Management"
+MSG_MAIN_MENU_SERVICES_DESC="Audit running services, disable unnecessary services, scan open ports"
+MSG_MAIN_MENU_QUICK="[10] Full Security Wizard"
 MSG_MAIN_MENU_QUICK_DESC="Step-by-step guided configuration, choose at each step"
-MSG_MAIN_MENU_REPORT="[10] View Last Report"
+MSG_MAIN_MENU_REPORT="[11] View Last Report"
 MSG_MAIN_MENU_REPORT_DESC="View detailed report from last security hardening"
 MSG_MAIN_MENU_EXIT="[0] Exit"
 MSG_MAIN_MENU_PROMPT="Enter option"
@@ -208,15 +210,16 @@ MSG_FAIL2BAN_MAXRETRY_PROMPT="Max failure attempts (maxretry)"
 # Full Wizard
 MSG_WIZARD_TITLE="Full Security Configuration Wizard"
 MSG_WIZARD_DESC="This wizard will guide you through all security configurations step by step. Each step: confirm / modify / skip."
-MSG_WIZARD_STEP_INIT="[0/9] System Initialization"
-MSG_WIZARD_STEP_SSH="[1/9] SSH Security Hardening"
-MSG_WIZARD_STEP_FIREWALL="[2/9] Firewall Configuration"
-MSG_WIZARD_STEP_FAIL2BAN="[3/9] Fail2Ban Intrusion Prevention"
-MSG_WIZARD_STEP_AUDIT="[4/9] Audit Logging Configuration"
-MSG_WIZARD_STEP_USERS="[5/9] User Management"
-MSG_WIZARD_STEP_KERNEL="[6/9] Kernel Security Hardening"
-MSG_WIZARD_STEP_FILESYSTEM="[7/9] Filesystem Security"
-MSG_WIZARD_STEP_SUMMARY="[9/9] Change Summary & Confirmation"
+MSG_WIZARD_STEP_INIT="[0/10] System Initialization"
+MSG_WIZARD_STEP_SSH="[1/10] SSH Security Hardening"
+MSG_WIZARD_STEP_FIREWALL="[2/10] Firewall Configuration"
+MSG_WIZARD_STEP_FAIL2BAN="[3/10] Fail2Ban Intrusion Prevention"
+MSG_WIZARD_STEP_AUDIT="[4/10] Audit Logging Configuration"
+MSG_WIZARD_STEP_USERS="[5/10] User Management"
+MSG_WIZARD_STEP_KERNEL="[6/10] Kernel Security Hardening"
+MSG_WIZARD_STEP_FILESYSTEM="[7/10] Filesystem Security"
+MSG_WIZARD_STEP_SERVICES="[8/10] Service Management"
+MSG_WIZARD_STEP_SUMMARY="[10/10] Change Summary & Confirmation"
 MSG_WIZARD_SKIP_STEP="Skip this step? (y/N)"
 MSG_WIZARD_COMPLETE="Wizard complete"
 MSG_WIZARD_SKIPPED="Skipped"
@@ -236,6 +239,8 @@ MSG_WIZARD_SKIPPED_KERNEL="Skipping kernel hardening"
 MSG_WIZARD_ERR_KERNEL="Kernel hardening had errors"
 MSG_WIZARD_SKIPPED_FILESYSTEM="Skipping filesystem check"
 MSG_WIZARD_ERR_FILESYSTEM="Filesystem check had errors"
+MSG_WIZARD_SKIPPED_SERVICES="Skipping service management"
+MSG_WIZARD_ERR_SERVICES="Service management had errors"
 MSG_WIZARD_ERR_HINT="(some steps had errors, check logs)"
 
 # SSH Key
@@ -636,6 +641,10 @@ MSG_REPORT_WARN_FAIL2BAN="Check Fail2Ban logs regularly: sudo tail -f /var/log/f
 MSG_REPORT_WARN_AUDIT="Check audit logs regularly: sudo aureport --summary or sudo ausearch -k identity"
 MSG_REPORT_WARN_FS="Filesystem permissions changed, verify critical services still work"
 MSG_STATUS_FS_SUID="SUID files"
+MSG_STATUS_SERVICES="Service Management"
+MSG_STATUS_SERVICES_RUNNING="Running services"
+MSG_STATUS_SERVICES_UNNECESSARY="Unnecessary services"
+MSG_REPORT_WARN_SERVICES="Some services disabled, verify required services are still running"
 
 # ═══════════════════════════════════════════
 # Log
@@ -646,6 +655,67 @@ MSG_LOG_COMPLETE="Execution completed"
 MSG_LOG_ERROR="Execution error"
 MSG_LOG_BACKUP="Backing up file"
 MSG_LOG_RESTORE="Restoring file"
+
+# ═══════════════════════════════════════════
+# Services Management
+# ═══════════════════════════════════════════
+
+MSG_SERVICES_WIZARD_TITLE="Service Management Wizard"
+MSG_SERVICES_WIZARD_DESC="Audit running services, disable unnecessary services, scan open ports"
+
+# Service descriptions
+MSG_SERVICES_DESC_TELNET="telnet — unencrypted remote access, insecure"
+MSG_SERVICES_DESC_RSH="rsh — unencrypted remote access, insecure"
+MSG_SERVICES_DESC_RLOGIN="rlogin — unencrypted remote access, insecure"
+MSG_SERVICES_DESC_VSFTPD="FTP — unencrypted file transfer, disable unless needed"
+MSG_SERVICES_DESC_AVAHI="mDNS/DNS-SD — usually not needed on servers"
+MSG_SERVICES_DESC_CUPS="printing service — usually not needed on servers"
+MSG_SERVICES_DESC_RPCBIND="RPC port mapper — disable if not needed"
+
+# Wizard steps
+MSG_SERVICES_STEP_AUDIT="Step 1: Audit running services"
+MSG_SERVICES_STEP_AUDIT_CONFIRM="Show all currently running services?"
+MSG_SERVICES_STEP_DISABLE="Step 2: Disable unnecessary services"
+MSG_SERVICES_STEP_DISABLE_CONFIRM="Detect and disable unnecessary services?"
+MSG_SERVICES_STEP_PORTS="Step 3: Scan open ports"
+MSG_SERVICES_STEP_PORTS_CONFIRM="Scan all currently listening ports?"
+MSG_SERVICES_STEP_SKIPPED="Skipped this step"
+
+# Audit
+MSG_SERVICES_AUDIT_TITLE="Service Audit"
+MSG_SERVICES_RUNNING_TITLE="Running services:"
+MSG_SERVICES_RUNNING_TOTAL="Total running services"
+
+# Disable services
+MSG_SERVICES_UNNECESSARY_TITLE="Unnecessary Service Detection"
+MSG_SERVICES_UNNECESSARY_DESC="The following unnecessary services are running:"
+MSG_SERVICES_CONFIRM_DISABLE="Confirm disable"
+MSG_SERVICES_DISABLING="Disabling service"
+MSG_SERVICES_STOP_FAILED="Failed to stop service"
+MSG_SERVICES_DISABLE_FAILED="Failed to disable service auto-start"
+MSG_SERVICES_DISABLED="Disabled service"
+MSG_SERVICES_DISABLE_ERROR="Failed to disable service"
+MSG_SERVICES_SKIPPED="Skipped service"
+MSG_SERVICES_ALL_CLEAR="No unnecessary running services detected"
+MSG_SERVICES_DISABLED_COUNT="Services disabled"
+
+# Port scanning
+MSG_SERVICES_PORTS_TITLE="Open Port Scan"
+MSG_SERVICES_PORTS_DESC="Currently listening ports:"
+MSG_SERVICES_PORTS_TOTAL="Total listening ports"
+MSG_SERVICES_PORTS_WARNING="Non-standard ports found"
+MSG_SERVICES_PORTS_UNKNOWN="ports need verification"
+MSG_SERVICES_PORT_STANDARD="standard port"
+MSG_SERVICES_PORT_NONSTANDARD="non-standard port, verify if needed"
+
+# Check list
+MSG_SERVICES_CHECK_LIST_TITLE="Checking the following services"
+
+# Summary
+MSG_SERVICES_SUMMARY="Service Management Summary"
+MSG_SERVICES_SUMMARY_RUNNING="Running services"
+MSG_SERVICES_SUMMARY_UNNECESSARY="Remaining unnecessary services"
+MSG_SERVICES_WIZARD_DONE="Service management configuration complete"
 
 # ═══════════════════════════════════════════
 # Errors and Warnings

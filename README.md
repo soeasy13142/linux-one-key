@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![ShellCheck](https://img.shields.io/badge/ShellCheck-Passing-brightgreen.svg)](https://www.shellcheck.net/)
-[![Bats Tests](https://img.shields.io/badge/Tests-150+-brightgreen.svg)](https://github.com/bats-core/bats-core)
+[![Bats Tests](https://img.shields.io/badge/Tests-218+-brightgreen.svg)](https://github.com/bats-core/bats-core)
 
 **Linux 云服务器安全加固一键脚本** — 通过交互式向导，几步完成 SSH、防火墙、Fail2Ban、审计日志等安全配置。
 
@@ -77,6 +77,13 @@
 - 检查关键目录权限（/etc/passwd、/etc/shadow 等）
 - 发现问题后提供修复建议
 
+### 服务管理
+
+- 审计运行中的 systemd 服务
+- 检测并禁用不必要服务（telnet、rsh、vsftpd、avahi-daemon 等）
+- 扫描开放端口，标记非标准端口并警告
+- 支持 ss/netstat/proc 多种端口检测方式
+
 ---
 
 ## 快速开始 / Quick Start
@@ -149,7 +156,8 @@ linux-one-key/
 │   │   ├── audit.sh           # 审计日志配置（auditd）
 │   │   ├── users.sh           # 用户管理
 │   │   ├── kernel.sh          # 内核安全加固（sysctl）
-│   │   └── filesystem.sh      # 文件系统安全
+│   │   ├── filesystem.sh      # 文件系统安全
+│   │   └── services.sh        # 服务管理
 │   └── lang/                  # 国际化
 │       ├── zh.sh              # 中文翻译
 │       └── en.sh              # 英文翻译
@@ -158,7 +166,7 @@ linux-one-key/
 │   ├── audit/                 # auditd 配置和规则模板
 │   └── sysctl/                # sysctl 安全参数模板
 ├── tests/                     # 单元测试（Bats）
-│   └── unit/                  # 150+ 测试用例
+│   └── unit/                  # 218+ 测试用例
 └── docs/                      # 文档
     ├── code-reviews/          # 代码审查报告
     ├── test-reports/          # 测试报告
@@ -197,7 +205,8 @@ Step 4: 审计日志配置（auditd 规则级别）
 Step 5: 用户管理（创建用户、密钥、sudo）
 Step 6: 内核安全加固（sysctl 参数）
 Step 7: 文件系统安全（SUID 审计、权限检查）
-Step 8: 生成安全报告
+Step 8: 服务管理（审计服务、禁用不必要服务、端口扫描）
+Step 9: 生成安全报告
 ```
 
 ### 安全保障
@@ -310,7 +319,7 @@ shellcheck -x install.sh
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
-| v0.4 | 2026-06-23 | 审计日志模块（auditd，三级规则） |
+| v0.4 | 2026-06-24 | 审计日志模块（auditd）、服务管理模块 |
 | v0.3 | 2026-06-24 | 用户管理、内核安全加固、文件系统安全 |
 | v0.2 | 2026-06-20 | 防火墙配置、Fail2Ban 入侵防护 |
 | v0.1 | 2026-06-20 | 基础框架、SSH 安全加固、交互式向导、国际化 |
@@ -319,7 +328,6 @@ shellcheck -x install.sh
 
 ### 待完成
 
-- v0.5：服务管理模块
 - v1.0：完整测试、文档、正式发布
 
 ---

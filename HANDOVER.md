@@ -2,8 +2,8 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-24（Code Review Round 3 全部修复完成）
-**当前阶段**: v0.3 用户管理+内核加固+文件系统安全已完成（2026-06-24）
+**最后更新**: 2026-06-24（v0.4 服务管理模块完成）
+**当前阶段**: v0.4 全部模块已完成（2026-06-24）
 
 ---
 
@@ -34,7 +34,7 @@
 | Code Review (Round 3) | ✅ 完成 | 0 CRITICAL + 3 HIGH + 4 MEDIUM + 4 LOW；全部已修复（含 H2、L4） |
 | v0.3 用户管理 + 内核加固 + 文件系统 | ✅ 完成 | users.sh, kernel.sh, filesystem.sh, sysctl 模板, i18n, 测试 76 个用例 |
 | v0.4 审计日志模块 | ✅ 完成 | audit.sh, audit.bats, config/audit/, i18n 更新, 菜单集成, 44 个测试用例 |
-| v0.4 服务管理 | ⬜ 未开始 | |
+| v0.4 服务管理 | ✅ 完成 | services.sh, services.bats, i18n 更新, 菜单集成, 35 个测试用例 |
 | v1.0 测试 + 文档 + 发布 | ⬜ 未开始 | |
 
 ### 已完成的工作
@@ -164,7 +164,8 @@ linux-one-key/
 │   │   ├── audit.sh           # 审计日志配置 (v0.4)
 │   │   ├── users.sh           # 用户管理 (v0.3)
 │   │   ├── kernel.sh          # 内核安全加固 (v0.3)
-│   │   └── filesystem.sh      # 文件系统安全 (v0.3)
+│   │   ├── filesystem.sh      # 文件系统安全 (v0.3)
+│   │   └── services.sh        # 服务管理 (v0.4)
 │   ├── lang/
 │   │   ├── README.md          # 语言文件说明
 │   │   ├── zh.sh              # 中文翻译
@@ -339,8 +340,8 @@ linux-one-key/
 1. **📋 验证其他发行版**：在 CentOS/Debian VM 中运行完整向导流程
    - SSH 端口交互逻辑
    - Fail2Ban 参数验证
-2. **开始 v0.4**：服务管理模块（services.sh）
-3. **E2E 测试**：在 Docker 容器中各发行版验证
+2. **E2E 测试**：在 Docker 容器中各发行版验证
+3. **开始 v1.0**：完整测试、文档、正式发布
 
 ### 实现顺序建议
 
@@ -366,10 +367,10 @@ v0.3 (第三周)
 ├── scripts/security/filesystem.sh
 └── 用户创建功能
 
-v0.4 🔄 进行中
+v0.4 ✅ 已完成
 ├── scripts/security/audit.sh       ✅ (44 个测试用例)
-├── scripts/security/services.sh    ⬜
-├── scripts/utils/report.sh         ⬜ (已移至 scripts/base/report.sh)
+├── scripts/security/services.sh    ✅ (35 个测试用例)
+├── scripts/utils/report.sh         ✅ (已移至 scripts/base/report.sh)
 └── scripts/utils/backup.sh / rollback.sh ⬜
 ```
 
@@ -584,3 +585,11 @@ v0.4 🔄 进行中
 | 2026-06-24 | UPDATE | `tests/README.md`, `tests/unit/README.md` | 添加 users/kernel/filesystem 测试文件，更新总数 107→183 |
 | 2026-06-24 | UPDATE | `docs/README.md`, `docs/code-reviews/README.md` | 丰富文档描述，添加 Round 4 审查记录 |
 | 2026-06-24 | UPDATE | `scripts/README.md` | 更新依赖表和目录结构 |
+| 2026-06-24 | CREATE | `scripts/security/services.sh` | v0.4 服务管理模块：审计运行服务、禁用不必要服务、端口扫描、交互式向导 |
+| 2026-06-24 | UPDATE | `scripts/lang/zh.sh` | 添加 ~35 条 MSG_SERVICES_* 中文翻译，更新菜单编号 /9→/10，添加向导步骤 |
+| 2026-06-24 | UPDATE | `scripts/lang/en.sh` | 添加 ~35 条 MSG_SERVICES_* 英文翻译，更新菜单编号，添加向导步骤 |
+| 2026-06-24 | UPDATE | `install.sh` | 集成 services.sh：load_dependencies、菜单[9]、向步→[10]报告→[11]、full wizard Step 8、状态检测 |
+| 2026-06-24 | UPDATE | `scripts/base/report.sh` | 添加服务管理报告段（运行中服务数、不必要服务数、警告信息） |
+| 2026-06-24 | CREATE | `tests/unit/services.bats` | 服务管理单元测试（35 个用例：常量、函数存在性、端口安全检查、状态输出格式） |
+| 2026-06-24 | UPDATE | `scripts/security/README.md` | 更新 services.sh 状态为 ✅ 完成，添加模块说明 |
+| 2026-06-24 | UPDATE | `HANDOVER.md` | 更新进度状态、文件清单、下一步工作、变更日志 |

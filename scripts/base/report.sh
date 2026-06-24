@@ -148,6 +148,21 @@ generate_report() {
             echo "    - ${MSG_STATUS_FS_SUID:-SUID files}: ${fs_suid_count}"
         fi
 
+        # Services
+        _report_task_line "${_WIZARD_SERVICES_DONE:-0}" "${MSG_TASK_SERVICES}"
+        if [[ "${_WIZARD_SERVICES_DONE:-0}" == "1" ]]; then
+            if type check_services_status &>/dev/null; then
+                local svc_status
+                svc_status=$(check_services_status 2>/dev/null)
+                local svc_running
+                svc_running=$(echo "${svc_status}" | grep '^services_running=' | cut -d= -f2)
+                local svc_unnecessary
+                svc_unnecessary=$(echo "${svc_status}" | grep '^services_unnecessary=' | cut -d= -f2)
+                echo "    - ${MSG_STATUS_SERVICES_RUNNING:-Running services}: ${svc_running}"
+                echo "    - ${MSG_STATUS_SERVICES_UNNECESSARY:-Unnecessary services}: ${svc_unnecessary}"
+            fi
+        fi
+
         echo ""
 
         # ── Config files modified ──
@@ -203,6 +218,9 @@ generate_report() {
         fi
         if [[ "${_WIZARD_FS_DONE:-0}" == "1" ]]; then
             echo "  ⚠ ${MSG_REPORT_WARN_FS:-Filesystem permissions changed, verify critical services still work}"
+        fi
+        if [[ "${_WIZARD_SERVICES_DONE:-0}" == "1" ]]; then
+            echo "  ⚠ ${MSG_REPORT_WARN_SERVICES:-Some services disabled, verify required services are still running}"
         fi
 
         echo ""

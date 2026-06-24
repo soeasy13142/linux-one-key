@@ -78,9 +78,11 @@ MSG_MAIN_MENU_KERNEL="[7] 内核安全加固"
 MSG_MAIN_MENU_KERNEL_DESC="sysctl 安全参数、内核模块限制"
 MSG_MAIN_MENU_FILESYSTEM="[8] 文件系统安全"
 MSG_MAIN_MENU_FILESYSTEM_DESC="目录权限检查、SUID审计、无主文件检查"
-MSG_MAIN_MENU_QUICK="[9] 完整安全配置向导"
+MSG_MAIN_MENU_SERVICES="[9] 服务管理"
+MSG_MAIN_MENU_SERVICES_DESC="审计运行中的服务、禁用不必要服务、扫描开放端口"
+MSG_MAIN_MENU_QUICK="[10] 完整安全配置向导"
 MSG_MAIN_MENU_QUICK_DESC="逐步引导完成所有安全配置，每步可选择"
-MSG_MAIN_MENU_REPORT="[10] 查看上次加固报告"
+MSG_MAIN_MENU_REPORT="[11] 查看上次加固报告"
 MSG_MAIN_MENU_REPORT_DESC="查看上次安全加固的详细报告"
 MSG_MAIN_MENU_EXIT="[0] 退出"
 MSG_MAIN_MENU_PROMPT="请输入选项"
@@ -208,15 +210,16 @@ MSG_FAIL2BAN_MAXRETRY_PROMPT="最大失败次数 (maxretry)"
 # 完整向导
 MSG_WIZARD_TITLE="完整安全配置向导"
 MSG_WIZARD_DESC="将逐步引导您完成所有安全配置，每步可选择：确认/修改/跳过"
-MSG_WIZARD_STEP_INIT="[0/9] 系统初始化"
-MSG_WIZARD_STEP_SSH="[1/9] SSH 安全加固"
-MSG_WIZARD_STEP_FIREWALL="[2/9] 防火墙配置"
-MSG_WIZARD_STEP_FAIL2BAN="[3/9] Fail2Ban 入侵防护"
-MSG_WIZARD_STEP_AUDIT="[4/9] 审计日志配置"
-MSG_WIZARD_STEP_USERS="[5/9] 用户管理"
-MSG_WIZARD_STEP_KERNEL="[6/9] 内核安全加固"
-MSG_WIZARD_STEP_FILESYSTEM="[7/9] 文件系统安全"
-MSG_WIZARD_STEP_SUMMARY="[9/9] 变更摘要与确认"
+MSG_WIZARD_STEP_INIT="[0/10] 系统初始化"
+MSG_WIZARD_STEP_SSH="[1/10] SSH 安全加固"
+MSG_WIZARD_STEP_FIREWALL="[2/10] 防火墙配置"
+MSG_WIZARD_STEP_FAIL2BAN="[3/10] Fail2Ban 入侵防护"
+MSG_WIZARD_STEP_AUDIT="[4/10] 审计日志配置"
+MSG_WIZARD_STEP_USERS="[5/10] 用户管理"
+MSG_WIZARD_STEP_KERNEL="[6/10] 内核安全加固"
+MSG_WIZARD_STEP_FILESYSTEM="[7/10] 文件系统安全"
+MSG_WIZARD_STEP_SERVICES="[8/10] 服务管理"
+MSG_WIZARD_STEP_SUMMARY="[10/10] 变更摘要与确认"
 MSG_WIZARD_SKIP_STEP="跳过此步骤？(y/N)"
 MSG_WIZARD_COMPLETE="向导完成"
 MSG_WIZARD_SKIPPED="已跳过"
@@ -236,6 +239,8 @@ MSG_WIZARD_SKIPPED_KERNEL="跳过内核加固"
 MSG_WIZARD_ERR_KERNEL="内核加固出现错误"
 MSG_WIZARD_SKIPPED_FILESYSTEM="跳过文件系统检查"
 MSG_WIZARD_ERR_FILESYSTEM="文件系统检查出现错误"
+MSG_WIZARD_SKIPPED_SERVICES="跳过服务管理"
+MSG_WIZARD_ERR_SERVICES="服务管理出现错误"
 MSG_WIZARD_ERR_HINT="（部分步骤出现错误，请查看日志）"
 
 # SSH 密钥
@@ -636,6 +641,10 @@ MSG_REPORT_WARN_FAIL2BAN="请定期检查 Fail2Ban 日志: sudo tail -f /var/log
 MSG_REPORT_WARN_AUDIT="请定期检查审计日志: sudo aureport --summary 或 sudo ausearch -k identity"
 MSG_REPORT_WARN_FS="文件系统权限已更改，请验证关键服务是否正常工作"
 MSG_STATUS_FS_SUID="SUID 文件数"
+MSG_STATUS_SERVICES="服务管理"
+MSG_STATUS_SERVICES_RUNNING="运行中服务"
+MSG_STATUS_SERVICES_UNNECESSARY="不必要服务"
+MSG_REPORT_WARN_SERVICES="已禁用部分服务，请验证所需服务是否正常运行"
 
 # ═══════════════════════════════════════════
 # 日志
@@ -646,6 +655,67 @@ MSG_LOG_COMPLETE="执行完成"
 MSG_LOG_ERROR="执行出错"
 MSG_LOG_BACKUP="备份文件"
 MSG_LOG_RESTORE="恢复文件"
+
+# ═══════════════════════════════════════════
+# 服务管理
+# ═══════════════════════════════════════════
+
+MSG_SERVICES_WIZARD_TITLE="服务管理向导"
+MSG_SERVICES_WIZARD_DESC="审计运行中的服务、禁用不必要的服务、扫描开放端口"
+
+# 服务描述
+MSG_SERVICES_DESC_TELNET="telnet — 明文远程访问，不安全"
+MSG_SERVICES_DESC_RSH="rsh — 明文远程访问，不安全"
+MSG_SERVICES_DESC_RLOGIN="rlogin — 明文远程访问，不安全"
+MSG_SERVICES_DESC_VSFTPD="FTP — 明文文件传输，除非必要否则禁用"
+MSG_SERVICES_DESC_AVAHI="mDNS/DNS-SD — 服务器通常不需要"
+MSG_SERVICES_DESC_CUPS="打印服务 — 服务器通常不需要"
+MSG_SERVICES_DESC_RPCBIND="RPC 端口映射 — 不需要则禁用"
+
+# 向导步骤
+MSG_SERVICES_STEP_AUDIT="Step 1: 审计运行中的服务"
+MSG_SERVICES_STEP_AUDIT_CONFIRM="是否显示当前运行中的所有服务？"
+MSG_SERVICES_STEP_DISABLE="Step 2: 禁用不必要服务"
+MSG_SERVICES_STEP_DISABLE_CONFIRM="是否检测并禁用不必要服务？"
+MSG_SERVICES_STEP_PORTS="Step 3: 扫描开放端口"
+MSG_SERVICES_STEP_PORTS_CONFIRM="是否扫描当前所有监听端口？"
+MSG_SERVICES_STEP_SKIPPED="已跳过此步骤"
+
+# 审计
+MSG_SERVICES_AUDIT_TITLE="服务审计"
+MSG_SERVICES_RUNNING_TITLE="运行中的服务:"
+MSG_SERVICES_RUNNING_TOTAL="运行中服务总数"
+
+# 禁用服务
+MSG_SERVICES_UNNECESSARY_TITLE="不必要服务检测"
+MSG_SERVICES_UNNECESSARY_DESC="以下不必要服务正在运行:"
+MSG_SERVICES_CONFIRM_DISABLE="确认禁用"
+MSG_SERVICES_DISABLING="正在禁用服务"
+MSG_SERVICES_STOP_FAILED="停止服务失败"
+MSG_SERVICES_DISABLE_FAILED="禁用服务自启失败"
+MSG_SERVICES_DISABLED="已禁用服务"
+MSG_SERVICES_DISABLE_ERROR="禁用服务失败"
+MSG_SERVICES_SKIPPED="已跳过服务"
+MSG_SERVICES_ALL_CLEAR="未检测到不必要的运行中服务"
+MSG_SERVICES_DISABLED_COUNT="已禁用服务数"
+
+# 端口扫描
+MSG_SERVICES_PORTS_TITLE="开放端口扫描"
+MSG_SERVICES_PORTS_DESC="当前监听端口:"
+MSG_SERVICES_PORTS_TOTAL="监听端口总数"
+MSG_SERVICES_PORTS_WARNING="发现非标准端口"
+MSG_SERVICES_PORTS_UNKNOWN="个端口需要确认是否必要"
+MSG_SERVICES_PORT_STANDARD="标准端口"
+MSG_SERVICES_PORT_NONSTANDARD="非标准端口，请确认是否必要"
+
+# 检查列表
+MSG_SERVICES_CHECK_LIST_TITLE="检查以下服务"
+
+# 摘要
+MSG_SERVICES_SUMMARY="服务管理摘要"
+MSG_SERVICES_SUMMARY_RUNNING="运行中服务数"
+MSG_SERVICES_SUMMARY_UNNECESSARY="仍存在的不必要服务"
+MSG_SERVICES_WIZARD_DONE="服务管理配置完成"
 
 # ═══════════════════════════════════════════
 # 错误和警告
