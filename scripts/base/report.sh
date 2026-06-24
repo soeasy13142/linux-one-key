@@ -117,6 +117,32 @@ generate_report() {
             fi
         fi
 
+        # Users
+        _report_task_line "${_WIZARD_USERS_DONE:-0}" "${MSG_TASK_USER_MGMT}"
+        if [[ "${_WIZARD_USERS_DONE:-0}" == "1" ]]; then
+            local custom_users
+            custom_users=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd 2>/dev/null | wc -l | tr -d ' ')
+            echo "    - ${MSG_STATUS_USERS_COUNT:-Custom users}: ${custom_users}"
+        fi
+
+        # Kernel
+        _report_task_line "${_WIZARD_KERNEL_DONE:-0}" "${MSG_TASK_KERNEL}"
+        if [[ "${_WIZARD_KERNEL_DONE:-0}" == "1" ]]; then
+            local kernel_conf_status="${MSG_STATUS_DISABLED}"
+            if [[ -f "/etc/sysctl.d/99-hardening.conf" ]]; then
+                kernel_conf_status="${MSG_STATUS_ENABLED}"
+            fi
+            echo "    - ${MSG_STATUS_KERNEL_CONF:-sysctl config}: ${kernel_conf_status}"
+            if [[ -f "/etc/sysctl.d/99-hardening.conf" ]]; then
+                local kernel_param_count
+                kernel_param_count=$(grep -cE "^[^#]" "/etc/sysctl.d/99-hardening.conf" 2>/dev/null || echo "0")
+                echo "    - ${MSG_KERNEL_SUMMARY_PARAMS:-Parameters}: ${kernel_param_count}"
+            fi
+        fi
+
+        # Filesystem
+        _report_task_line "${_WIZARD_FS_DONE:-0}" "${MSG_TASK_FILESYSTEM}"
+
         echo ""
 
         # ── Config files modified ──
@@ -137,6 +163,9 @@ generate_report() {
         if [[ "${_WIZARD_AUDIT_DONE:-0}" == "1" ]]; then
             echo "  - ${AUDIT_RULES_FILE:-/etc/audit/rules.d/audit.rules}"
             echo "  - ${AUDITD_CONF:-/etc/audit/auditd.conf}"
+        fi
+        if [[ "${_WIZARD_KERNEL_DONE:-0}" == "1" ]]; then
+            echo "  - /etc/sysctl.d/99-hardening.conf"
         fi
         echo ""
 
@@ -160,6 +189,12 @@ generate_report() {
         fi
         if [[ "${_WIZARD_AUDIT_DONE:-0}" == "1" ]]; then
             echo "  ⚠ ${MSG_REPORT_WARN_AUDIT}"
+        fi
+        if [[ "${_WIZARD_KERNEL_DONE:-0}" == "1" ]]; then
+            echo "  ⚠ ${MSG_REPORT_WARN_KERNEL:-Kernel parameters modified, may affect network/services}"
+        fi
+        if [[ "${_WIZARD_USERS_DONE:-0}" == "1" ]]; then
+            echo "  ⚠ ${MSG_REPORT_WARN_USERS:-New user created, test login before closing current session}"
         fi
 
         echo ""
