@@ -11,8 +11,11 @@ Bats 单元测试文件目录。
 | `firewall.bats` | `scripts/security/firewall.sh` | 9 | 防火墙类型检测、UFW/firewalld 命令 |
 | `fail2ban.bats` | `scripts/security/fail2ban.sh` | 18 | 安装、配置生成、服务管理、封禁/解封 |
 | `audit.bats` | `scripts/security/audit.sh` | 45 | 常量定义、规则生成（3 级别）、配置生成、函数存在性 |
+| `users.bats` | `scripts/security/users.sh` | 33 | 用户创建、密码验证、SSH 密钥、sudo 配置 |
+| `kernel.bats` | `scripts/security/kernel.sh` | 20 | sysctl 参数生成、模块禁用、回滚 |
+| `filesystem.bats` | `scripts/security/filesystem.sh` | 23 | SUID 审计、无主文件扫描、权限检查 |
 
-**总计: 107 个测试用例**
+**总计: 183 个测试用例**
 
 ## 测试结构
 

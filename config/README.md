@@ -11,6 +11,8 @@ config/
 │   └── auditd.conf     # auditd 主配置模板
 ├── fail2ban/           # Fail2Ban 配置模板
 │   └── jail.local      # Fail2Ban jail 配置模板
+├── sysctl/             # 内核参数模板
+│   └── hardening.conf  # sysctl 安全参数模板（CIS Benchmark）
 └── .gitkeep            # Git 占位文件
 ```
 
@@ -27,13 +29,4 @@ config/
 | `audit/audit.rules` | `scripts/security/audit.sh` | `/etc/audit/rules.d/audit.rules` |
 | `audit/auditd.conf` | `scripts/security/audit.sh` | `/etc/audit/auditd.conf` |
 | `fail2ban/jail.local` | `scripts/security/fail2ban.sh` | `/etc/fail2ban/jail.local` |
-
-## 规划中的配置
-
-```
-config/
-├── ssh/                # SSH 配置模板
-│   └── sshd_config     # SSH 安全配置模板
-└── sysctl/             # 内核参数模板
-    └── 99-security.conf # sysctl 安全参数
-```
+| `sysctl/hardening.conf` | `scripts/security/kernel.sh` | `/etc/sysctl.d/99-hardening.conf` |

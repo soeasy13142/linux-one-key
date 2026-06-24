@@ -11,7 +11,10 @@ tests/
 │   ├── ssh.bats        # SSH 模块测试 (16 个用例)
 │   ├── firewall.bats   # 防火墙模块测试 (9 个用例)
 │   ├── fail2ban.bats   # Fail2Ban 模块测试 (18 个用例)
-│   └── audit.bats      # 审计模块测试 (45 个用例)
+│   ├── audit.bats      # 审计模块测试 (45 个用例)
+│   ├── users.bats      # 用户管理测试 (33 个用例)
+│   ├── kernel.bats     # 内核加固测试 (20 个用例)
+│   └── filesystem.bats # 文件系统测试 (23 个用例)
 ├── integration/        # [规划中] 集成测试
 └── .gitkeep
 ```

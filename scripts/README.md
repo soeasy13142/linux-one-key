@@ -7,7 +7,7 @@
 ```
 scripts/
 ├── base/           # 基础框架模块（工具函数、系统检测、初始化、报告）
-├── security/       # 安全加固模块（SSH、防火墙、Fail2Ban、审计日志）
+├── security/       # 安全加固模块（SSH、防火墙、Fail2Ban、审计、用户、内核、文件系统）
 ├── lang/           # 国际化语言文件（中文、英文）
 ├── dev/            # [规划中] 开发工具安装
 ├── server/         # [规划中] 服务器软件安装
@@ -37,6 +37,9 @@ utils.sh → lang/*.sh → detect.sh → init.sh → security/*.sh → report.sh
 | `security/firewall.sh` | `utils.sh` |
 | `security/fail2ban.sh` | `utils.sh` |
 | `security/audit.sh` | `utils.sh` |
+| `security/users.sh` | `utils.sh` |
+| `security/kernel.sh` | `utils.sh` |
+| `security/filesystem.sh` | `utils.sh` |
 
 ## 编码规范
 
