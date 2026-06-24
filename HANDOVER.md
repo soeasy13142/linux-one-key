@@ -2,7 +2,7 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-24（v0.3 Code Review 问题修复完成）
+**最后更新**: 2026-06-24（Code Review Round 3 全部修复完成）
 **当前阶段**: v0.3 用户管理+内核加固+文件系统安全已完成（2026-06-24）
 
 ---
@@ -31,7 +31,7 @@
 | v0.2 防火墙 + Fail2Ban | ✅ 完成 | firewall.sh, fail2ban.sh, 语言文件更新, 菜单集成, 单元测试 |
 | Code Review (Round 1) | ✅ 完成 | 全面审查发现 2 CRITICAL + 7 HIGH + 14 MEDIUM + 9 LOW bug |
 | Code Review (Round 2) | ✅ 完成 | 3 代理并行审查，发现 10 CRITICAL + 15 HIGH + 13 MEDIUM + 12 LOW，共 50 个问题 |
-| Code Review (Round 3) | 🔄 部分修复 | 0 CRITICAL + 3 HIGH + 4 MEDIUM + 4 LOW；H1,H3,M1-M4,L1-L3 已修复，H2 延后，L4 未修复 |
+| Code Review (Round 3) | ✅ 完成 | 0 CRITICAL + 3 HIGH + 4 MEDIUM + 4 LOW；全部已修复（含 H2、L4） |
 | v0.3 用户管理 + 内核加固 + 文件系统 | ✅ 完成 | users.sh, kernel.sh, filesystem.sh, sysctl 模板, i18n, 测试 76 个用例 |
 | v0.4 审计日志模块 | ✅ 完成 | audit.sh, audit.bats, config/audit/, i18n 更新, 菜单集成, 44 个测试用例 |
 | v0.4 服务管理 | ⬜ 未开始 | |
@@ -99,6 +99,7 @@
 | 2026-06-24 | 更新报告模块 | `scripts/base/report.sh` — 添加用户/内核/文件系统报告段 |
 | 2026-06-24 | 创建 v0.3 单元测试 | `tests/unit/users.bats`(33), `kernel.bats`(20), `filesystem.bats`(23) — 共 76 个测试用例 |
 | 2026-06-24 | 修复 v0.3 Code Review 问题 | eval 注入、函数顺序、find 排除、截断警告、状态函数集成等 9 项修复 |
+| 2026-06-24 | 修复 Code Review Round 3 H2 | `install.sh` — 集成 `run_init()` 到向导 Step 0；`scripts/lang/zh.sh`, `en.sh` — 添加 INIT 翻译，步骤编号 /8→/9 |
 
 ---
 
@@ -335,15 +336,11 @@ linux-one-key/
 
 ### 接下来要做
 
-1. **🟡 修复剩余问题**：
-   - H2: `init.sh` 已加载但 `run_init()` 从未调用
-   - L4: `view_report()` 中 `find -printf` 改为 macOS 兼容方案
-   - 非 root 用户自动 fallback 日志目录
-2. **📋 验证其他发行版**：在 CentOS/Debian VM 中运行完整向导流程
+1. **📋 验证其他发行版**：在 CentOS/Debian VM 中运行完整向导流程
    - SSH 端口交互逻辑
    - Fail2Ban 参数验证
-3. **开始 v0.3**：用户管理 + 内核加固
-4. **E2E 测试**：在 Docker 容器中各发行版验证
+2. **开始 v0.4**：服务管理模块（services.sh）
+3. **E2E 测试**：在 Docker 容器中各发行版验证
 
 ### 实现顺序建议
 
@@ -575,3 +572,8 @@ v0.4 🔄 进行中
 | 2026-06-24 | UPDATE | `scripts/lang/zh.sh` | SSH 无密码警告；截断提示；文件系统报告键 |
 | 2026-06-24 | UPDATE | `install.sh` | show_system_status 改用 check_*_status() 函数 |
 | 2026-06-24 | CREATE | `.claude/plans/fix-commit-400933a-review.plan.md` | v0.3 Code Review 修复计划 |
+| 2026-06-24 | UPDATE | `install.sh` | H2 修复：集成 `run_init()` 到向导 Step 0，添加 `_WIZARD_INIT_DONE` 标志 |
+| 2026-06-24 | UPDATE | `scripts/lang/zh.sh` | 添加 `MSG_WIZARD_STEP_INIT`/`SKIPPED_INIT`/`ERR_INIT`，步骤编号 /8→/9 |
+| 2026-06-24 | UPDATE | `scripts/lang/en.sh` | 同上英文翻译 |
+| 2026-06-24 | UPDATE | `HANDOVER.md` | 更新 Code Review Round 3 状态为 ✅ 完成，更新下一步工作 |
+| 2026-06-24 | UPDATE | `README.md` | 更新功能特性列表：用户管理/内核加固/文件系统安全标记为 ✅，新增文件系统安全条目 |
