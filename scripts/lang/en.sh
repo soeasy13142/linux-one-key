@@ -75,6 +75,7 @@ MSG_MAIN_MENU_AUDIT_DESC="Configure auditd system auditing, monitor security eve
 MSG_MAIN_MENU_QUICK="[6] Full Security Wizard"
 MSG_MAIN_MENU_QUICK_DESC="Step-by-step guided configuration, choose at each step"
 MSG_MAIN_MENU_REPORT="[7] View Last Report"
+MSG_MAIN_MENU_REPORT_DESC="View detailed report from last security hardening"
 MSG_MAIN_MENU_EXIT="[0] Exit"
 MSG_MAIN_MENU_PROMPT="Enter option"
 MSG_MAIN_MENU_CHOICE="Please select an action"

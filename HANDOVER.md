@@ -2,7 +2,7 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-23（v0.4 审计日志模块实现）
+**最后更新**: 2026-06-24（添加项目目录 README）
 **当前阶段**: v0.4 审计日志模块已完成（2026-06-23）
 
 ---
@@ -136,35 +136,48 @@ linux-one-key/
 │           ├── security.md
 │           └── testing.md
 ├── scripts/
+│   ├── README.md              # 脚本目录总览
 │   ├── base/
+│   │   ├── README.md          # 基础模块说明
 │   │   ├── utils.sh           # 工具函数库
 │   │   ├── detect.sh          # 系统检测
 │   │   ├── init.sh            # 系统初始化
 │   │   └── report.sh          # 报告生成
 │   ├── security/
+│   │   ├── README.md          # 安全模块说明
 │   │   ├── ssh.sh             # SSH 安全加固
 │   │   ├── firewall.sh        # 防火墙配置
 │   │   ├── fail2ban.sh        # Fail2Ban 入侵防护
 │   │   └── audit.sh           # 审计日志配置 (v0.4)
 │   ├── lang/
+│   │   ├── README.md          # 语言文件说明
 │   │   ├── zh.sh              # 中文翻译
 │   │   └── en.sh              # 英文翻译
-│   ├── dev/                   # [空] 开发工具安装
-│   ├── server/                # [空] 服务器软件安装
-│   └── utils/                 # [空] 通用工具
+│   ├── dev/
+│   │   └── README.md          # [规划中] 开发工具安装
+│   ├── server/
+│   │   └── README.md          # [规划中] 服务器软件安装
+│   └── utils/
+│       └── README.md          # [规划中] 通用工具
 ├── tests/
+│   ├── README.md              # 测试目录总览
 │   └── unit/
+│       ├── README.md          # 单元测试说明
 │       ├── utils.bats         # 工具函数测试
 │       ├── firewall.bats      # 防火墙测试
 │       ├── fail2ban.bats      # Fail2Ban 测试
 │       ├── ssh.bats           # SSH 模块测试
-│       └── audit.bats         # 审计模块测试 (v0.4, 44个用例)
+│       └── audit.bats         # 审计模块测试 (v0.4, 45个用例)
 ├── config/
+│   ├── README.md              # 配置目录总览
 │   ├── fail2ban/
+│   │   ├── README.md          # Fail2Ban 配置说明
 │   │   └── jail.local         # Fail2Ban 配置模板
 │   └── audit/
+│       ├── README.md          # 审计配置说明
 │       ├── audit.rules        # 审计规则模板 (v0.4)
 │       └── auditd.conf        # auditd 配置模板 (v0.4)
+├── scripts/README.md           # 脚本目录总览
 ├── docs/                      # 文档目录
 │   ├── README.md                           # 文档目录总览
 │   ├── code-reviews/                       # Code Review 报告
@@ -500,3 +513,24 @@ v0.4 🔄 进行中
 | 2026-06-23 | UPDATE | `scripts/base/report.sh` | 添加审计状态、配置文件路径、警告信息到报告 |
 | 2026-06-23 | CREATE | `tests/unit/audit.bats` | 审计模块单元测试：44 个用例（常量、规则生成、配置、函数存在性） |
 | 2026-06-23 | UPDATE | `HANDOVER.md` | 更新进度状态、文件清单、变更日志 |
+| 2026-06-24 | CREATE | `docs/code-reviews/round-4-audit-module-review.md` | v0.4 审计模块 Code Review：1 HIGH + 3 MEDIUM + 2 LOW |
+| 2026-06-24 | UPDATE | `scripts/lang/zh.sh` | H1: 修复 auseport→aureport 拼写错误; M2: 添加 MSG_MAIN_MENU_REPORT_DESC |
+| 2026-06-24 | UPDATE | `scripts/lang/en.sh` | M2: 添加 MSG_MAIN_MENU_REPORT_DESC |
+| 2026-06-24 | UPDATE | `scripts/security/audit.sh` | M1: 添加 case default 分支; L1: mkdir 错误记录到日志 |
+| 2026-06-24 | UPDATE | `tests/unit/audit.bats` | M3: 添加 standard 规则不含 modules 的测试（45 个用例） |
+| 2026-06-24 | UPDATE | `config/audit/audit.rules` | L2: 标注模板为 full 级别示例 |
+| 2026-06-24 | UPDATE | `install.sh` | M2: 显示报告菜单描述文本 |
+| 2026-06-24 | CREATE | `scripts/README.md` | 脚本目录总览：模块说明、加载顺序、依赖关系、编码规范 |
+| 2026-06-24 | CREATE | `scripts/base/README.md` | 基础模块说明：utils/detect/init/report 各函数清单 |
+| 2026-06-24 | CREATE | `scripts/security/README.md` | 安全模块说明：SSH/防火墙/Fail2Ban/审计功能和通用模式 |
+| 2026-06-24 | CREATE | `scripts/lang/README.md` | 语言文件说明：i18n 工作原理、翻译键命名、添加新语言指南 |
+| 2026-06-24 | CREATE | `scripts/dev/README.md` | [规划中] 开发工具安装目录说明 |
+| 2026-06-24 | CREATE | `scripts/server/README.md` | [规划中] 服务器软件安装目录说明 |
+| 2026-06-24 | CREATE | `scripts/utils/README.md` | [规划中] 通用工具脚本目录说明 |
+| 2026-06-24 | CREATE | `config/README.md` | 配置目录总览：模板与实际配置的关系 |
+| 2026-06-24 | CREATE | `config/audit/README.md` | 审计配置模板说明：3 级规则、auditd.conf 参数 |
+| 2026-06-24 | CREATE | `config/fail2ban/README.md` | Fail2Ban 配置模板说明：jail.local 参数和占位符 |
+| 2026-06-24 | CREATE | `tests/README.md` | 测试目录总览：Bats 框架、运行方式、测试规范 |
+| 2026-06-24 | CREATE | `tests/unit/README.md` | 单元测试说明：107 个用例、测试结构、运行方式 |
+| 2026-06-24 | UPDATE | `README.md` | 更新功能列表：审计日志状态 ⬜→✅ |
+| 2026-06-24 | UPDATE | `HANDOVER.md` | 更新文件清单、添加变更日志 |

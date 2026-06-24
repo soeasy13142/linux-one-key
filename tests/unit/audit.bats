@@ -111,6 +111,11 @@ teardown() {
     [[ "${result}" == *"sshd_config"* ]]
 }
 
+@test "_generate_standard_rules excludes modules key" {
+    result=$(_generate_standard_rules)
+    [[ "${result}" != *"modules"* ]]
+}
+
 # 测试 _generate_full_rules 函数
 @test "_generate_full_rules contains perm_change key" {
     result=$(_generate_full_rules)
