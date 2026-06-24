@@ -39,45 +39,6 @@ _backup_sysctl_config() {
     fi
 }
 
-# ============================================================================
-# 公共函数
-# ============================================================================
-
-# 应用 sysctl 安全参数
-apply_sysctl_params() {
-    log_title "${MSG_KERNEL_SYSCTL_TITLE}"
-
-    # 备份现有配置
-    _backup_sysctl_config
-
-    log_step "${MSG_KERNEL_SYSCTL_APPLYING}..."
-
-    # 检查模板文件是否存在
-    if [[ -f "${SYSCTL_TEMPLATE}" ]]; then
-        # 使用模板文件生成配置
-        mkdir -p "$(dirname "${SYSCTL_HARDENING_CONF}")"
-        cp -a "${SYSCTL_TEMPLATE}" "${SYSCTL_HARDENING_CONF}"
-    else
-        # 模板不存在，直接生成
-        log_warn "${MSG_KERNEL_TEMPLATE_NOT_FOUND}"
-        _generate_sysctl_config
-    fi
-
-    # 应用 sysctl 配置
-    local apply_errors=0
-    if sysctl --system >> "${LOG_FILE}" 2>&1; then
-        log_success "${MSG_KERNEL_SYSCTL_DONE}"
-    else
-        log_warn "${MSG_KERNEL_SYSCTL_PARTIAL}"
-        apply_errors=1
-    fi
-
-    # 验证关键参数
-    _verify_sysctl_params
-
-    return ${apply_errors}
-}
-
 # 生成 sysctl 配置（当模板不存在时的 fallback）
 _generate_sysctl_config() {
     cat > "${SYSCTL_HARDENING_CONF}" << 'SYSCTL'
@@ -130,6 +91,45 @@ kernel.dmesg_restrict = 1
 # 限制内核指针泄露
 kernel.kptr_restrict = 2
 SYSCTL
+}
+
+# ============================================================================
+# 公共函数
+# ============================================================================
+
+# 应用 sysctl 安全参数
+apply_sysctl_params() {
+    log_title "${MSG_KERNEL_SYSCTL_TITLE}"
+
+    # 备份现有配置
+    _backup_sysctl_config
+
+    log_step "${MSG_KERNEL_SYSCTL_APPLYING}..."
+
+    # 检查模板文件是否存在
+    if [[ -f "${SYSCTL_TEMPLATE}" ]]; then
+        # 使用模板文件生成配置
+        mkdir -p "$(dirname "${SYSCTL_HARDENING_CONF}")"
+        cp -a "${SYSCTL_TEMPLATE}" "${SYSCTL_HARDENING_CONF}"
+    else
+        # 模板不存在，直接生成
+        log_warn "${MSG_KERNEL_TEMPLATE_NOT_FOUND}"
+        _generate_sysctl_config
+    fi
+
+    # 应用 sysctl 配置
+    local apply_errors=0
+    if sysctl --system >> "${LOG_FILE}" 2>&1; then
+        log_success "${MSG_KERNEL_SYSCTL_DONE}"
+    else
+        log_warn "${MSG_KERNEL_SYSCTL_PARTIAL}"
+        apply_errors=1
+    fi
+
+    # 验证关键参数
+    _verify_sysctl_params
+
+    return ${apply_errors}
 }
 
 # 验证关键 sysctl 参数

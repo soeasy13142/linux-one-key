@@ -464,7 +464,7 @@ MSG_USERS_SSH_KEY_SKIPPED="Skipping SSH key configuration"
 MSG_USERS_SSH_KEY_GENERATING="Generating Ed25519 key pair"
 MSG_USERS_SSH_KEY_FAILED="SSH key generation failed"
 MSG_USERS_SSH_KEY_DONE="SSH key generated"
-MSG_USERS_SSH_KEY_HINT="Please download the private key to local storage"
+MSG_USERS_SSH_KEY_HINT="Please download the private key to local storage. WARNING: The key has no passphrase — protect it carefully."
 
 MSG_USERS_SUDO_TITLE="Configure sudo NOPASSWD"
 MSG_USERS_SUDO_SECURITY_HINT="Security: NOPASSWD allows sudo without password, use with caution"
@@ -600,6 +600,7 @@ MSG_FS_ORPHAN_SCANNING="Scanning orphan files..."
 MSG_FS_ORPHAN_NONE="No orphan files found"
 MSG_FS_ORPHAN_RESULTS_TITLE="Orphan File List"
 MSG_FS_ORPHAN_FOUND="orphan files"
+MSG_FS_ORPHAN_TRUNCATED="Showing first 50 results — more orphan files may exist"
 MSG_FS_ORPHAN_HINT="Orphan files found"
 MSG_FS_ORPHAN_FIX_CMD="Fix suggestion: sudo chown root:root <file>"
 
@@ -630,6 +631,8 @@ MSG_REPORT_WARN_SSH_PORT22="Firewall kept port 22 open. After confirming new SSH
 MSG_REPORT_WARN_FIREWALL="Firewall enabled. Ensure all required ports are properly opened."
 MSG_REPORT_WARN_FAIL2BAN="Check Fail2Ban logs regularly: sudo tail -f /var/log/fail2ban.log"
 MSG_REPORT_WARN_AUDIT="Check audit logs regularly: sudo aureport --summary or sudo ausearch -k identity"
+MSG_REPORT_WARN_FS="Filesystem permissions changed, verify critical services still work"
+MSG_STATUS_FS_SUID="SUID files"
 
 # ═══════════════════════════════════════════
 # Log

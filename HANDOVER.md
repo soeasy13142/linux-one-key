@@ -2,7 +2,7 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-24（v0.3 用户管理+内核加固+文件系统安全完成）
+**最后更新**: 2026-06-24（v0.3 Code Review 问题修复完成）
 **当前阶段**: v0.3 用户管理+内核加固+文件系统安全已完成（2026-06-24）
 
 ---
@@ -98,6 +98,7 @@
 | 2026-06-24 | 集成 v0.3 到主入口 | `install.sh` — load_dependencies、菜单[6-8]、状态检测、full_wizard Step 5-7 |
 | 2026-06-24 | 更新报告模块 | `scripts/base/report.sh` — 添加用户/内核/文件系统报告段 |
 | 2026-06-24 | 创建 v0.3 单元测试 | `tests/unit/users.bats`(33), `kernel.bats`(20), `filesystem.bats`(23) — 共 76 个测试用例 |
+| 2026-06-24 | 修复 v0.3 Code Review 问题 | eval 注入、函数顺序、find 排除、截断警告、状态函数集成等 9 项修复 |
 
 ---
 
@@ -113,7 +114,8 @@ linux-one-key/
 │   │   ├── linux-security-hardening.prd.md  # PRD 需求文档
 │   │   └── main-menu-redesign.prd.md        # 主菜单重设计 PRD
 │   ├── plans/
-│   │   └── main-menu-redesign.plan.md       # 主菜单重设计实施计划
+│   │   ├── main-menu-redesign.plan.md       # 主菜单重设计实施计划
+│   │   ├── fix-commit-400933a-review.plan.md # v0.3 Code Review 修复计划
 │   ├── commands/
 │   │   ├── feature-development.md  # 功能开发命令
 │   │   ├── database-migration.md   # 数据库迁移命令
@@ -121,7 +123,9 @@ linux-one-key/
 │   ├── research/
 │   │   └── everything-claude-code-research-playbook.md  # 研究工作流指南
 │   ├── reviews/
-│   │   └── local-review-20260621.md  # 代码审查报告
+│   │   ├── local-review-20260621.md  # 代码审查报告
+│   │   └── commit-400933a-review.md  # v0.3 commit 代码审查报告
+│   │   └── fix-commit-400933a-review.plan.md # v0.3 Code Review 修复计划
 │   └── rules/
 │       ├── common/            # 通用规则
 │       │   ├── agents.md
@@ -562,3 +566,12 @@ v0.4 🔄 进行中
 | 2026-06-24 | CREATE | `tests/unit/kernel.bats` | 内核加固单元测试（20 个用例） |
 | 2026-06-24 | CREATE | `tests/unit/filesystem.bats` | 文件系统单元测试（23 个用例） |
 | 2026-06-24 | CREATE | `.claude/plans/v0.3-user-kernel-filesystem.plan.md` | v0.3 实施计划文档 |
+| 2026-06-24 | CREATE | `.claude/reviews/commit-400933a-review.md` | v0.3 commit 代码审查：3 HIGH + 4 MEDIUM + 3 LOW，含 eval 注入、find 性能、函数定义顺序等问题 |
+| 2026-06-24 | UPDATE | `scripts/security/users.sh` | HIGH#1: eval 注入修复（getent passwd 替代 eval echo）；SSH 密钥无密码警告 |
+| 2026-06-24 | UPDATE | `scripts/security/kernel.sh` | HIGH#2: _generate_sysctl_config 移至 apply_sysctl_params 之前 |
+| 2026-06-24 | UPDATE | `scripts/security/filesystem.sh` | HIGH#3: find / 添加 -xdev 和排除 /proc /sys；截断警告；tail -1 改为全局变量；status 扫描范围 /usr→/ |
+| 2026-06-24 | UPDATE | `scripts/base/report.sh` | 添加文件系统 SUID 详情和警告信息 |
+| 2026-06-24 | UPDATE | `scripts/lang/en.sh` | SSH 无密码警告；截断提示；文件系统报告键 |
+| 2026-06-24 | UPDATE | `scripts/lang/zh.sh` | SSH 无密码警告；截断提示；文件系统报告键 |
+| 2026-06-24 | UPDATE | `install.sh` | show_system_status 改用 check_*_status() 函数 |
+| 2026-06-24 | CREATE | `.claude/plans/fix-commit-400933a-review.plan.md` | v0.3 Code Review 修复计划 |

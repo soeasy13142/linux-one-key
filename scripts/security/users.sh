@@ -181,7 +181,8 @@ setup_user_ssh_key() {
     fi
 
     local user_home
-    user_home=$(eval echo "~${username}" 2>/dev/null || echo "/home/${username}")
+    user_home=$(getent passwd "${username}" 2>/dev/null | cut -d: -f6)
+    user_home="${user_home:-/home/${username}}"
 
     local ssh_dir="${user_home}/.ssh"
     local key_file="${ssh_dir}/id_ed25519"

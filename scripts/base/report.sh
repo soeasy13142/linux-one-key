@@ -142,6 +142,11 @@ generate_report() {
 
         # Filesystem
         _report_task_line "${_WIZARD_FS_DONE:-0}" "${MSG_TASK_FILESYSTEM}"
+        if [[ "${_WIZARD_FS_DONE:-0}" == "1" ]]; then
+            local fs_suid_count
+            fs_suid_count=$(find / -xdev -not -path '/proc/*' -not -path '/sys/*' -perm -4000 -type f 2>/dev/null | wc -l | tr -d ' ')
+            echo "    - ${MSG_STATUS_FS_SUID:-SUID files}: ${fs_suid_count}"
+        fi
 
         echo ""
 
@@ -195,6 +200,9 @@ generate_report() {
         fi
         if [[ "${_WIZARD_USERS_DONE:-0}" == "1" ]]; then
             echo "  ⚠ ${MSG_REPORT_WARN_USERS:-New user created, test login before closing current session}"
+        fi
+        if [[ "${_WIZARD_FS_DONE:-0}" == "1" ]]; then
+            echo "  ⚠ ${MSG_REPORT_WARN_FS:-Filesystem permissions changed, verify critical services still work}"
         fi
 
         echo ""
