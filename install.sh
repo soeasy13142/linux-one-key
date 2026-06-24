@@ -293,26 +293,7 @@ load_dependencies() {
 # 欢迎信息
 # ═══════════════════════════════════════════
 
-show_welcome() {
-    clear 2>/dev/null || true
-    echo "=================================="
-    echo "   _____ _     _       _     "
-    echo "  / ____| |   (_)     | |    "
-    echo " | |    | |__  _ _ __ | |__  "
-    echo " | |    | '_ \| | '_ \| '_ \ "
-    echo " | |____| | | | | | | | | | |"
-    echo "  \_____|_| |_|_|_| |_|_| |_|"
-    echo "        Author: Charlie       "
-    echo "=================================="
-    echo ""
-    echo -e "  ${BOLD}Linux 云服务器安全加固脚本${NC}"
-    echo -e "  ${BOLD}Linux Server Security Hardening Script${NC}"
-    echo -e "  ${BOLD}${MSG_VERSION}: ${SCRIPT_VERSION}  |  Author: Charlie${NC}"
-    echo ""
-    echo -e "  ${BLUE}${MSG_WELCOME}${NC}"
-    echo -e "  ${BLUE}${MSG_DESCRIPTION}${NC}"
-    echo ""
-}
+# show_welcome 已合并到 show_main_menu
 
 # ═══════════════════════════════════════════
 # 系统状态检测（只读，不修改系统）
@@ -450,13 +431,21 @@ show_system_status() {
 
 # 显示主菜单
 show_main_menu() {
+    clear 2>/dev/null || true
     echo ""
-    echo -e "${BOLD}╔═══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BOLD}║       Linux 云服务器安全加固脚本 ${SCRIPT_VERSION}                    ║${NC}"
-    echo -e "${BOLD}╚═══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "${BOLD}  _____ _     _       _     ${NC}"
+    echo -e "${BOLD} / ____| |   (_)     | |    ${NC}"
+    echo -e "${BOLD}| |    | |__  _ _ __ | |__  ${NC}"
+    echo -e "${BOLD}| |    | '_ \| | '_ \| '_ \ ${NC}"
+    echo -e "${BOLD}| |____| | | | | | | | | | |${NC}"
+    echo -e "${BOLD} \_____|_| |_|_|_| |_|_| |_|${NC}"
+    echo ""
+    echo -e "  ${BOLD}Linux Server Security Hardening ${SCRIPT_VERSION}${NC}"
+    echo -e "  ${BLUE}${MSG_WELCOME}${NC}"
     echo ""
     echo -e "  ${MSG_MAIN_MENU_SYSTEM_INFO}: $(get_detected_os) $(get_detected_os_version) | $(get_detected_arch) | $(whoami)"
     echo ""
+    echo -e "${BOLD}───────────────────────────────────────────────────────────${NC}"
     echo -e "${BOLD}${MSG_MAIN_MENU_CHOICE}${NC}"
     echo ""
     echo -e "  ${GREEN}${MSG_MAIN_MENU_STATUS}${NC}"
@@ -671,6 +660,7 @@ run_full_wizard() {
     local wizard_rc=0
 
     # Track which modules were executed (not skipped)
+    export _WIZARD_INIT_DONE=0
     export _WIZARD_SSH_DONE=0
     export _WIZARD_FIREWALL_DONE=0
     export _WIZARD_FAIL2BAN_DONE=0
@@ -678,6 +668,21 @@ run_full_wizard() {
     export _WIZARD_USERS_DONE=0
     export _WIZARD_KERNEL_DONE=0
     export _WIZARD_FS_DONE=0
+
+    # ── Step 0: System Init ──
+    echo ""
+    log_title "${MSG_WIZARD_STEP_INIT}"
+
+    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+        log_info "${MSG_WIZARD_SKIPPED_INIT}"
+    else
+        if run_init; then
+            _WIZARD_INIT_DONE=1
+        else
+            log_warn "${MSG_WIZARD_ERR_INIT}"
+            wizard_rc=1
+        fi
+    fi
 
     # ── Step 1: SSH ──
     echo ""
@@ -887,9 +892,7 @@ main() {
         exit 0
     fi
 
-    # 交互模式：显示欢迎 → 系统检测 → 主菜单循环
-    show_welcome
-
+    # 交互模式：系统检测 → 主菜单循环
     run_detection || {
         log_warn "System detection completed with warnings"
         log_warn "Some features may not work correctly on this system"
