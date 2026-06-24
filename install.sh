@@ -280,6 +280,14 @@ load_dependencies() {
     # shellcheck source=/dev/null
     source "${SCRIPT_DIR}/scripts/security/filesystem.sh"
 
+    # 加载 services.sh
+    if [[ ! -f "${SCRIPT_DIR}/scripts/security/services.sh" ]]; then
+        echo "Error: Cannot find services.sh at ${SCRIPT_DIR}/scripts/security/services.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/scripts/security/services.sh"
+
     # 加载 report.sh (generate_report 函数)
     if [[ ! -f "${SCRIPT_DIR}/scripts/base/report.sh" ]]; then
         echo "Error: Cannot find report.sh at ${SCRIPT_DIR}/scripts/base/report.sh"
@@ -422,6 +430,21 @@ show_system_status() {
     fi
 
     echo ""
+
+    # 服务管理状态
+    echo -e "${GREEN}[${MSG_STATUS_SERVICES:-Services}]${NC}"
+    if type check_services_status &>/dev/null; then
+        local svc_status
+        svc_status=$(check_services_status 2>/dev/null)
+        local svc_running
+        svc_running=$(echo "${svc_status}" | grep '^services_running=' | cut -d= -f2)
+        local svc_unnecessary
+        svc_unnecessary=$(echo "${svc_status}" | grep '^services_unnecessary=' | cut -d= -f2)
+        echo -e "  ${MSG_STATUS_SERVICES_RUNNING:-Running services}: ${svc_running}"
+        echo -e "  ${MSG_STATUS_SERVICES_UNNECESSARY:-Unnecessary services}: ${svc_unnecessary}"
+    fi
+
+    echo ""
     press_enter
 }
 
@@ -472,6 +495,9 @@ show_main_menu() {
     echo -e "  ${GREEN}${MSG_MAIN_MENU_FILESYSTEM}${NC}"
     echo -e "      ${MSG_MAIN_MENU_FILESYSTEM_DESC}"
     echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_SERVICES}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_SERVICES_DESC}"
+    echo ""
     echo -e "  ${GREEN}${MSG_MAIN_MENU_QUICK}${NC}"
     echo -e "      ${MSG_MAIN_MENU_QUICK_DESC}"
     echo ""
@@ -486,7 +512,7 @@ show_main_menu() {
 get_main_menu_choice() {
     local choice
     while true; do
-        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-10]" "")
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-11]" "")
         # EOF / non-interactive stdin: exit gracefully
         if [[ -z "${choice}" ]]; then
             echo ""
@@ -494,7 +520,7 @@ get_main_menu_choice() {
             exit 1
         fi
         case "${choice}" in
-            [0-9]|10)
+            [0-9]|10|11)
                 echo "${choice}"
                 return 0
                 ;;
@@ -668,6 +694,7 @@ run_full_wizard() {
     export _WIZARD_USERS_DONE=0
     export _WIZARD_KERNEL_DONE=0
     export _WIZARD_FS_DONE=0
+    export _WIZARD_SERVICES_DONE=0
 
     # ── Step 0: System Init ──
     echo ""
@@ -789,7 +816,22 @@ run_full_wizard() {
         fi
     fi
 
-    # ── Step 8: Summary ──
+    # ── Step 8: Services ──
+    echo ""
+    log_title "${MSG_WIZARD_STEP_SERVICES}"
+
+    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+        log_info "${MSG_WIZARD_SKIPPED_SERVICES}"
+    else
+        if run_services_wizard; then
+            _WIZARD_SERVICES_DONE=1
+        else
+            log_warn "${MSG_WIZARD_ERR_SERVICES}"
+            wizard_rc=1
+        fi
+    fi
+
+    # ── Step 9: Summary ──
     echo ""
     log_title "${MSG_WIZARD_STEP_SUMMARY}"
 
@@ -855,10 +897,14 @@ run_main_menu_loop() {
                 press_enter
                 ;;
             9)
+                run_services_wizard || log_error "Service management failed"
+                press_enter
+                ;;
+            10)
                 run_full_wizard
                 press_enter
                 ;;
-            10) view_report ;;
+            11) view_report ;;
             0) cleanup_and_exit ;;
         esac
     done

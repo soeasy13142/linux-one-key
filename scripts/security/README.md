@@ -13,7 +13,7 @@
 | `users.sh` | 用户管理 | ✅ 完成 |
 | `kernel.sh` | 内核安全加固（sysctl） | ✅ 完成 |
 | `filesystem.sh` | 文件系统安全 | ✅ 完成 |
-| `services.sh` | 服务管理 | ⬜ 规划中 (v0.5) |
+| `services.sh` | 服务管理 | ✅ 完成 |
 
 ## 模块说明
 
@@ -90,6 +90,16 @@
 - 发现问题后提供修复建议
 - 结果写入日志文件，支持后续审计
 
+### services.sh — 服务管理
+
+审计运行中的服务、禁用不必要的服务、扫描开放端口：
+
+- 审计所有 systemd 运行中的服务
+- 检测并交互式禁用不必要服务（telnet、rsh、rlogin、vsftpd、avahi-daemon、cups、rpcbind）
+- 使用 `ss`/`netstat` 扫描监听端口，标记非标准端口并警告
+- 可自定义安全端口列表（默认 22/80/443）
+- 支持 `/proc/net/tcp` fallback
+
 ## 通用模式
 
 所有安全模块遵循统一的向导模式：
@@ -117,5 +127,6 @@ run_xxx_wizard() {
 | `users.sh` | `utils.sh` |
 | `kernel.sh` | `utils.sh` |
 | `filesystem.sh` | `utils.sh` |
+| `services.sh` | `utils.sh` |
 
 所有模块都依赖 `scripts/base/utils.sh`（通过 source guard 检查）。模块之间无相互依赖，可独立运行。
