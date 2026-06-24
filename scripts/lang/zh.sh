@@ -70,9 +70,11 @@ MSG_MAIN_MENU_FIREWALL="[3] 防火墙配置"
 MSG_MAIN_MENU_FIREWALL_DESC="UFW/firewalld 规则配置"
 MSG_MAIN_MENU_FAIL2BAN="[4] Fail2Ban 入侵防护"
 MSG_MAIN_MENU_FAIL2BAN_DESC="自动封禁恶意登录尝试"
-MSG_MAIN_MENU_QUICK="[5] 完整安全配置向导"
+MSG_MAIN_MENU_AUDIT="[5] 审计日志"
+MSG_MAIN_MENU_AUDIT_DESC="配置 auditd 系统审计，监控安全事件"
+MSG_MAIN_MENU_QUICK="[6] 完整安全配置向导"
 MSG_MAIN_MENU_QUICK_DESC="逐步引导完成所有安全配置，每步可选择"
-MSG_MAIN_MENU_REPORT="[6] 查看上次加固报告"
+MSG_MAIN_MENU_REPORT="[7] 查看上次加固报告"
 MSG_MAIN_MENU_EXIT="[0] 退出"
 MSG_MAIN_MENU_PROMPT="请输入选项"
 MSG_MAIN_MENU_CHOICE="请选择操作"
@@ -103,6 +105,7 @@ MSG_STATUS_SSH_PASSWD="密码认证"
 MSG_STATUS_SSH_KEY="密钥认证"
 MSG_STATUS_FIREWALL="防火墙"
 MSG_STATUS_FAIL2BAN="Fail2Ban"
+MSG_STATUS_AUDIT="审计日志"
 MSG_STATUS_ENABLED="已启用"
 MSG_STATUS_DISABLED="未启用"
 MSG_STATUS_INSTALLED="已安装"
@@ -198,10 +201,11 @@ MSG_FAIL2BAN_MAXRETRY_PROMPT="最大失败次数 (maxretry)"
 # 完整向导
 MSG_WIZARD_TITLE="完整安全配置向导"
 MSG_WIZARD_DESC="将逐步引导您完成所有安全配置，每步可选择：确认/修改/跳过"
-MSG_WIZARD_STEP_SSH="[1/4] SSH 安全加固"
-MSG_WIZARD_STEP_FIREWALL="[2/4] 防火墙配置"
-MSG_WIZARD_STEP_FAIL2BAN="[3/4] Fail2Ban 入侵防护"
-MSG_WIZARD_STEP_SUMMARY="[4/4] 变更摘要与确认"
+MSG_WIZARD_STEP_SSH="[1/5] SSH 安全加固"
+MSG_WIZARD_STEP_FIREWALL="[2/5] 防火墙配置"
+MSG_WIZARD_STEP_FAIL2BAN="[3/5] Fail2Ban 入侵防护"
+MSG_WIZARD_STEP_AUDIT="[4/5] 审计日志配置"
+MSG_WIZARD_STEP_SUMMARY="[5/5] 变更摘要与确认"
 MSG_WIZARD_SKIP_STEP="跳过此步骤？(y/N)"
 MSG_WIZARD_COMPLETE="向导完成"
 MSG_WIZARD_SKIPPED="已跳过"
@@ -211,6 +215,8 @@ MSG_WIZARD_SKIPPED_FIREWALL="跳过防火墙配置"
 MSG_WIZARD_ERR_FIREWALL="防火墙配置出现错误"
 MSG_WIZARD_SKIPPED_FAIL2BAN="跳过 Fail2Ban 配置"
 MSG_WIZARD_ERR_FAIL2BAN="Fail2Ban 配置出现错误"
+MSG_WIZARD_SKIPPED_AUDIT="跳过审计日志配置"
+MSG_WIZARD_ERR_AUDIT="审计日志配置出现错误"
 MSG_WIZARD_ERR_HINT="（部分步骤出现错误，请查看日志）"
 
 # SSH 密钥
@@ -340,6 +346,66 @@ MSG_FAIL2BAN_TIPS_4="解封 IP: fail2ban-client set sshd unbanip <ip>"
 MSG_FAIL2BAN_TIPS_5="重启服务: systemctl restart fail2ban"
 
 # ═══════════════════════════════════════════
+# 审计日志
+# ═══════════════════════════════════════════
+
+MSG_AUDIT_TITLE="审计日志配置"
+MSG_AUDIT_INSTALL="正在安装 auditd..."
+MSG_AUDIT_INSTALL_DONE="auditd 安装完成"
+MSG_AUDIT_INSTALL_FAILED="auditd 安装失败"
+MSG_AUDIT_ALREADY_INSTALLED="auditd 已安装"
+MSG_AUDIT_UNSUPPORTED_OS="不支持的操作系统，跳过审计配置"
+MSG_AUDIT_BACKUP_RULES="备份审计规则文件"
+MSG_AUDIT_BACKUP_CONF="备份 auditd 配置文件"
+MSG_AUDIT_CONFIGURE_RULES="正在生成审计规则..."
+MSG_AUDIT_CONFIGURE_RULES_DONE="审计规则生成完成"
+MSG_AUDIT_CONFIGURE_CONF="正在配置 auditd..."
+MSG_AUDIT_CONFIGURE_CONF_DONE="auditd 配置完成"
+MSG_AUDIT_LOAD_RULES="正在加载审计规则..."
+MSG_AUDIT_LOAD_RULES_DONE="审计规则已加载"
+MSG_AUDIT_LOAD_RULES_WARN="部分规则加载失败（可能与内核版本不兼容）"
+MSG_AUDIT_ENABLE="正在启用 auditd 服务..."
+MSG_AUDIT_ENABLE_DONE="auditd 服务已启用"
+MSG_AUDIT_ENABLE_FAILED="auditd 服务启用失败"
+MSG_AUDIT_STATUS="审计状态"
+MSG_AUDIT_SERVICE_STATUS="服务状态："
+MSG_AUDIT_RULES_COUNT="规则数量："
+MSG_AUDIT_LOG_INFO="日志文件："
+MSG_AUDIT_LOG_NOT_FOUND="尚未生成"
+MSG_AUDIT_CONFIG_INFO="当前审计配置信息："
+MSG_AUDIT_DONE="审计日志配置完成！"
+MSG_AUDIT_NOT_INSTALLED="auditd 未安装"
+
+# 审计向导 - 规则级别
+MSG_AUDIT_RULES_LEVEL_TITLE="请选择审计规则级别"
+MSG_AUDIT_RULES_BASIC="[1] 基础规则 - 身份认证、SSH、sudo 监控"
+MSG_AUDIT_RULES_STANDARD="[2] 标准规则 - 基础 + 网络、cron、日志防篡改（推荐）"
+MSG_AUDIT_RULES_FULL="[3] 全面规则 - 所有安全事件监控"
+MSG_AUDIT_RULES_LEVEL_PROMPT="请选择规则级别"
+
+# 审计向导 - 自定义参数
+MSG_AUDIT_CUSTOM_TITLE="auditd 参数配置"
+MSG_AUDIT_CUSTOM_PROMPT="每个参数将展示默认值，您可以直接回车接受或输入新值"
+MSG_AUDIT_LOG_SIZE_PROMPT="单个日志文件最大大小 (MB)"
+MSG_AUDIT_LOG_COUNT_PROMPT="保留日志文件份数"
+MSG_AUDIT_INVALID_CHOICE="无效选项，使用默认值（标准规则）"
+MSG_AUDIT_INVALID_NUMBER="请输入有效的正整数"
+
+# 审计日志搜索/报告
+MSG_AUDIT_SEARCH="搜索审计日志 (key={key})..."
+MSG_AUDIT_REPORT="生成审计报告..."
+MSG_AUDIT_REPORT_SUMMARY="审计报告摘要："
+MSG_AUDIT_REPORT_AUTH="认证审计摘要："
+
+# 审计管理提示
+MSG_AUDIT_TIPS_TITLE="审计日志管理命令："
+MSG_AUDIT_TIPS_1="查看规则: auditctl -l"
+MSG_AUDIT_TIPS_2="搜索日志: ausearch -k <key> -i"
+MSG_AUDIT_TIPS_3="审计报告: aureport --summary"
+MSG_AUDIT_TIPS_4="实时日志: tail -f /var/log/audit/audit.log"
+MSG_AUDIT_TIPS_5="服务状态: systemctl status auditd"
+
+# ═══════════════════════════════════════════
 # 用户管理
 # ═══════════════════════════════════════════
 
@@ -366,6 +432,7 @@ MSG_REPORT_SAVED="报告已保存到"
 MSG_REPORT_WARN_SSH_PORT22="防火墙已保留放通 22 端口，确认新 SSH 端口可用后请手动关闭: sudo ufw deny 22/tcp"
 MSG_REPORT_WARN_FIREWALL="防火墙已启用，请确保已正确放通所需端口"
 MSG_REPORT_WARN_FAIL2BAN="请定期检查 Fail2Ban 日志: sudo tail -f /var/log/fail2ban.log"
+MSG_REPORT_WARN_AUDIT="请定期检查审计日志: sudo auseport --summary 或 sudo ausearch -k identity"
 
 # ═══════════════════════════════════════════
 # 日志
