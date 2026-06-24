@@ -75,6 +75,7 @@ MSG_MAIN_MENU_AUDIT_DESC="配置 auditd 系统审计，监控安全事件"
 MSG_MAIN_MENU_QUICK="[6] 完整安全配置向导"
 MSG_MAIN_MENU_QUICK_DESC="逐步引导完成所有安全配置，每步可选择"
 MSG_MAIN_MENU_REPORT="[7] 查看上次加固报告"
+MSG_MAIN_MENU_REPORT_DESC="查看上次安全加固的详细报告"
 MSG_MAIN_MENU_EXIT="[0] 退出"
 MSG_MAIN_MENU_PROMPT="请输入选项"
 MSG_MAIN_MENU_CHOICE="请选择操作"
@@ -432,7 +433,7 @@ MSG_REPORT_SAVED="报告已保存到"
 MSG_REPORT_WARN_SSH_PORT22="防火墙已保留放通 22 端口，确认新 SSH 端口可用后请手动关闭: sudo ufw deny 22/tcp"
 MSG_REPORT_WARN_FIREWALL="防火墙已启用，请确保已正确放通所需端口"
 MSG_REPORT_WARN_FAIL2BAN="请定期检查 Fail2Ban 日志: sudo tail -f /var/log/fail2ban.log"
-MSG_REPORT_WARN_AUDIT="请定期检查审计日志: sudo auseport --summary 或 sudo ausearch -k identity"
+MSG_REPORT_WARN_AUDIT="请定期检查审计日志: sudo aureport --summary 或 sudo ausearch -k identity"
 
 # ═══════════════════════════════════════════
 # 日志

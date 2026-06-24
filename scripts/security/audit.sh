@@ -167,7 +167,9 @@ _generate_audit_rules() {
     log_step "${MSG_AUDIT_CONFIGURE_RULES}"
 
     # 确保规则目录存在
-    mkdir -p "${AUDIT_RULES_DIR}" 2>/dev/null || true
+    mkdir -p "${AUDIT_RULES_DIR}" >> "${LOG_FILE}" 2>&1 || {
+        log_warn "Failed to create ${AUDIT_RULES_DIR}, trying anyway"
+    }
 
     # 生成规则文件
     {
@@ -194,6 +196,10 @@ _generate_audit_rules() {
                 ;;
             "${AUDIT_LEVEL_FULL}")
                 _generate_full_rules
+                ;;
+            *)
+                log_warn "Unknown audit level '${level}', falling back to standard"
+                _generate_standard_rules
                 ;;
         esac
 

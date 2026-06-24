@@ -414,6 +414,7 @@ show_main_menu() {
     echo -e "      ${MSG_MAIN_MENU_QUICK_DESC}"
     echo ""
     echo -e "  ${GREEN}${MSG_MAIN_MENU_REPORT}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_REPORT_DESC}"
     echo ""
     echo -e "  ${RED}${MSG_MAIN_MENU_EXIT}${NC}"
     echo ""
