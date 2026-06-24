@@ -113,7 +113,8 @@ check_critical_permissions() {
         log_warn "${MSG_FS_PERM_ISSUES}: ${issues}/${checked} ${MSG_FS_PERM_MISMATCH}"
     fi
 
-    echo "${issues}"
+    # 通过全局变量返回结果（避免脆弱的 stdout 解析）
+    _FS_PERM_ISSUE_COUNT=${issues}
     return 0
 }
 
@@ -194,11 +195,11 @@ audit_suid_sgid() {
 
     log_step "${MSG_FS_SUID_SCANNING}..."
 
-    # 查找 SUID 和 SGID 文件
+    # 查找 SUID 和 SGID 文件（排除虚拟/网络文件系统）
     local suid_files
-    suid_files=$(find / -perm -4000 -type f 2>/dev/null || true)
+    suid_files=$(find / -xdev -not -path '/proc/*' -not -path '/sys/*' -perm -4000 -type f 2>/dev/null || true)
     local sgid_files
-    sgid_files=$(find / -perm -2000 -type f 2>/dev/null || true)
+    sgid_files=$(find / -xdev -not -path '/proc/*' -not -path '/sys/*' -perm -2000 -type f 2>/dev/null || true)
 
     local suid_count=0
     local sgid_count=0
@@ -261,7 +262,7 @@ check_orphan_files() {
     log_step "${MSG_FS_ORPHAN_SCANNING}..."
 
     local orphan_files
-    orphan_files=$(find / -nouser -o -nogroup 2>/dev/null | head -50 || true)
+    orphan_files=$(find / -xdev -not -path '/proc/*' -not -path '/sys/*' \( -nouser -o -nogroup \) 2>/dev/null | head -50 || true)
 
     if [[ -z "${orphan_files}" ]]; then
         log_success "${MSG_FS_ORPHAN_NONE}"
@@ -273,6 +274,11 @@ check_orphan_files() {
 
     echo ""
     echo -e "${BOLD}${MSG_FS_ORPHAN_RESULTS_TITLE}${NC}"
+
+    # 提示结果可能被截断
+    if [[ ${orphan_count} -ge 50 ]]; then
+        log_warn "${MSG_FS_ORPHAN_TRUNCATED}"
+    fi
     echo ""
     echo "${orphan_files}" | while IFS= read -r file; do
         local owner
@@ -308,8 +314,9 @@ run_filesystem_wizard() {
     echo ""
     log_title "${MSG_FS_STEP_PERM}"
 
-    local issue_count
-    issue_count=$(check_critical_permissions 2>/dev/null | tail -1)
+    _FS_PERM_ISSUE_COUNT=0
+    check_critical_permissions
+    local issue_count=${_FS_PERM_ISSUE_COUNT}
 
     if [[ "${issue_count}" -gt 0 ]]; then
         echo ""
@@ -356,8 +363,8 @@ run_filesystem_wizard() {
 check_filesystem_status() {
     local suid_count=0
 
-    # 快速统计 SUID 文件数
-    suid_count=$(find /usr -perm -4000 -type f 2>/dev/null | wc -l | tr -d ' ')
+    # 快速统计 SUID 文件数（与 audit_suid_sgid 保持一致的扫描范围）
+    suid_count=$(find / -xdev -not -path '/proc/*' -not -path '/sys/*' -perm -4000 -type f 2>/dev/null | wc -l | tr -d ' ')
 
     echo "fs_suid_count=${suid_count}"
 }

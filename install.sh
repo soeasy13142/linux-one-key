@@ -404,27 +404,41 @@ show_system_status() {
 
     # 用户管理状态
     echo -e "${GREEN}[${MSG_STATUS_USERS:-Users}]${NC}"
-    local custom_users
-    custom_users=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd 2>/dev/null | wc -l | tr -d ' ')
-    echo -e "  ${MSG_STATUS_USERS_COUNT:-Custom users}: ${custom_users}"
+    if type check_users_status &>/dev/null; then
+        local users_status
+        users_status=$(check_users_status 2>/dev/null)
+        local custom_users
+        custom_users=$(echo "${users_status}" | grep '^users_custom=' | cut -d= -f2)
+        echo -e "  ${MSG_STATUS_USERS_COUNT:-Custom users}: ${custom_users}"
+    fi
 
     echo ""
 
     # 内核加固状态
     echo -e "${GREEN}[${MSG_STATUS_KERNEL:-Kernel}]${NC}"
-    local kernel_conf_status="${MSG_STATUS_NOT_INSTALLED}"
-    if [[ -f "/etc/sysctl.d/99-hardening.conf" ]]; then
-        kernel_conf_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_CONFIGURED})"
+    if type check_kernel_status &>/dev/null; then
+        local kernel_status
+        kernel_status=$(check_kernel_status 2>/dev/null)
+        local kernel_conf
+        kernel_conf=$(echo "${kernel_status}" | grep '^kernel_conf=' | cut -d= -f2)
+        local kernel_conf_status="${MSG_STATUS_NOT_INSTALLED}"
+        if [[ "${kernel_conf}" == "yes" ]]; then
+            kernel_conf_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_CONFIGURED})"
+        fi
+        echo -e "  ${MSG_STATUS_KERNEL_CONF:-sysctl config}: ${kernel_conf_status}"
     fi
-    echo -e "  ${MSG_STATUS_KERNEL_CONF:-sysctl config}: ${kernel_conf_status}"
 
     echo ""
 
     # 文件系统状态
     echo -e "${GREEN}[${MSG_STATUS_FILESYSTEM:-Filesystem}]${NC}"
-    local suid_count
-    suid_count=$(find /usr -perm -4000 -type f 2>/dev/null | wc -l | tr -d ' ')
-    echo -e "  ${MSG_STATUS_FS_SUID:-SUID files}: ${suid_count}"
+    if type check_filesystem_status &>/dev/null; then
+        local fs_status
+        fs_status=$(check_filesystem_status 2>/dev/null)
+        local suid_count
+        suid_count=$(echo "${fs_status}" | grep '^fs_suid_count=' | cut -d= -f2)
+        echo -e "  ${MSG_STATUS_FS_SUID:-SUID files}: ${suid_count}"
+    fi
 
     echo ""
     press_enter
