@@ -2,8 +2,8 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-24（添加项目目录 README）
-**当前阶段**: v0.4 审计日志模块已完成（2026-06-23）
+**最后更新**: 2026-06-24（v0.3 用户管理+内核加固+文件系统安全完成）
+**当前阶段**: v0.3 用户管理+内核加固+文件系统安全已完成（2026-06-24）
 
 ---
 
@@ -21,7 +21,7 @@
 
 ## 2. 当前进度
 
-### 总体状态：🟢 v0.4 审计日志模块已完成
+### 总体状态：🟢 v0.3 用户管理+内核加固+文件系统安全已完成
 
 | 阶段 | 状态 | 说明 |
 |------|------|------|
@@ -32,7 +32,7 @@
 | Code Review (Round 1) | ✅ 完成 | 全面审查发现 2 CRITICAL + 7 HIGH + 14 MEDIUM + 9 LOW bug |
 | Code Review (Round 2) | ✅ 完成 | 3 代理并行审查，发现 10 CRITICAL + 15 HIGH + 13 MEDIUM + 12 LOW，共 50 个问题 |
 | Code Review (Round 3) | 🔄 部分修复 | 0 CRITICAL + 3 HIGH + 4 MEDIUM + 4 LOW；H1,H3,M1-M4,L1-L3 已修复，H2 延后，L4 未修复 |
-| v0.3 用户管理 + 内核加固 | ⬜ 未开始 | |
+| v0.3 用户管理 + 内核加固 + 文件系统 | ✅ 完成 | users.sh, kernel.sh, filesystem.sh, sysctl 模板, i18n, 测试 76 个用例 |
 | v0.4 审计日志模块 | ✅ 完成 | audit.sh, audit.bats, config/audit/, i18n 更新, 菜单集成, 44 个测试用例 |
 | v0.4 服务管理 | ⬜ 未开始 | |
 | v1.0 测试 + 文档 + 发布 | ⬜ 未开始 | |
@@ -90,6 +90,14 @@
 | 2026-06-23 | 集成审计模块到主菜单 | `install.sh` — load_dependencies、菜单[5]、状态检测、full_wizard Step 4 |
 | 2026-06-23 | 更新报告模块 | `scripts/base/report.sh` — 添加审计状态、配置文件、警告信息 |
 | 2026-06-23 | 创建审计模块单元测试 | `tests/unit/audit.bats` — 44 个测试用例，覆盖常量、规则生成、配置、函数存在性 |
+| 2026-06-24 | 创建用户管理模块 | `scripts/security/users.sh` — 创建用户、密码、SSH密钥、sudo NOPASSWD、向导 |
+| 2026-06-24 | 创建内核加固模块 | `scripts/security/kernel.sh` — sysctl 参数、内核模块禁用、回滚、向导 |
+| 2026-06-24 | 创建文件系统安全模块 | `scripts/security/filesystem.sh` — 权限检查、SUID审计、无主文件、向导 |
+| 2026-06-24 | 创建 sysctl 配置模板 | `config/sysctl/hardening.conf` — CIS Benchmark 参考参数 |
+| 2026-06-24 | 添加 v0.3 i18n 翻译 | `scripts/lang/zh.sh`, `scripts/lang/en.sh` — ~120 条 MSG_USERS_*/MSG_KERNEL_*/MSG_FS_* 翻译 |
+| 2026-06-24 | 集成 v0.3 到主入口 | `install.sh` — load_dependencies、菜单[6-8]、状态检测、full_wizard Step 5-7 |
+| 2026-06-24 | 更新报告模块 | `scripts/base/report.sh` — 添加用户/内核/文件系统报告段 |
+| 2026-06-24 | 创建 v0.3 单元测试 | `tests/unit/users.bats`(33), `kernel.bats`(20), `filesystem.bats`(23) — 共 76 个测试用例 |
 
 ---
 
@@ -148,7 +156,10 @@ linux-one-key/
 │   │   ├── ssh.sh             # SSH 安全加固
 │   │   ├── firewall.sh        # 防火墙配置
 │   │   ├── fail2ban.sh        # Fail2Ban 入侵防护
-│   │   └── audit.sh           # 审计日志配置 (v0.4)
+│   │   ├── audit.sh           # 审计日志配置 (v0.4)
+│   │   ├── users.sh           # 用户管理 (v0.3)
+│   │   ├── kernel.sh          # 内核安全加固 (v0.3)
+│   │   └── filesystem.sh      # 文件系统安全 (v0.3)
 │   ├── lang/
 │   │   ├── README.md          # 语言文件说明
 │   │   ├── zh.sh              # 中文翻译
@@ -167,16 +178,21 @@ linux-one-key/
 │       ├── firewall.bats      # 防火墙测试
 │       ├── fail2ban.bats      # Fail2Ban 测试
 │       ├── ssh.bats           # SSH 模块测试
-│       └── audit.bats         # 审计模块测试 (v0.4, 45个用例)
+│       ├── audit.bats         # 审计模块测试 (v0.4, 45个用例)
+│       ├── users.bats         # 用户管理测试 (v0.3, 33个用例)
+│       ├── kernel.bats        # 内核加固测试 (v0.3, 20个用例)
+│       └── filesystem.bats    # 文件系统测试 (v0.3, 23个用例)
 ├── config/
 │   ├── README.md              # 配置目录总览
 │   ├── fail2ban/
 │   │   ├── README.md          # Fail2Ban 配置说明
 │   │   └── jail.local         # Fail2Ban 配置模板
-│   └── audit/
-│       ├── README.md          # 审计配置说明
-│       ├── audit.rules        # 审计规则模板 (v0.4)
-│       └── auditd.conf        # auditd 配置模板 (v0.4)
+│   ├── audit/
+│   │   ├── README.md          # 审计配置说明
+│   │   ├── audit.rules        # 审计规则模板 (v0.4)
+│   │   └── auditd.conf        # auditd 配置模板 (v0.4)
+│   └── sysctl/
+│       └── hardening.conf     # 内核安全参数模板 (v0.3)
 ├── scripts/README.md           # 脚本目录总览
 ├── docs/                      # 文档目录
 │   ├── README.md                           # 文档目录总览
@@ -534,3 +550,15 @@ v0.4 🔄 进行中
 | 2026-06-24 | CREATE | `tests/unit/README.md` | 单元测试说明：107 个用例、测试结构、运行方式 |
 | 2026-06-24 | UPDATE | `README.md` | 更新功能列表：审计日志状态 ⬜→✅ |
 | 2026-06-24 | UPDATE | `HANDOVER.md` | 更新文件清单、添加变更日志 |
+| 2026-06-24 | CREATE | `scripts/security/users.sh` | v0.3 用户管理模块：创建用户、密码、SSH密钥、sudo NOPASSWD、向导 |
+| 2026-06-24 | CREATE | `scripts/security/kernel.sh` | v0.3 内核加固模块：sysctl 参数、内核模块禁用、回滚、向导 |
+| 2026-06-24 | CREATE | `scripts/security/filesystem.sh` | v0.3 文件系统模块：权限检查、SUID审计、无主文件、向导 |
+| 2026-06-24 | CREATE | `config/sysctl/hardening.conf` | v0.3 sysctl 安全参数配置模板（CIS Benchmark） |
+| 2026-06-24 | UPDATE | `scripts/lang/zh.sh` | 添加 ~120 条 MSG_USERS_*/MSG_KERNEL_*/MSG_FS_* 中文翻译 |
+| 2026-06-24 | UPDATE | `scripts/lang/en.sh` | 添加 ~120 条对应英文翻译 |
+| 2026-06-24 | UPDATE | `install.sh` | 集成 v0.3：load_dependencies、菜单[6-8]、状态检测、full_wizard Step 5-7 |
+| 2026-06-24 | UPDATE | `scripts/base/report.sh` | 添加用户/内核/文件系统报告段 |
+| 2026-06-24 | CREATE | `tests/unit/users.bats` | 用户管理单元测试（33 个用例） |
+| 2026-06-24 | CREATE | `tests/unit/kernel.bats` | 内核加固单元测试（20 个用例） |
+| 2026-06-24 | CREATE | `tests/unit/filesystem.bats` | 文件系统单元测试（23 个用例） |
+| 2026-06-24 | CREATE | `.claude/plans/v0.3-user-kernel-filesystem.plan.md` | v0.3 实施计划文档 |

@@ -256,6 +256,30 @@ load_dependencies() {
     # shellcheck source=/dev/null
     source "${SCRIPT_DIR}/scripts/security/audit.sh"
 
+    # 加载 users.sh
+    if [[ ! -f "${SCRIPT_DIR}/scripts/security/users.sh" ]]; then
+        echo "Error: Cannot find users.sh at ${SCRIPT_DIR}/scripts/security/users.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/scripts/security/users.sh"
+
+    # 加载 kernel.sh
+    if [[ ! -f "${SCRIPT_DIR}/scripts/security/kernel.sh" ]]; then
+        echo "Error: Cannot find kernel.sh at ${SCRIPT_DIR}/scripts/security/kernel.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/scripts/security/kernel.sh"
+
+    # 加载 filesystem.sh
+    if [[ ! -f "${SCRIPT_DIR}/scripts/security/filesystem.sh" ]]; then
+        echo "Error: Cannot find filesystem.sh at ${SCRIPT_DIR}/scripts/security/filesystem.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/scripts/security/filesystem.sh"
+
     # 加载 report.sh (generate_report 函数)
     if [[ ! -f "${SCRIPT_DIR}/scripts/base/report.sh" ]]; then
         echo "Error: Cannot find report.sh at ${SCRIPT_DIR}/scripts/base/report.sh"
@@ -377,6 +401,32 @@ show_system_status() {
     echo -e "  ${MSG_STATUS_AUDIT}: ${audit_status}"
 
     echo ""
+
+    # 用户管理状态
+    echo -e "${GREEN}[${MSG_STATUS_USERS:-Users}]${NC}"
+    local custom_users
+    custom_users=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd 2>/dev/null | wc -l | tr -d ' ')
+    echo -e "  ${MSG_STATUS_USERS_COUNT:-Custom users}: ${custom_users}"
+
+    echo ""
+
+    # 内核加固状态
+    echo -e "${GREEN}[${MSG_STATUS_KERNEL:-Kernel}]${NC}"
+    local kernel_conf_status="${MSG_STATUS_NOT_INSTALLED}"
+    if [[ -f "/etc/sysctl.d/99-hardening.conf" ]]; then
+        kernel_conf_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_CONFIGURED})"
+    fi
+    echo -e "  ${MSG_STATUS_KERNEL_CONF:-sysctl config}: ${kernel_conf_status}"
+
+    echo ""
+
+    # 文件系统状态
+    echo -e "${GREEN}[${MSG_STATUS_FILESYSTEM:-Filesystem}]${NC}"
+    local suid_count
+    suid_count=$(find /usr -perm -4000 -type f 2>/dev/null | wc -l | tr -d ' ')
+    echo -e "  ${MSG_STATUS_FS_SUID:-SUID files}: ${suid_count}"
+
+    echo ""
     press_enter
 }
 
@@ -410,6 +460,15 @@ show_main_menu() {
     echo -e "  ${GREEN}${MSG_MAIN_MENU_AUDIT}${NC}"
     echo -e "      ${MSG_MAIN_MENU_AUDIT_DESC}"
     echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_USERS}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_USERS_DESC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_KERNEL}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_KERNEL_DESC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_FILESYSTEM}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_FILESYSTEM_DESC}"
+    echo ""
     echo -e "  ${GREEN}${MSG_MAIN_MENU_QUICK}${NC}"
     echo -e "      ${MSG_MAIN_MENU_QUICK_DESC}"
     echo ""
@@ -424,7 +483,7 @@ show_main_menu() {
 get_main_menu_choice() {
     local choice
     while true; do
-        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-7]" "")
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-10]" "")
         # EOF / non-interactive stdin: exit gracefully
         if [[ -z "${choice}" ]]; then
             echo ""
@@ -432,7 +491,7 @@ get_main_menu_choice() {
             exit 1
         fi
         case "${choice}" in
-            [0-7])
+            [0-9]|10)
                 echo "${choice}"
                 return 0
                 ;;
@@ -602,6 +661,9 @@ run_full_wizard() {
     export _WIZARD_FIREWALL_DONE=0
     export _WIZARD_FAIL2BAN_DONE=0
     export _WIZARD_AUDIT_DONE=0
+    export _WIZARD_USERS_DONE=0
+    export _WIZARD_KERNEL_DONE=0
+    export _WIZARD_FS_DONE=0
 
     # ── Step 1: SSH ──
     echo ""
@@ -663,7 +725,52 @@ run_full_wizard() {
         fi
     fi
 
-    # ── Step 5: Summary ──
+    # ── Step 5: Users ──
+    echo ""
+    log_title "${MSG_WIZARD_STEP_USERS}"
+
+    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+        log_info "${MSG_WIZARD_SKIPPED_USERS}"
+    else
+        if run_users_wizard; then
+            _WIZARD_USERS_DONE=1
+        else
+            log_warn "${MSG_WIZARD_ERR_USERS}"
+            wizard_rc=1
+        fi
+    fi
+
+    # ── Step 6: Kernel ──
+    echo ""
+    log_title "${MSG_WIZARD_STEP_KERNEL}"
+
+    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+        log_info "${MSG_WIZARD_SKIPPED_KERNEL}"
+    else
+        if run_kernel_wizard; then
+            _WIZARD_KERNEL_DONE=1
+        else
+            log_warn "${MSG_WIZARD_ERR_KERNEL}"
+            wizard_rc=1
+        fi
+    fi
+
+    # ── Step 7: Filesystem ──
+    echo ""
+    log_title "${MSG_WIZARD_STEP_FILESYSTEM}"
+
+    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+        log_info "${MSG_WIZARD_SKIPPED_FILESYSTEM}"
+    else
+        if run_filesystem_wizard; then
+            _WIZARD_FS_DONE=1
+        else
+            log_warn "${MSG_WIZARD_ERR_FILESYSTEM}"
+            wizard_rc=1
+        fi
+    fi
+
+    # ── Step 8: Summary ──
     echo ""
     log_title "${MSG_WIZARD_STEP_SUMMARY}"
 
@@ -717,10 +824,22 @@ run_main_menu_loop() {
                 press_enter
                 ;;
             6)
+                run_users_wizard || log_error "User management failed"
+                press_enter
+                ;;
+            7)
+                run_kernel_wizard || log_error "Kernel hardening failed"
+                press_enter
+                ;;
+            8)
+                run_filesystem_wizard || log_error "Filesystem check failed"
+                press_enter
+                ;;
+            9)
                 run_full_wizard
                 press_enter
                 ;;
-            7) view_report ;;
+            10) view_report ;;
             0) cleanup_and_exit ;;
         esac
     done
