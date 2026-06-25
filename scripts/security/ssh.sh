@@ -169,7 +169,10 @@ change_ssh_port() {
     fi
 
     # Apply
-    set_ssh_config "Port" "${new_port}"
+    if ! set_ssh_config "Port" "${new_port}"; then
+        log_error "Failed to change SSH port"
+        return 1
+    fi
 
     log_success "${MSG_SSH_PORT_SUCCESS}: ${current_port} → ${new_port}"
     echo -e "${MSG_SSH_PORT_HINT//\{port\}/${new_port}}"
@@ -220,17 +223,23 @@ generate_ssh_key() {
 
     # 添加到 authorized_keys（检查重复，避免幂等问题）
     local auth_keys="$HOME/.ssh/authorized_keys"
+    local auth_ok=true
     if [[ -f "${key_path}.pub" ]]; then
         if grep -qF "$(cat "${key_path}.pub")" "${auth_keys}" 2>/dev/null; then
             log_info "Key already in authorized_keys, skipping"
         else
-            cat "${key_path}.pub" >> "${auth_keys}"
-            chmod 600 "${auth_keys}"
-            log_success "${MSG_SSH_KEY_AUTHORIZED}"
+            if cat "${key_path}.pub" >> "${auth_keys}" 2>/dev/null && chmod 600 "${auth_keys}" 2>/dev/null; then
+                log_success "${MSG_SSH_KEY_AUTHORIZED}"
+            else
+                log_warn "Failed to update authorized_keys"
+                auth_ok=false
+            fi
         fi
     fi
 
-    log_success "${MSG_SSH_KEY_PERMS}"
+    if [[ "${auth_ok}" == true ]]; then
+        log_success "${MSG_SSH_KEY_PERMS}"
+    fi
 
     return 0
 }
@@ -279,7 +288,10 @@ disable_root_login() {
     fi
 
     # 修改配置
-    set_ssh_config "PermitRootLogin" "no"
+    if ! set_ssh_config "PermitRootLogin" "no"; then
+        log_error "Failed to disable root login"
+        return 1
+    fi
 
     log_success "${MSG_SSH_ROOT_SUCCESS}"
 
@@ -333,16 +345,17 @@ disable_password_auth() {
         return 0
     fi
 
-    # 修改配置
-    set_ssh_config "PasswordAuthentication" "no"
-    set_ssh_config "PubkeyAuthentication" "yes"
-    set_ssh_config "ChallengeResponseAuthentication" "no"
-
-    # 验证配置已正确写入（防止部分失败锁住用户）
-    local pass_auth
-    pass_auth=$(get_ssh_config "PasswordAuthentication")
-    if [[ "${pass_auth}" != "no" ]]; then
-        log_error "PasswordAuthentication 配置验证失败，当前值: ${pass_auth:-未设置}"
+    # 修改配置（set_ssh_config 内部已有写后验证）
+    if ! set_ssh_config "PasswordAuthentication" "no"; then
+        log_error "Failed to set PasswordAuthentication"
+        return 1
+    fi
+    if ! set_ssh_config "PubkeyAuthentication" "yes"; then
+        log_error "Failed to set PubkeyAuthentication"
+        return 1
+    fi
+    if ! set_ssh_config "ChallengeResponseAuthentication" "no"; then
+        log_error "Failed to set ChallengeResponseAuthentication"
         return 1
     fi
 
@@ -364,44 +377,62 @@ configure_ssh_params() {
     echo ""
 
     local val
+    local failed=0
 
     val=$(prompt_input "${MSG_SSH_PARAMS_MAXAUTHTRIES}" "3")
     if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
         log_error "Invalid MaxAuthTries value, using default 3"
         val="3"
     fi
-    set_ssh_config "MaxAuthTries" "${val}"
+    if ! set_ssh_config "MaxAuthTries" "${val}"; then
+        failed=$((failed + 1))
+    fi
 
     val=$(prompt_input "${MSG_SSH_PARAMS_LOGINGRACETIME}" "60")
     if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
         log_error "Invalid LoginGraceTime value, using default 60"
         val="60"
     fi
-    set_ssh_config "LoginGraceTime" "${val}"
+    if ! set_ssh_config "LoginGraceTime" "${val}"; then
+        failed=$((failed + 1))
+    fi
 
     val=$(prompt_input "${MSG_SSH_PARAMS_CLIENTALIVEINTERVAL}" "300")
     if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
         log_error "Invalid ClientAliveInterval value, using default 300"
         val="300"
     fi
-    set_ssh_config "ClientAliveInterval" "${val}"
+    if ! set_ssh_config "ClientAliveInterval" "${val}"; then
+        failed=$((failed + 1))
+    fi
 
     val=$(prompt_input "${MSG_SSH_PARAMS_CLIENTALIVECOUNTMAX}" "2")
     if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
         log_error "Invalid ClientAliveCountMax value, using default 2"
         val="2"
     fi
-    set_ssh_config "ClientAliveCountMax" "${val}"
+    if ! set_ssh_config "ClientAliveCountMax" "${val}"; then
+        failed=$((failed + 1))
+    fi
 
     val=$(prompt_input "${MSG_SSH_PARAMS_MAXSESSIONS}" "2")
     if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
         log_error "Invalid MaxSessions value, using default 2"
         val="2"
     fi
-    set_ssh_config "MaxSessions" "${val}"
+    if ! set_ssh_config "MaxSessions" "${val}"; then
+        failed=$((failed + 1))
+    fi
 
     # X11Forwarding always disabled (no need to ask)
-    set_ssh_config "X11Forwarding" "no"
+    if ! set_ssh_config "X11Forwarding" "no"; then
+        failed=$((failed + 1))
+    fi
+
+    if [[ "${failed}" -gt 0 ]]; then
+        log_error "Failed to set ${failed} SSH parameter(s)"
+        return 1
+    fi
 
     log_success "${MSG_SSH_PARAMS_SUCCESS}"
     return 0

@@ -24,7 +24,10 @@ fi
 init_directories() {
     log_step "Initializing directories..."
 
-    mkdir -p "${LOG_DIR}" "${BACKUP_DIR}" "${REPORT_DIR}"
+    if ! mkdir -p "${LOG_DIR}" "${BACKUP_DIR}" "${REPORT_DIR}"; then
+        log_error "Failed to create directories"
+        return 1
+    fi
 
     log_success "Directories initialized"
     log_debug "LOG_DIR: ${LOG_DIR}"
@@ -89,21 +92,31 @@ install_base_tools() {
 
     case "${pkg_manager}" in
         apt)
-            apt-get install -y -qq "${tools[@]}" 2>/dev/null || true
+            if apt-get install -y -qq "${tools[@]}" 2>/dev/null; then
+                log_success "Base tools installed"
+            else
+                log_warn "Some base tools may have failed to install"
+            fi
             ;;
         dnf)
-            dnf install -y -q "${tools[@]}" 2>/dev/null || true
+            if dnf install -y -q "${tools[@]}" 2>/dev/null; then
+                log_success "Base tools installed"
+            else
+                log_warn "Some base tools may have failed to install"
+            fi
             ;;
         yum)
-            yum install -y -q "${tools[@]}" 2>/dev/null || true
+            if yum install -y -q "${tools[@]}" 2>/dev/null; then
+                log_success "Base tools installed"
+            else
+                log_warn "Some base tools may have failed to install"
+            fi
             ;;
         *)
             log_warn "Unknown package manager, skipping tool installation"
             return 0
             ;;
     esac
-
-    log_success "Base tools installed"
 }
 
 # 设置时区

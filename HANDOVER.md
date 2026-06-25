@@ -2,7 +2,7 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-24（v0.4 服务管理模块完成）
+**最后更新**: 2026-06-25（"假成功"Bug 全部修复）
 **当前阶段**: v0.4 全部模块已完成（2026-06-24）
 
 ---
@@ -99,7 +99,9 @@
 | 2026-06-24 | 更新报告模块 | `scripts/base/report.sh` — 添加用户/内核/文件系统报告段 |
 | 2026-06-24 | 创建 v0.3 单元测试 | `tests/unit/users.bats`(33), `kernel.bats`(20), `filesystem.bats`(23) — 共 76 个测试用例 |
 | 2026-06-24 | 修复 v0.3 Code Review 问题 | eval 注入、函数顺序、find 排除、截断警告、状态函数集成等 9 项修复 |
-| 2026-06-24 | 修复 Code Review Round 3 H2 | `install.sh` — 集成 `run_init()` 到向导 Step 0；`scripts/lang/zh.sh`, `en.sh` — 添加 INIT 翻译，步骤编号 /8→/9 |
+| 2026-06-24 | 修复 Code Review Round 3 H2 |
+| 2026-06-25 | "假成功"Bug 全面审计 | `install.sh` — 集成 `run_init()` 到向导 Step 0；`scripts/lang/zh.sh`, `en.sh` — 添加 INIT 翻译，步骤编号 /8→/9 |
+| 2026-06-25 | "假成功"Bug 全部修复（15 项） | `utils.sh`(set_ssh_config 写后验证), `ssh.sh`(端口/root/密码/参数验证), `fail2ban.sh`(安装后验证), `audit.sh`(条件打印), `init.sh`(mkdir/安装验证), `kernel.sh`(黑名单验证), `users.sh`(SSH密钥错误处理), `firewall.sh`(启动/reload验证), `filesystem.sh`(权限回读验证) |
 
 ---
 
@@ -125,7 +127,8 @@ linux-one-key/
 │   │   └── everything-claude-code-research-playbook.md  # 研究工作流指南
 │   ├── reviews/
 │   │   ├── local-review-20260621.md  # 代码审查报告
-│   │   └── commit-400933a-review.md  # v0.3 commit 代码审查报告
+│   │   ├── commit-400933a-review.md  # v0.3 commit 代码审查报告
+│   │   └── false-success-bug-audit-20260625.md  # "假成功"Bug 全面审计报告
 │   │   └── fix-commit-400933a-review.plan.md # v0.3 Code Review 修复计划
 │   └── rules/
 │       ├── common/            # 通用规则
@@ -593,3 +596,14 @@ v0.4 ✅ 已完成
 | 2026-06-24 | CREATE | `tests/unit/services.bats` | 服务管理单元测试（35 个用例：常量、函数存在性、端口安全检查、状态输出格式） |
 | 2026-06-24 | UPDATE | `scripts/security/README.md` | 更新 services.sh 状态为 ✅ 完成，添加模块说明 |
 | 2026-06-24 | UPDATE | `HANDOVER.md` | 更新进度状态、文件清单、下一步工作、变更日志 |
+| 2026-06-25 | CREATE | `.claude/reviews/false-success-bug-audit-20260625.md` | "假成功"Bug 全面审计：审查全部脚本，发现 8 CRITICAL + 5 HIGH + 2 MEDIUM 共 15 个"报告成功但操作未生效"类 bug，含修复方案和优先级建议 |
+| 2026-06-25 | UPDATE | `scripts/base/utils.sh` | P0 修复：set_ssh_config() 添加写后验证（回读 grep 确认值已生效，不匹配返回 1） |
+| 2026-06-25 | UPDATE | `scripts/security/ssh.sh` | P0-P1 修复：change_ssh_port/disable_root_login/disable_password_auth/configure_ssh_params/generate_ssh_key 共 5 个函数添加验证 |
+| 2026-06-25 | UPDATE | `scripts/security/fail2ban.sh` | P1 修复：_install_fail2ban() 安装后 command_exists 验证 |
+| 2026-06-25 | UPDATE | `scripts/security/audit.sh` | P1 修复：_load_audit_rules() 成功/失败分支条件打印 |
+| 2026-06-25 | UPDATE | `scripts/base/init.sh` | P2 修复：init_directories() mkdir 错误检查 + install_base_tools() 去掉 \|\| true |
+| 2026-06-25 | UPDATE | `scripts/security/kernel.sh` | P2 修复：disable_kernel_modules() 黑名单写入后验证 |
+| 2026-06-25 | UPDATE | `scripts/security/users.sh` | P2 修复：setup_user_ssh_key() cat/chmod/chown 每步错误检查 |
+| 2026-06-25 | UPDATE | `scripts/security/firewall.sh` | P2 修复：_install_firewall() systemctl 验证 + _ufw_enable() 状态验证 + _firewalld_reload() 返回值 |
+| 2026-06-25 | UPDATE | `scripts/security/filesystem.sh` | P2 修复：_fix_single_permission() chmod 后回读权限验证 |
+| 2026-06-25 | UPDATE | `HANDOVER.md` | 更新进度、已完成工作、变更日志 |

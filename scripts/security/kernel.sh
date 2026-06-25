@@ -169,6 +169,7 @@ disable_kernel_modules() {
 
     local disabled_count=0
     local skipped_count=0
+    local blacklist_failed=0
 
     for module in "${DISABLED_MODULES[@]}"; do
         log_step "${MSG_KERNEL_MODULE_DISABLE}: ${module}..."
@@ -189,13 +190,22 @@ disable_kernel_modules() {
         # 写入黑名单（防止自动加载）
         local blacklist_file="/etc/modprobe.d/${module}-blacklist.conf"
         if [[ ! -f "${blacklist_file}" ]] || ! grep -q "blacklist ${module}" "${blacklist_file}" 2>/dev/null; then
-            echo "install ${module} /bin/true" > "${blacklist_file}" 2>/dev/null || true
-            echo "blacklist ${module}" >> "${blacklist_file}" 2>/dev/null || true
-            log_debug "Blacklisted module: ${module}"
+            if echo "install ${module} /bin/true" > "${blacklist_file}" 2>/dev/null \
+                && echo "blacklist ${module}" >> "${blacklist_file}" 2>/dev/null \
+                && grep -q "blacklist ${module}" "${blacklist_file}" 2>/dev/null; then
+                log_debug "Blacklisted module: ${module}"
+            else
+                log_warn "Failed to blacklist module: ${module}"
+                blacklist_failed=$((blacklist_failed + 1))
+            fi
         fi
     done
 
-    log_success "${MSG_KERNEL_MODULES_DONE}: ${disabled_count} ${MSG_KERNEL_MODULES_DISABLED}, ${skipped_count} ${MSG_KERNEL_MODULES_SKIPPED}"
+    if [[ "${blacklist_failed}" -gt 0 ]]; then
+        log_warn "${MSG_KERNEL_MODULES_DONE}: ${disabled_count} ${MSG_KERNEL_MODULES_DISABLED}, ${skipped_count} ${MSG_KERNEL_MODULES_SKIPPED}, ${blacklist_failed} blacklist failed"
+    else
+        log_success "${MSG_KERNEL_MODULES_DONE}: ${disabled_count} ${MSG_KERNEL_MODULES_DISABLED}, ${skipped_count} ${MSG_KERNEL_MODULES_SKIPPED}"
+    fi
 }
 
 # 回滚 sysctl 配置

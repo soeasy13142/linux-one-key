@@ -258,11 +258,12 @@ EOF
 _load_audit_rules() {
     log_step "${MSG_AUDIT_LOAD_RULES}"
 
-    if ! auditctl -R "${AUDIT_RULES_FILE}" >> "${LOG_FILE}" 2>&1; then
-        log_warn "${MSG_AUDIT_LOAD_RULES_WARN}"
+    if auditctl -R "${AUDIT_RULES_FILE}" >> "${LOG_FILE}" 2>&1; then
+        log_success "${MSG_AUDIT_LOAD_RULES_DONE}"
+    else
+        log_error "${MSG_AUDIT_LOAD_RULES_WARN}"
+        return 1
     fi
-
-    log_success "${MSG_AUDIT_LOAD_RULES_DONE}"
 }
 
 # 启用 auditd 服务
