@@ -49,7 +49,13 @@ _install_fail2ban() {
             ;;
     esac
 
-    log_success "${MSG_FAIL2BAN_INSTALL_DONE}"
+    # 安装后验证
+    if command_exists fail2ban-client; then
+        log_success "${MSG_FAIL2BAN_INSTALL_DONE}"
+    else
+        log_error "${MSG_FAIL2BAN_INSTALL_FAILED:-Fail2Ban installation failed}"
+        return 1
+    fi
 }
 
 # 获取认证日志路径

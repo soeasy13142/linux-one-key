@@ -141,13 +141,21 @@ _fix_single_permission() {
     # 备份当前权限（记录到日志）
     log_debug "Changing ${file} permission from ${actual} to ${expected}"
 
-    if chmod "${expected}" "${file}" >> "${LOG_FILE}" 2>&1; then
-        log_success "${MSG_FS_PERM_FIXED}: ${file} (${expected})"
-        return 0
-    else
+    if ! chmod "${expected}" "${file}" >> "${LOG_FILE}" 2>&1; then
         log_error "${MSG_FS_PERM_FIX_FAILED}: ${file}"
         return 1
     fi
+
+    # 写后验证：回读权限确认已生效
+    local new_actual
+    new_actual=$(_get_file_mode "${file}")
+    if [[ "${new_actual}" != "${expected}" ]]; then
+        log_error "${MSG_FS_PERM_FIX_FAILED}: ${file} (expected ${expected}, got ${new_actual})"
+        return 1
+    fi
+
+    log_success "${MSG_FS_PERM_FIXED}: ${file} (${expected})"
+    return 0
 }
 
 # 交互式修复权限不正确的关键文件

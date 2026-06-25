@@ -328,7 +328,15 @@ set_ssh_config() {
         echo "${key} ${value}" >> "${config_file}"
     fi
 
-    log_debug "SSH config: ${key} = ${value}"
+    # 写后验证：回读确认值已生效
+    local actual
+    actual=$(grep "^${key}" "${config_file}" 2>/dev/null | awk '{print $2}' | tail -1)
+    if [[ "${actual}" != "${value}" ]]; then
+        log_error "Failed to set ${key}=${value} in ${config_file} (got: ${actual:-unset})"
+        return 1
+    fi
+
+    log_debug "SSH config: ${key} = ${value} (verified)"
 }
 
 # 获取 SSH 配置参数

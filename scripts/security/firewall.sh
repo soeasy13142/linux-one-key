@@ -35,7 +35,9 @@ _install_firewall() {
             fi
             yum install -y firewalld >> "${LOG_FILE}" 2>&1
             # 安装后启动 firewalld 服务
-            systemctl enable --now firewalld >> "${LOG_FILE}" 2>&1 || true
+            if ! systemctl enable --now firewalld >> "${LOG_FILE}" 2>&1; then
+                log_warn "Failed to enable firewalld service"
+            fi
             ;;
         fedora)
             if command_exists firewall-cmd; then
@@ -43,7 +45,9 @@ _install_firewall() {
                 return 0
             fi
             dnf install -y firewalld >> "${LOG_FILE}" 2>&1
-            systemctl enable --now firewalld >> "${LOG_FILE}" 2>&1 || true
+            if ! systemctl enable --now firewalld >> "${LOG_FILE}" 2>&1; then
+                log_warn "Failed to enable firewalld service"
+            fi
             ;;
         *)
             log_error "${MSG_FIREWALL_UNSUPPORTED_OS}"
@@ -113,8 +117,12 @@ _ufw_allow_icmp() {
 # 启用 UFW
 _ufw_enable() {
     log_step "${MSG_FIREWALL_ENABLE}"
-    ufw --force enable >> "${LOG_FILE}" 2>&1
-    log_success "${MSG_FIREWALL_ENABLE_DONE}"
+    if ufw --force enable >> "${LOG_FILE}" 2>&1 && ufw status | grep -q "Status: active"; then
+        log_success "${MSG_FIREWALL_ENABLE_DONE}"
+    else
+        log_error "Failed to enable UFW"
+        return 1
+    fi
 }
 
 # 显示 UFW 状态
@@ -178,7 +186,12 @@ _firewalld_deny_icmp() {
 
 # 重新加载 firewalld 规则
 _firewalld_reload() {
-    firewall-cmd --reload >> "${LOG_FILE}" 2>&1
+    if firewall-cmd --reload >> "${LOG_FILE}" 2>&1; then
+        log_debug "firewalld rules reloaded"
+    else
+        log_warn "Failed to reload firewalld rules"
+        return 1
+    fi
 }
 
 # 显示 firewalld 状态
