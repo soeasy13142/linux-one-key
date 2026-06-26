@@ -537,7 +537,9 @@ schedule_rollback() {
 
     echo -e "${BLUE}[INFO]${NC} ${description} in ${delay} seconds" >&2
 
+    # 在子 shell 中忽略 INT/TERM 信号，防止 sleep 被中断导致 callback 不执行
     (
+        trap '' INT TERM
         sleep "${delay}" && "${callback}"
     ) &
 

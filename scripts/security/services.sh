@@ -150,14 +150,27 @@ _scan_listening_ports() {
             }' \
             || true
     else
-        # Fallback: /proc/net/tcp
-        if [[ -r /proc/net/tcp ]]; then
+        # Fallback: /proc/net/tcp + /proc/net/tcp6（兼容 mawk，不依赖 strtonum）
+        for _proto_file in /proc/net/tcp /proc/net/tcp6; do
+            [[ -r "${_proto_file}" ]] || continue
+            local _proto_name="tcp"
+            [[ "${_proto_file}" == *6 ]] && _proto_name="tcp6"
             awk 'NR > 1 {
-                split($2, a, ":");
-                port = strtonum("0x" a[2]);
-                if (port > 0) print "tcp:" port "::(unknown)"
-            }' /proc/net/tcp 2>/dev/null || true
-        fi
+                n = split($2, a, ":");
+                hex_port = a[n];
+                # 手动 hex→dec（兼容 mawk，不依赖 strtonum）
+                port = 0;
+                for (i = 1; i <= length(hex_port); i++) {
+                    c = substr(hex_port, i, 1);
+                    if (c >= "a" && c <= "f") c = index("abcdef", c) + 9;
+                    else if (c >= "A" && c <= "F") c = index("ABCDEF", c) + 9;
+                    else if (c >= "0" && c <= "9") c = c + 0;
+                    else continue;
+                    port = port * 16 + c;
+                }
+                if (port > 0) print "'"${_proto_name}"':" port "::(unknown)"
+            }' "${_proto_file}" 2>/dev/null || true
+        done
     fi
 }
 
