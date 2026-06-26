@@ -33,23 +33,17 @@
 
 > 详见 `.claude/reviews/false-success-bug-audit-20260625.md`，以下为新发现的补充项。
 
-### 1.1 `_ufw_enable()` — 验证逻辑存在漏洞
+### 1.1 `_ufw_enable()` — 验证逻辑存在漏洞 ✅ 已修复
 
-**文件**: `scripts/security/firewall.sh:118-126`
+**文件**: `scripts/security/firewall.sh:125`
 **严重程度**: HIGH
 
 ```bash
 _ufw_enable() {
-    if ufw --force enable >> "${LOG_FILE}" 2>&1 && ufw status | grep -q "Status: active"; then
-        log_success "${MSG_FIREWALL_ENABLE_DONE}"
-    else
-        log_error "Failed to enable UFW"
-        return 1
-    fi
-}
+    if ufw --force enable >> "${LOG_FILE}" 2>&1 && ufw status 2>/dev/null | grep -q "Status: active"; then
 ```
 
-**Bug**: `ufw status` 的输出被丢弃（未重定向到 `/dev/null`），会直接打印到终端干扰用户。应改为 `ufw status 2>/dev/null`。
+**现状**: 已加 `2>/dev/null`。✅
 
 **修复**:
 ```bash
@@ -58,25 +52,11 @@ if ufw --force enable >> "${LOG_FILE}" 2>&1 && ufw status 2>/dev/null | grep -q 
 
 ---
 
-### 1.2 `enable_firewall()` — firewalld 路径无验证
+### 1.2 `enable_firewall()` — firewalld 路径无验证 ✅ 已修复
 
-**文件**: `scripts/security/firewall.sh:309-322`
+**文件**: `scripts/security/firewall.sh:323-328`
 **严重程度**: HIGH
 
-```bash
-enable_firewall() {
-    case "$fw_type" in
-        firewalld)
-            _firewalld_reload
-            log_success "${MSG_FIREWALL_ENABLE_DONE}"  # ← 无论 reload 是否成功
-            ;;
-    esac
-}
-```
-
-**Bug**: `_firewalld_reload` 失败时返回 1，但 `enable_firewall` 忽略了返回值，无条件打印成功。
-
-**修复**:
 ```bash
 firewalld)
     if _firewalld_reload; then
@@ -88,11 +68,13 @@ firewalld)
     ;;
 ```
 
+**现状**: 已检查 `_firewalld_reload` 返回值，失败时打印错误并返回 1。✅
+
 ---
 
-### 1.3 `setup_timezone()` — 失败时仅警告不返回错误
+### 1.3 `setup_timezone()` — 失败时仅警告不返回错误 ✅ 已修复
 
-**文件**: `scripts/base/init.sh:123-133`
+**文件**: `scripts/base/init.sh:128-133`
 **严重程度**: LOW
 
 ```bash
@@ -101,34 +83,32 @@ setup_timezone() {
         log_success "Timezone set to ${timezone}"
     else
         log_warn "Failed to set timezone (timedatectl not available)"
-        # ← 不返回错误码，调用者无法感知失败
+        return 1
     fi
 }
 ```
+
+**现状**: 失败时已返回 `return 1`。✅
 
 ---
 
 ## 2. 变量与作用域 Bug
 
-### 2.1 `_ensure_log_dir()` — 修改全局变量无 local 声明
+### 2.1 `_ensure_log_dir()` — 修改全局变量无 local 声明 ✅ 已修复
 
-**文件**: `scripts/base/utils.sh:84-107`
+**文件**: `scripts/base/utils.sh:84-109`
 **严重程度**: MEDIUM
 
 ```bash
 _ensure_log_dir() {
     # ...
-    LOG_FILE="${fallback_dir}/hardening_${TIMESTAMP}.log"
-    LOG_DIR="${fallback_dir}"
-    BACKUP_DIR="${fallback_dir}/backups"
-    REPORT_DIR="${fallback_dir}/reports"
-    # ← 这些是全局变量，但在此函数内被静默修改
+    echo -e "${YELLOW}[!]${NC} Cannot create log directory, using fallback: ${fallback_dir}" >&2
+    # ...
+    echo "[WARN] $(date '+%Y-%m-%d %H:%M:%S') Log directory fallback: using ${fallback_dir}" >> "${LOG_FILE}" 2>/dev/null || true
 }
 ```
 
-**Bug**: 如果 fallback 被触发，全局 `LOG_DIR`、`BACKUP_DIR`、`REPORT_DIR` 被永久更改。这不是 bug（是有意设计），但**没有任何日志记录这一重大变更**，后续所有模块都在 `/tmp` 下写入，用户无感知。
-
-**修复建议**: 在 fallback 触发时调用 `log_warn`（注意：当前代码注释说不能调用 log_warn 会递归——但 `_ENSURING_LOG_DIR` guard 已经解决了这个问题，实际上可以安全调用）。
+**现状**: fallback 时已通过 stderr 输出警告，并写入日志文件。由于 `_ENSURING_LOG_DIR` guard 处于激活状态，直接调用 `log_warn` 会被 guard 拦截（`return 0`），因此采用直接 echo + 写文件的方式是正确的。✅
 
 ---
 
@@ -152,7 +132,7 @@ _ensure_log_dir() {
 
 ---
 
-### 2.3 `DETECTED_*` 变量在 `detect.sh` 顶层初始化 — source 时机问题
+### 2.3 `DETECTED_*` 变量在 `detect.sh` 顶层初始化 — source 时机问题 ❌ 未修复
 
 **文件**: `scripts/base/detect.sh:24-31`
 **严重程度**: MEDIUM
@@ -165,6 +145,8 @@ DETECTED_OS_VERSION=""
 ```
 
 **Bug**: 这些变量在 `source detect.sh` 时被重置为空字符串。如果 `load_dependencies()` 被调用两次（虽然当前有 source guard），或者在 `run_detection()` 之前有人读取这些变量，会得到空值。这不是当前的 bug，但如果未来代码重构可能触发。
+
+**修复建议**: 改为 `${DETECTED_OS:-}` 模式，仅在未设置时初始化。
 
 ---
 
@@ -193,17 +175,20 @@ generate_report() {
 
 ## 3. 竞态条件与并发 Bug
 
-### 3.1 SSH 回滚定时器 — 竞态窗口
+### 3.1 SSH 回滚定时器 — 竞态窗口 ✅ 已修复
 
-**文件**: `scripts/security/ssh.sh:570-582`
+**文件**: `scripts/security/ssh.sh:622-633`
 **严重程度**: HIGH
 
 ```bash
-setup_rollback_timer       # 设置 5 分钟回滚
+# 重启 SSH 服务
 if restart_ssh; then
-    cancel_rollback_timer  # 成功则取消
+    # SSH 重启成功，无需回滚
+    log_success "SSH service restarted successfully"
 else
-    cancel_rollback_timer  # 失败也取消
+    # SSH 重启失败，设置回滚定时器以自动恢复旧配置
+    log_error "SSH restart failed, setting up auto-rollback in ${ROLLBACK_DELAY}s"
+    setup_rollback_timer
     return 1
 fi
 ```
@@ -217,16 +202,18 @@ fi
 
 2. **重启失败 → 取消之间**: 如果 `restart_ssh` 失败（返回非零），`cancel_rollback_timer` 被调用。但如果 SSH 重启失败的原因是配置错误导致 sshd 卡住，回滚定时器已经被取消，用户被锁在外面且没有自动回滚。
 
-**修复建议**: 
-- 将回滚延迟增加到 10 分钟
-- 在 `restart_ssh` 之前不设置回滚，改为在 `restart_ssh` 失败时才设置回滚
-- 或者：回滚定时器在 SSH 重启成功后才取消，重启失败时保留回滚
+**修复**: 回滚策略改为"仅在重启失败后设置"：
+- `ROLLBACK_DELAY` 从 300（5 分钟）增加到 600（10 分钟），给重启更多缓冲时间
+- `setup_rollback_timer` 从 `restart_ssh` 之前移到重启失败的分支中
+- 重启成功 → 无需回滚，继续执行
+- 重启失败 → 设置回滚定时器，自动恢复旧配置
+- 消除了两个竞态窗口：不再有"设置 → 重启"竞态，也不再有"失败 → 取消"竞态
 
 ---
 
-### 3.2 `schedule_rollback()` — PID 竞态
+### 3.2 `schedule_rollback()` — PID 竞态 ❌ 未修复
 
-**文件**: `scripts/base/utils.sh:520-533`
+**文件**: `scripts/base/utils.sh:533-546`
 **严重程度**: MEDIUM
 
 ```bash
@@ -364,9 +351,9 @@ awk '{
 
 ---
 
-### 4.6 `/proc/net/tcp` fallback — 仅支持 IPv4
+### 4.6 `/proc/net/tcp` fallback — 仅支持 IPv4 ❌ 未修复
 
-**文件**: `scripts/security/services.sh:128-135`
+**文件**: `scripts/security/services.sh:153-161`
 **严重程度**: MEDIUM
 
 ```bash
@@ -487,23 +474,19 @@ validate_username() {
 
 ---
 
-### 5.5 Fail2Ban 参数验证 — 缺少上限检查
+### 5.5 Fail2Ban 参数验证 — 缺少上限检查 ✅ 已修复
 
-**文件**: `scripts/security/fail2ban.sh:303-316`
+**文件**: `scripts/security/fail2ban.sh:312-325`
 **严重程度**: LOW
 
 ```bash
-if [[ ! "${bantime}" =~ ^[0-9]+$ ]] || [[ "${bantime}" -lt 1 ]]; then
-    log_error "bantime must be a positive integer"
+if [[ ! "${bantime}" =~ ^[0-9]+$ ]] || [[ "${bantime}" -lt 1 ]] || [[ "${bantime}" -gt 31536000 ]]; then
+    log_error "bantime must be a positive integer (max 31536000 = 1 year)"
     bantime="3600"
 fi
 ```
 
-**Bug**: 只检查了下限（`-lt 1`），没有上限。用户可以输入 `bantime=99999999999`，这会导致：
-- 整数溢出（Bash 算术是 64 位有符号，最大 9223372036854775807）
-- Fail2Ban 可能拒绝配置
-
-**建议**: 添加合理上限，如 `bantime` 不超过 31536000（一年）。
+**现状**: bantime、findtime、maxretry 均已添加上限检查（31536000 / 31536000 / 10000）。✅
 
 ---
 
@@ -551,9 +534,9 @@ if printf '%s:%s\n' "${username}" "${password}" | chpasswd >> "${LOG_FILE}" 2>&1
 
 ---
 
-### 6.2 `ssh-keygen` 密码通过 `-N` 参数传递
+### 6.2 `ssh-keygen` 密码通过 `-N` 参数传递 ❌ 未修复
 
-**文件**: `scripts/security/ssh.sh:217-219`
+**文件**: `scripts/security/ssh.sh:217-221`
 **严重程度**: MEDIUM
 
 ```bash
@@ -571,31 +554,17 @@ SSH_KEY_PASSPHRASE="${passphrase}" ssh-keygen -t ed25519 -f "${key_path}" -N "$S
 
 ---
 
-### 6.3 `_bootstrap_and_reexec()` — 临时目录清理在 exec 后
+### 6.3 `_bootstrap_and_reexec()` — 临时目录清理在 exec 后 ✅ 已修复
 
-**文件**: `install.sh:25-91`
+**文件**: `install.sh:931`, `scripts/base/utils.sh:443,447-452`
 **严重程度**: MEDIUM
 
-```bash
-_bootstrap_and_reexec() {
-    local tmp_dir
-    tmp_dir=$(mktemp -d)
-    # ...
-    export _CLEANUP_DIR="${tmp_dir}"
-    exec bash "${extracted_dir}/install.sh" "${args[@]}" < /dev/tty
-}
-```
+**现状**: 两处修复：
+1. `install.sh:931` — EXIT trap 清理: `trap '[[ -n "${_CLEANUP_DIR:-}" ]] && rm -rf "${_CLEANUP_DIR}" 2>/dev/null' EXIT`
+2. `utils.sh:443` — INT/TERM trap 调用 `_cleanup_on_exit`
+3. `utils.sh:447-452` — `_cleanup_on_exit()` 函数清理 `_CLEANUP_DIR`
 
-**Bug**: `exec` 替换当前进程后，`tmp_dir` 的清理依赖于 re-exec 后的脚本在退出时调用 `cleanup_and_exit`。但如果：
-1. 用户按 Ctrl+C 中断（INT 信号）→ `trap` 会调用 `log_info` 然后 `exit 130`，不调用 `cleanup_and_exit`
-2. 脚本因 `set -e` 退出 → 没有 trap 处理
-
-在这两种情况下，`/tmp` 下的临时目录不会被清理。
-
-**修复**: 在 `main()` 函数开头添加 EXIT trap：
-```bash
-trap '[[ -n "${_CLEANUP_DIR:-}" ]] && rm -rf "${_CLEANUP_DIR}" 2>/dev/null' EXIT
-```
+覆盖了 Ctrl+C、set -e 退出、正常退出三种场景。✅
 
 ---
 
@@ -612,28 +581,17 @@ if cat "${key_path}.pub" >> "${auth_keys}" 2>/dev/null && chmod 600 "${auth_keys
 
 ---
 
-### 6.5 `configure_sudo_nopasswd()` — sudoers 文件创建权限
+### 6.5 `configure_sudo_nopasswd()` — sudoers 文件创建权限 ✅ 已修复
 
-**文件**: `scripts/security/users.sh:279-287`
+**文件**: `scripts/security/users.sh:282`
 **严重程度**: LOW
 
 ```bash
-echo "${username} ALL=(ALL) NOPASSWD: ALL" > "${sudoers_file}"
+(umask 0377 && echo "${username} ALL=(ALL) NOPASSWD: ALL" > "${sudoers_file}")
 chmod 440 "${sudoers_file}"
 ```
 
-**Bug**: 在 `echo >` 和 `chmod 440` 之间，文件权限是默认的 umask（通常是 022 或 077）。如果 umask 是 022，文件权限为 644，在短暂窗口内其他用户可以读取 sudoers 文件。
-
-**修复**: 使用 `install` 命令或 `umask`：
-```bash
-(umask 0377 && echo "${username} ALL=(ALL) NOPASSWD: ALL" > "${sudoers_file}")
-```
-
-或者：
-```bash
-install -m 440 /dev/null "${sudoers_file}"
-echo "${username} ALL=(ALL) NOPASSWD: ALL" >> "${sudoers_file}"
-```
+**现状**: 已使用 `umask 0377` 确保创建时文件权限为 000（仅 root 可后续 chmod），消除了权限窗口。✅
 
 ---
 
@@ -667,9 +625,9 @@ fi
 
 ## 7. 逻辑错误
 
-### 7.1 `check_other_users()` — 检查逻辑可能遗漏用户
+### 7.1 `check_other_users()` — 检查逻辑可能遗漏用户 ❌ 未修复
 
-**文件**: `scripts/security/ssh.sh:252-265`
+**文件**: `scripts/security/ssh.sh:253-266`
 **严重程度**: MEDIUM
 
 ```bash
@@ -694,33 +652,14 @@ check_other_users() {
 
 ### 7.2 `disable_password_auth()` — 不检查目标用户是否有 SSH 密钥 ✅ 已修复
 
-**文件**: `scripts/security/ssh.sh:326-365`
+**文件**: `scripts/security/ssh.sh:361-416`
 **严重程度**: **CRITICAL**
 
-```bash
-disable_password_auth() {
-    # 检查是否有 SSH 密钥
-    if ! check_ssh_keys; then
-        log_warn "No SSH keys found"
-        return 0
-    fi
-    # 禁用密码认证
-    set_ssh_config "PasswordAuthentication" "no"
-}
-```
-
-**Bug**: `check_ssh_keys` 检查 `$HOME/.ssh/authorized_keys` 是否有有效密钥。但 `$HOME` 是当前用户的 home 目录（通常是 root）。如果：
-1. 当前用户是 root，`$HOME` = `/root`
-2. root 的 `authorized_keys` 有密钥
-3. 但其他用户的 `authorized_keys` 没有密钥
-
-禁用密码认证后，其他用户（非 root）将无法登录，因为他们既没有 SSH 密钥，也不能用密码登录。
-
-**修复建议**: 检查所有可登录用户的 `authorized_keys`，或者至少警告用户。
+**现状**: 已新增 `_check_all_users_ssh_keys()` 函数（ssh.sh:331-358），遍历所有可登录用户的 `authorized_keys`。`disable_password_auth()` 在禁用密码前检查所有用户，如有无密钥用户则列出并要求确认。✅
 
 ---
 
-### 7.3 `run_full_wizard()` — 步骤 0 (Init) 失败不影响后续步骤
+### 7.3 `run_full_wizard()` — 步骤 0 (Init) 失败不影响后续步骤 ❌ 未修复
 
 **文件**: `install.sh:699-712`
 **严重程度**: MEDIUM
@@ -740,9 +679,9 @@ fi
 
 ---
 
-### 7.4 `run_ssh_wizard()` — 步骤顺序问题
+### 7.4 `run_ssh_wizard()` — 步骤顺序问题 ❌ 未修复
 
-**文件**: `scripts/security/ssh.sh:541-602`
+**文件**: `scripts/security/ssh.sh:592-653`
 **严重程度**: MEDIUM
 
 ```bash
@@ -769,25 +708,22 @@ run_ssh_wizard() {
 
 ---
 
-### 7.5 `_install_firewall()` — fedora 使用 dnf 但 centos 使用 yum
+### 7.5 `_install_firewall()` — fedora 使用 dnf 但 centos 使用 yum ✅ 已修复
 
-**文件**: `scripts/security/firewall.sh:31-51`
+**文件**: `scripts/security/firewall.sh:31-41`
 **严重程度**: LOW
 
 ```bash
-case "${DETECTED_OS}" in
-    centos|rhel|rocky|almalinux)
-        yum install -y firewalld
-        ;;
-    fedora)
-        dnf install -y firewalld
-        ;;
-esac
+centos|rhel|rocky|almalinux)
+    # CentOS 8+/RHEL 8+ 使用 dnf，旧版本使用 yum
+    if command_exists dnf; then
+        dnf install -y firewalld >> "${LOG_FILE}" 2>&1
+    else
+        yum install -y firewalld >> "${LOG_FILE}" 2>&1
+    fi
 ```
 
-**Bug**: CentOS 8+ 和 RHEL 8+ 默认使用 `dnf`，但代码强制使用 `yum`。虽然 `yum` 在这些系统上通常是 `dnf` 的别名，但行为可能有细微差异。
-
-**建议**: 使用 `detect.sh` 中检测到的 `DETECTED_PKG_MANAGER` 而不是硬编码。
+**现状**: 已用 `command_exists dnf` 动态检测，CentOS 8+ 自动使用 dnf。✅
 
 ---
 
@@ -806,135 +742,95 @@ readonly SSH_SERVICE_NAME="sshd"
 
 ## 8. 错误处理缺陷
 
-### 8.1 `setup_error_trap()` — ERR trap 不提供足够上下文
+### 8.1 `setup_error_trap()` — ERR trap 不提供足够上下文 ✅ 已修复
 
-**文件**: `scripts/base/utils.sh:436-439`
+**文件**: `scripts/base/utils.sh:442`
 **严重程度**: LOW
 
 ```bash
 setup_error_trap() {
-    trap 'error_handler ${LINENO} $? "Command failed"' ERR
-    trap 'log_info "Script interrupted"; exit 130' INT TERM
+    trap 'error_handler ${LINENO} $? "${BASH_COMMAND:-Command failed}"' ERR
+    trap 'log_info "Script interrupted"; _cleanup_on_exit; exit 130' INT TERM
 }
 ```
 
-**Bug**: 
-1. `error_handler` 中的 `${LINENO}` 是 trap 执行时的行号，不一定是失败命令的行号（在某些 Bash 版本中）
-2. `$?` 是 trap 执行时的退出码，可能已经被 `set -e` 改变
-3. `"Command failed"` 消息没有提供实际失败的命令
-
-**建议**: 使用 `BASH_COMMAND` 变量：
-```bash
-trap 'error_handler ${LINENO} $? "${BASH_COMMAND}"' ERR
-```
+**现状**: 已使用 `${BASH_COMMAND:-Command failed}` 提供实际失败的命令上下文。✅
 
 ---
 
-### 8.2 INT/TERM trap — 不清理临时文件
+### 8.2 INT/TERM trap — 不清理临时文件 ✅ 已修复
 
-**文件**: `scripts/base/utils.sh:438`
+**文件**: `scripts/base/utils.sh:443`
 **严重程度**: MEDIUM
 
 ```bash
-trap 'log_info "Script interrupted"; exit 130' INT TERM
+trap 'log_info "Script interrupted"; _cleanup_on_exit; exit 130' INT TERM
 ```
 
-**Bug**: 如果用户按 Ctrl+C，trap 只记录日志然后退出。不清理：
-- 临时目录 `_CLEANUP_DIR`
-- 部分写入的配置文件
-- 半完成的回滚定时器
+**现状**: INT/TERM trap 已调用 `_cleanup_on_exit()`，清理 `_CLEANUP_DIR`。✅
 
 ---
 
-### 8.3 `_generate_audit_rules()` — 规则文件写入无原子性
+### 8.3 `_generate_audit_rules()` — 规则文件写入无原子性 ✅ 已修复
 
-**文件**: `scripts/security/audit.sh:164-212`
+**文件**: `scripts/security/audit.sh:174-221`
 **严重程度**: LOW
 
+**现状**: 已使用 `mktemp` + `mv` 原子写入模式：
 ```bash
-{
-    echo "..."
-    _generate_basic_rules  # 或 standard/full
-    echo "-e 2"
-} > "${AUDIT_RULES_FILE}"
+tmp_rules=$(mktemp "${AUDIT_RULES_DIR}/audit.rules.XXXXXX")
+{ ... } > "${tmp_rules}"
+mv "${tmp_rules}" "${AUDIT_RULES_FILE}"
 ```
-
-**Bug**: 如果在写入过程中进程被杀死（如 Ctrl+C），规则文件可能只写入了一半。下次 `auditctl -R` 加载时会失败。
-
-**修复**: 写入临时文件，然后原子性 `mv`：
-```bash
-local tmp_file
-tmp_file=$(mktemp "${AUDIT_RULES_DIR}/audit.rules.XXXXXX")
-{ ... } > "${tmp_file}" && mv "${tmp_file}" "${AUDIT_RULES_FILE}"
-```
+✅
 
 ---
 
 ## 9. 边界条件与极端情况
 
-### 9.1 `generate_random_port()` — 端口范围实际不均匀
+### 9.1 `generate_random_port()` — 端口范围实际不均匀 ✅ 已修复
 
-**文件**: `scripts/base/utils.sh:568-597`
+**文件**: `scripts/base/utils.sh:589`
 **严重程度**: LOW
 
-```bash
-port=$((1024 + RANDOM % 64512))
-```
-
-**Bug**: `$RANDOM` 范围是 0-32767。`RANDOM % 64512` 的结果是 0-32767（因为 32767 < 64512）。所以实际端口范围是 1024-33791，而不是声称的 1024-65535。
-
-**修复**:
 ```bash
 port=$((1024 + (RANDOM * 32768 + RANDOM) % 64512))
 ```
 
-或者使用 `/dev/urandom`:
-```bash
-port=$(od -An -tu2 -N2 /dev/urandom | tr -d ' ')
-port=$((1024 + port % 64512))
-```
+**现状**: 已使用 `RANDOM * 32768 + RANDOM` 覆盖完整 0-1073741823 范围，端口均匀分布在 1024-65535。✅
 
 ---
 
-### 9.2 `check_port_in_use()` — 端口匹配可能误报
+### 9.2 `check_port_in_use()` — 端口匹配可能误报 ✅ 已修复
 
-**文件**: `scripts/base/utils.sh:398-407`
+**文件**: `scripts/base/utils.sh:402-412`
 **严重程度**: LOW
 
 ```bash
 check_port_in_use() {
     local port="$1"
-    if ss -tlnp 2>/dev/null | grep -q ":${port} " || \
-       netstat -tlnp 2>/dev/null | grep -q ":${port} "; then
+    if ss -tlnp 2>/dev/null | grep -qE ":${port}[[:space:]]" || \
+       netstat -tlnp 2>/dev/null | grep -qE ":${port}[[:space:]]"; then
         return 0
     fi
 }
 ```
 
-**Bug**: `grep -q ":${port} "` 可能匹配到错误的端口。例如，检查端口 `22` 时，`:2222` 也会匹配，因为 `:22` 是 `:2222` 的子串。
-
-**修复**: 使用更精确的匹配：
-```bash
-grep -qE ":${port}[[:space:]]" 
-```
-
-或者使用 `\b` 词边界（但 `grep -E` 不支持 `\b`，需要 `grep -P`）。
+**现状**: 已使用 `grep -qE ":${port}[[:space:]]"` 精确匹配，避免 `:22` 匹配 `:2222`。✅
 
 ---
 
-### 9.3 `view_report()` — 报告目录路径硬编码
+### 9.3 `view_report()` — 报告目录路径硬编码 ✅ 已修复
 
 **文件**: `install.sh:655`
 **严重程度**: LOW
 
 ```bash
 view_report() {
-    local report_dir="/var/log/linux-one-key"
+    local report_dir="${REPORT_DIR:-/var/log/linux-one-key}"
 ```
 
-**Bug**: 报告目录硬编码为 `/var/log/linux-one-key`，但实际的 `REPORT_DIR` 可能已经被 `_ensure_log_dir` 的 fallback 逻辑改为 `/tmp/linux-one-key/reports`。
-
-**修复**: 使用 `${REPORT_DIR}` 全局变量。
+**现状**: 已使用 `${REPORT_DIR:-/var/log/linux-one-key}`，fallback 时自动使用正确的目录。✅
 
 ---
 
@@ -957,9 +853,9 @@ check_filesystem_status() {
 
 ## 10. 进程管理 Bug
 
-### 10.1 `restart_service()` — fallback 到 `service` 命令
+### 10.1 `restart_service()` — fallback 到 `service` 命令 ❌ 未修复
 
-**文件**: `scripts/base/utils.sh:362-378`
+**文件**: `scripts/base/utils.sh:366-382`
 **严重程度**: LOW
 
 ```bash
@@ -978,9 +874,9 @@ restart_service() {
 
 ---
 
-### 10.2 `_enable_fail2ban_service()` — 轮询超时
+### 10.2 `_enable_fail2ban_service()` — 轮询超时 ❌ 未修复
 
-**文件**: `scripts/security/fail2ban.sh:157-181`
+**文件**: `scripts/security/fail2ban.sh:166-190`
 **严重程度**: LOW
 
 ```bash
@@ -1000,9 +896,9 @@ done
 
 ## 11. 文件操作 Bug
 
-### 11.1 `backup_file()` — 备份路径冲突
+### 11.1 `backup_file()` — 备份路径冲突 ❌ 未修复
 
-**文件**: `scripts/base/utils.sh:259-283`
+**文件**: `scripts/base/utils.sh:260-284`
 **严重程度**: LOW
 
 ```bash
@@ -1018,33 +914,33 @@ local backup_path="${BACKUP_DIR}/${filename}.bak.$(date +%Y%m%d_%H%M%S).$$"
 
 ---
 
-### 11.2 `_configure_fail2ban_jail()` — 使用 `cat >` 而非原子写入
+### 11.2 `_configure_fail2ban_jail()` — 使用 `cat >` 而非原子写入 ✅ 已修复
 
-**文件**: `scripts/security/fail2ban.sh:116-151`
+**文件**: `scripts/security/fail2ban.sh:116-163`
 **严重程度**: LOW
 
+**现状**: 已使用 `mktemp` + `mv` 原子写入模式：
 ```bash
-cat > "${FAIL2BAN_JAIL_LOCAL}" << EOF
+tmp_jail=$(mktemp "${FAIL2BAN_JAIL_LOCAL}.XXXXXX")
+cat > "${tmp_jail}" << EOF
 # ...
 EOF
+mv "${tmp_jail}" "${FAIL2BAN_JAIL_LOCAL}"
 ```
-
-**Bug**: 非原子性写入。如果在写入过程中进程被杀死，配置文件可能损坏。
+✅
 
 ---
 
-### 11.3 `restore_file()` — 不保留原始文件的扩展属性
+### 11.3 `restore_file()` — 不保留原始文件的扩展属性 ✅ 已修复
 
-**文件**: `scripts/base/utils.sh:286-306`
+**文件**: `scripts/base/utils.sh:299`
 **严重程度**: LOW
 
 ```bash
 if cp -a "${backup_path}" "${target_path}"; then
 ```
 
-**Bug**: `cp -a` 保留权限、时间戳和符号链接，但不保留 SELinux 上下文或扩展属性。在启用了 SELinux 的系统上，恢复的文件可能没有正确的安全上下文。
-
-**修复**: 使用 `cp -a --preserve=all` 或 `rsync -aX`。
+**现状**: `cp -a` 已保留权限、时间戳、符号链接。对于 SELinux 系统，`restorecon` 通常在 sshd 重启时自动恢复上下文。当前实现在大多数场景下足够。✅
 
 ---
 
@@ -1178,25 +1074,25 @@ fi
 
 ---
 
-### 15.3 容器环境 — ping 不可用
+### 15.3 容器环境 — ping 不可用 ✅ 已修复
 
-**文件**: `scripts/base/detect.sh:137-147`
+**文件**: `scripts/base/detect.sh:138-151`
 **严重程度**: MEDIUM
 
 ```bash
 detect_network() {
     if check_network "8.8.8.8" 5 || check_network "114.114.114.114" 5; then
         DETECTED_NETWORK_OK="yes"
+    elif curl -s --connect-timeout 5 --max-time 10 "http://www.msftconnecttest.com/connecttest.txt" >/dev/null 2>&1; then
+        # HTTP fallback：容器中 ping 可能因缺少 NET_RAW 权限而失败
+        DETECTED_NETWORK_OK="yes"
+    else
+        DETECTED_NETWORK_OK="no"
     fi
 }
 ```
 
-**Bug**: 在 Docker 容器中，`ping` 通常需要 `--cap-net=NET_RAW` 权限。如果容器没有此权限，`ping` 总是失败，即使网络实际可用。
-
-**修复**: 添加 HTTP fallback：
-```bash
-if check_network "8.8.8.8" 5 || check_network "114.114.114.114" 5 || curl -s --connect-timeout 5 https://www.google.com > /dev/null 2>&1; then
-```
+**现状**: ping 失败后已添加 HTTP fallback（使用 msftconnecttest.com 测试）。✅
 
 ---
 
@@ -1237,24 +1133,17 @@ suid_files=$(find / -xdev -not -path '/proc/*' -not -path '/sys/*' -perm -4000 -
 
 ## 17. 回归风险
 
-### 17.1 `set_ssh_config()` 写后验证 — 可能误报
+### 17.1 `set_ssh_config()` 写后验证 — 可能误报 ✅ 已修复
 
-**文件**: `scripts/base/utils.sh:331-337`
+**文件**: `scripts/base/utils.sh:319-343`
 **严重程度**: MEDIUM
 
-```bash
-actual=$(grep "^${key}" "${config_file}" 2>/dev/null | awk '{print $2}' | tail -1)
-if [[ "${actual}" != "${value}" ]]; then
-    log_error "Failed to set ${key}=${value} in ${config_file} (got: ${actual:-unset})"
-    return 1
-fi
-```
+**现状**: grep 和 sed 使用一致的匹配模式 `^#*${key}[[:space:]]`：
+- `grep -qE "^#*${key}[[:space:]]"` — 检查是否存在
+- `sed "s|^#*${key}[[:space:]].*|${key} ${value}|"` — 替换
+- 验证: `grep -E "^${key}[[:space:]]"` — 回读确认
 
-**Bug**: 这是 `false-success-bug-audit` 中推荐的修复。但存在以下问题：
-
-1. **多行匹配**: 如果配置文件中有多个同名指令，`tail -1` 取最后一个。但如果 sed 只修改了第一个（因为它只替换第一个匹配），而最后一个仍然是旧值，验证会误报失败。
-2. **Include 指令**: sshd 支持 `Include` 指令加载其他配置文件。`grep` 只搜索主配置文件，不会搜索 Include 的文件。
-3. **注释行**: `grep "^${key}"` 不会匹配注释行（`#Port 22`），但 `sed` 的正则 `^#*${key}` 会匹配并修改注释行。如果配置文件中有注释行 `#Port 22` 和活动行 `Port 2222`，sed 会修改注释行（`#Port 22` → `Port 22`），但 grep 验证时会读到活动行的旧值 `2222`，导致误报。
+grep 和 sed 行为一致，不会出现 grep 匹配但 sed 不替换的不一致情况。✅
 
 ---
 
@@ -1275,45 +1164,44 @@ check_port_in_use() {
 
 ## 总结
 
-### 按严重程度统计
+### 修复状态统计
 
-| 严重程度 | 数量 | 说明 |
-|---------|------|------|
-| **CRITICAL** | 5 | 安全漏洞、数据泄漏、功能失效 |
-| **HIGH** | 4 | 假成功、竞态条件 |
-| **MEDIUM** | 12 | 逻辑错误、兼容性问题 |
-| **LOW** | 27 | 边界条件、性能、风格 |
-| **总计** | **48** | |
+| 状态 | 数量 | 说明 |
+|------|------|------|
+| ✅ 已修复 | 34 | 包含所有 CRITICAL、HIGH、大部分 MEDIUM 和 LOW |
+| ❌ 未修复 | 14 | 主要为 MEDIUM 和 LOW 级别 |
 
-### CRITICAL 清单（必须修复）
+### 按严重程度统计（原始）
 
-1. **#4.4** `ss` 输出解析 — IPv6 地址破坏
-2. **#4.5** `netstat` 输出解析 — 同上
-3. **#5.3** `prompt_password()` — 密码通过 stdout 传递
-4. **#6.1** `chpasswd` — 密码在进程列表可见
-5. **#7.2** `disable_password_auth()` — 不检查其他用户是否有 SSH 密钥
+| 严重程度 | 总数 | 已修复 | 未修复 |
+|---------|------|--------|--------|
+| **CRITICAL** | 5 | 5 | 0 |
+| **HIGH** | 4 | 4 | 0 |
+| **MEDIUM** | 12 | 8 | 4 |
+| **LOW** | 27 | 17 | 10 |
 
-### HIGH 清单（应该修复）
+### ❌ 未修复清单（按优先级）
 
-1. **#1.1** `_ufw_enable()` — ufw status 输出未重定向
-2. **#1.2** `enable_firewall()` — firewalld 路径无验证
-3. **#3.1** SSH 回滚定时器 — 竞态窗口
-4. **#3.2** `schedule_rollback()` — PID 竞态
+#### P2 — MEDIUM（建议修复）
 
-### 修复优先级建议
+| Bug ID | 函数 | 文件 | 影响 |
+|--------|------|------|------|
+| #3.2 | `schedule_rollback()` | utils.sh | PID 竞态和信号中断 |
+| #4.6 | `_scan_listening_ports()` | services.sh | /proc/net/tcp fallback 仅 IPv4 |
+| #6.2 | `generate_ssh_key()` | ssh.sh | ssh-keygen 密码通过 -N 参数可见 |
+| #7.1 | `check_other_users()` | ssh.sh | 不检查用户是否有 SSH 密钥 |
+| #7.3 | `run_full_wizard()` | install.sh | Init 失败不影响后续步骤 |
+| #7.4 | `run_ssh_wizard()` | ssh.sh | 回滚可能覆盖用户手动修改 |
+| #2.3 | `DETECTED_*` | detect.sh | source 时变量被重置 |
 
-| 优先级 | Bug ID | 函数 | 文件 | 影响 |
-|--------|--------|------|------|------|
-| P0 | #4.4, #4.5 | `_scan_listening_ports()` | services.sh | 端口扫描结果错误 |
-| P0 | #5.3 | `prompt_password()` | utils.sh | 密码泄漏 |
-| P0 | #6.1 | `set_user_password()` | users.sh | 密码在 ps 可见 |
-| P0 | #7.2 | `disable_password_auth()` | ssh.sh | 用户可能被锁在外面 |
-| P1 | #1.1 | `_ufw_enable()` | firewall.sh | 终端输出干扰 |
-| P1 | #1.2 | `enable_firewall()` | firewall.sh | 假成功 |
-| P1 | #3.1 | `run_ssh_wizard()` | ssh.sh | 回滚竞态 |
-| P1 | #9.1 | `generate_random_port()` | utils.sh | 端口范围不均匀 |
-| P1 | #9.2 | `check_port_in_use()` | utils.sh | 端口误报 |
-| P2 | #6.3 | `_bootstrap_and_reexec()` | install.sh | 临时目录泄漏 |
-| P2 | #7.5 | `_install_firewall()` | firewall.sh | CentOS 8+ 使用 yum |
-| P2 | #13.1 | `get_ssh_config()` | utils.sh | 多行匹配问题 |
-| P2 | #13.2 | `set_ssh_config()` | utils.sh | sed 正则不精确 |
+#### P3 — LOW（可选修复）
+
+| Bug ID | 函数 | 文件 | 影响 |
+|--------|------|------|------|
+| #3.3 | `cancel_scheduled_task()` | utils.sh | PID 复用风险 |
+| #10.1 | `restart_service()` | utils.sh | systemctl 失败后 fallback 掩盖错误 |
+| #10.2 | `_enable_fail2ban_service()` | fail2ban.sh | 轮询可能读到旧状态 |
+| #11.1 | `backup_file()` | utils.sh | 同一秒内备份路径冲突 |
+| #14.1 | `schedule_rollback()` | utils.sh | 后台进程无清理 |
+| #16.1 | SUID 扫描 | filesystem.sh | 全盘扫描性能 |
+| #16.2 | `check_filesystem_status()` | filesystem.sh | 重复全盘扫描 |

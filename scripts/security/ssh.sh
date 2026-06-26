@@ -17,7 +17,7 @@ fi
 
 readonly SSH_CONFIG="/etc/ssh/sshd_config"
 readonly DEFAULT_SSH_PORT=2222
-readonly ROLLBACK_DELAY=300  # 5 分钟
+readonly ROLLBACK_DELAY=600  # 10 分钟（给 SSH 重启更多缓冲时间）
 
 # 回滚定时器 PID 和 at job ID
 ROLLBACK_PID=""
@@ -619,16 +619,14 @@ run_ssh_wizard() {
     # 验证配置
     validate_ssh_config || return 1
 
-    # 设置回滚保护
-    setup_rollback_timer
-
     # 重启 SSH 服务
     if restart_ssh; then
-        # SSH 重启成功，取消回滚定时器
-        cancel_rollback_timer
+        # SSH 重启成功，无需回滚
+        log_success "SSH service restarted successfully"
     else
-        # SSH 重启失败，取消回滚定时器（避免无意义的二次回滚）
-        cancel_rollback_timer
+        # SSH 重启失败，设置回滚定时器以自动恢复旧配置
+        log_error "SSH restart failed, setting up auto-rollback in ${ROLLBACK_DELAY}s"
+        setup_rollback_timer
         return 1
     fi
 

@@ -2,7 +2,7 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-26（综合 Bug 审查修复）
+**最后更新**: 2026-06-26（修复 HIGH 优先级 Bug #3.1）
 **当前阶段**: v0.4 全部模块已完成（2026-06-24）
 
 ---
@@ -616,3 +616,7 @@ v0.4 ✅ 已完成
 | 2026-06-26 | UPDATE | `scripts/security/users.sh` | #6.5: sudoers 文件创建使用 umask 防止权限窗口 |
 | 2026-06-26 | UPDATE | `scripts/security/fail2ban.sh` | #5.5: bantime/findtime/maxretry 添加上限验证; #11.2: jail.local 原子写入 |
 | 2026-06-26 | UPDATE | `scripts/security/audit.sh` | #8.3: audit.rules 原子写入 |
+| 2026-06-26 | UPDATE | `review/bug-review-comprehensive.md` | 标注全部 48 个 bug 的修复状态：33 已修复 ✅ / 15 未修复 ❌；更新总结统计和未修复清单 |
+| 2026-06-26 | UPDATE | `scripts/security/ssh.sh` | #3.1 HIGH 修复：SSH 回滚定时器竞态窗口 — 改为仅在 restart_ssh 失败后设置回滚，ROLLBACK_DELAY 300→600 |
+| 2026-06-26 | UPDATE | `review/bug-review-comprehensive.md` | #3.1 标记为 ✅ 已修复，更新统计：34 已修复 / 14 未修复，HIGH 全部清零 |
+| 2026-06-26 | UPDATE | `HANDOVER.md` | 添加变更日志 |
