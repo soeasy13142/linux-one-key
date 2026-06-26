@@ -217,13 +217,12 @@ prompt_input() {
 }
 
 # Read password (no echo)
+# 通过全局变量 _PROMPT_RESULT 返回密码，避免通过 stdout 传递（防止日志/管道泄露）
 prompt_password() {
     local prompt="$1"
-    local password
 
-    read -r -s -p "$(echo -e "${BLUE}${prompt}${NC}: ")" password
-    echo ""  # newline after hidden input
-    echo "${password}"
+    read -r -s -p "$(echo -e "${BLUE}${prompt}${NC}: ")" _PROMPT_RESULT
+    echo "" >&2  # newline after hidden input (输出到 stderr，不污染 stdout)
 }
 
 # ═══════════════════════════════════════════
@@ -316,7 +315,8 @@ set_ssh_config() {
     local config_file="${3:-/etc/ssh/sshd_config}"
 
     # 使用 POSIX 字符类 [[:space:]] 确保跨平台兼容（BSD/macOS + GNU/Linux）
-    if grep -qE "^#*${key}([[:space:]]|$)" "${config_file}" 2>/dev/null; then
+    # grep 和 sed 使用一致的模式：要求 key 后必须有空白字符
+    if grep -qE "^#*${key}[[:space:]]" "${config_file}" 2>/dev/null; then
         # 参数存在，修改它 (兼容 macOS 和 Linux)
         if [[ "$(uname)" == "Darwin" ]]; then
             sed -i '' "s|^#*${key}[[:space:]].*|${key} ${value}|" "${config_file}"
@@ -329,8 +329,9 @@ set_ssh_config() {
     fi
 
     # 写后验证：回读确认值已生效
+    # 使用 [[:space:]] 精确匹配，避免误匹配前缀相同的其他指令（如 PortForwarding）
     local actual
-    actual=$(grep "^${key}" "${config_file}" 2>/dev/null | awk '{print $2}' | tail -1)
+    actual=$(grep -E "^${key}[[:space:]]" "${config_file}" 2>/dev/null | awk '{print $2}' | tail -1)
     if [[ "${actual}" != "${value}" ]]; then
         log_error "Failed to set ${key}=${value} in ${config_file} (got: ${actual:-unset})"
         return 1
@@ -344,7 +345,8 @@ get_ssh_config() {
     local key="$1"
     local config_file="${2:-/etc/ssh/sshd_config}"
 
-    grep "^${key}" "${config_file}" 2>/dev/null | awk '{print $2}' | tail -1
+    # 使用 [[:space:]] 精确匹配，避免误匹配前缀相同的指令（如 Port 匹配 PortForwarding）
+    grep -E "^${key}[[:space:]]" "${config_file}" 2>/dev/null | awk '{print $2}' | tail -1
 }
 
 # 获取当前 SSH 端口

@@ -203,8 +203,9 @@ generate_ssh_key() {
         fi
     fi
 
-    # 获取密码短语
-    passphrase=$(prompt_password "${MSG_SSH_KEY_PROMPT_PASSPHRASE}")
+    # 获取密码短语（通过 _PROMPT_RESULT 全局变量传递，避免 stdout 泄露）
+    prompt_password "${MSG_SSH_KEY_PROMPT_PASSPHRASE}"
+    passphrase="${_PROMPT_RESULT}"
 
     # 创建 .ssh 目录
     mkdir -p "$(dirname "${key_path}")"
@@ -302,24 +303,58 @@ disable_root_login() {
 # 禁止密码登录
 # ═══════════════════════════════════════════
 
-# 检查是否有有效的 SSH 密钥
-check_ssh_keys() {
-    local auth_keys="$HOME/.ssh/authorized_keys"
+# 检查单个用户的 authorized_keys 是否有有效密钥
+# 参数: $1 = authorized_keys 文件路径
+# 返回: 0 = 有有效密钥, 1 = 无有效密钥
+_has_valid_ssh_key() {
+    local auth_keys="$1"
 
-    if [[ ! -f "${auth_keys}" ]]; then
+    if [[ ! -f "${auth_keys}" ]] || [[ ! -s "${auth_keys}" ]]; then
         return 1
     fi
 
-    if [[ ! -s "${auth_keys}" ]]; then
-        return 1
-    fi
-
-    # 检查是否有有效的密钥行
     if grep -qE '^(ssh-(rsa|ed25519|dss)|ecdsa-sha2|sk-ssh-)' "${auth_keys}"; then
         return 0
     fi
 
     return 1
+}
+
+# 检查当前用户是否有有效的 SSH 密钥
+check_ssh_keys() {
+    _has_valid_ssh_key "$HOME/.ssh/authorized_keys"
+}
+
+# 检查所有可登录用户是否有 SSH 密钥
+# 输出: 无密钥的用户名列表（每行一个）
+# 返回: 0 = 所有用户都有密钥, 1 = 存在无密钥用户
+_check_all_users_ssh_keys() {
+    local current_user
+    current_user=$(whoami)
+    local users_without_keys=""
+
+    # 获取所有有登录 shell 的用户（排除 nologin/false/sync/shutdown/halt）
+    while IFS= read -r user; do
+        [[ -z "${user}" ]] && continue
+
+        local user_home
+        user_home=$(getent passwd "${user}" 2>/dev/null | cut -d: -f6)
+        if [[ -z "${user_home}" ]]; then
+            continue
+        fi
+
+        local auth_keys="${user_home}/.ssh/authorized_keys"
+        if ! _has_valid_ssh_key "${auth_keys}"; then
+            users_without_keys="${users_without_keys}${user}\n"
+        fi
+    done < <(awk -F: '$7 !~ /(nologin|false|sync|shutdown|halt)$/ && $1 != "'"${current_user}"'" {print $1}' /etc/passwd 2>/dev/null || true)
+
+    if [[ -n "${users_without_keys}" ]]; then
+        echo -e "${users_without_keys}" | sed '/^$/d'
+        return 1
+    fi
+
+    return 0
 }
 
 # 禁止密码登录
@@ -328,12 +363,28 @@ disable_password_auth() {
 
     log_info "${MSG_SSH_PASSWD_DESC}"
 
-    # 检查是否有 SSH 密钥
+    # 检查当前用户是否有 SSH 密钥
     if ! check_ssh_keys; then
         log_warn "${MSG_SSH_PASSWD_NO_KEY}"
         log_warn "Please configure SSH keys first"
         log_info "Skipping password auth disable"
         return 0
+    fi
+
+    # 检查其他可登录用户是否有 SSH 密钥
+    local users_without_keys
+    users_without_keys=$(_check_all_users_ssh_keys) || true
+    if [[ -n "${users_without_keys}" ]]; then
+        log_warn "The following users have NO SSH keys and will be locked out if password auth is disabled:"
+        while IFS= read -r user; do
+            [[ -z "${user}" ]] && continue
+            log_warn "  - ${user}"
+        done <<< "${users_without_keys}"
+        log_warn "Please set up SSH keys for these users first, or they will be unable to log in."
+        if ! confirm "Continue anyway? (NOT recommended)" "n"; then
+            log_info "Skipping password auth disable"
+            return 0
+        fi
     fi
 
     # 风险提示
