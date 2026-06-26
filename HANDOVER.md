@@ -2,7 +2,7 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-25（"假成功"Bug 全部修复）
+**最后更新**: 2026-06-26（综合 Bug 审查修复）
 **当前阶段**: v0.4 全部模块已完成（2026-06-24）
 
 ---
@@ -607,3 +607,12 @@ v0.4 ✅ 已完成
 | 2026-06-25 | UPDATE | `scripts/security/firewall.sh` | P2 修复：_install_firewall() systemctl 验证 + _ufw_enable() 状态验证 + _firewalld_reload() 返回值 |
 | 2026-06-25 | UPDATE | `scripts/security/filesystem.sh` | P2 修复：_fix_single_permission() chmod 后回读权限验证 |
 | 2026-06-25 | UPDATE | `HANDOVER.md` | 更新进度、已完成工作、变更日志 |
+| 2026-06-26 | UPDATE | `scripts/security/firewall.sh` | #1.1: ufw status stderr 重定向; #1.2: firewalld reload 返回值检查; #7.5: CentOS 8+ 改用 dnf |
+| 2026-06-26 | UPDATE | `scripts/base/init.sh` | #1.3: setup_timezone 失败时返回错误码 |
+| 2026-06-26 | UPDATE | `scripts/base/utils.sh` | #2.1: _ensure_log_dir fallback 记录日志; #8.1: ERR trap 使用 BASH_COMMAND; #8.2: INT/TERM trap 添加清理; #9.1: generate_random_port 覆盖完整范围; #9.2: check_port_in_use 精确端口匹配 |
+| 2026-06-26 | UPDATE | `scripts/base/detect.sh` | #15.3: detect_network 添加 HTTP fallback（容器兼容） |
+| 2026-06-26 | UPDATE | `install.sh` | #6.3: EXIT trap 清理 _CLEANUP_DIR; #9.3: view_report 使用 REPORT_DIR 变量 |
+| 2026-06-26 | UPDATE | `scripts/security/ssh.sh` | #5.6: SSH 参数添加上限验证（MaxAuthTries/LoginGraceTime/ClientAliveInterval/ClientAliveCountMax/MaxSessions） |
+| 2026-06-26 | UPDATE | `scripts/security/users.sh` | #6.5: sudoers 文件创建使用 umask 防止权限窗口 |
+| 2026-06-26 | UPDATE | `scripts/security/fail2ban.sh` | #5.5: bantime/findtime/maxretry 添加上限验证; #11.2: jail.local 原子写入 |
+| 2026-06-26 | UPDATE | `scripts/security/audit.sh` | #8.3: audit.rules 原子写入 |

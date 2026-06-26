@@ -278,8 +278,8 @@ configure_sudo_nopasswd() {
 
     log_step "${MSG_USERS_SUDO_CONFIGURING}..."
 
-    # 创建 sudoers drop-in 文件
-    echo "${username} ALL=(ALL) NOPASSWD: ALL" > "${sudoers_file}"
+    # 创建 sudoers drop-in 文件（使用 umask 确保创建时权限安全，避免权限窗口）
+    (umask 0377 && echo "${username} ALL=(ALL) NOPASSWD: ALL" > "${sudoers_file}")
     chmod 440 "${sudoers_file}"
 
     # 验证语法

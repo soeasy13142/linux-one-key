@@ -92,7 +92,7 @@ _ensure_log_dir() {
         if ! mkdir -p "$(dirname "${LOG_FILE}")" 2>/dev/null; then
             # 如果无法创建目标目录，使用临时目录作为后备
             local fallback_dir="/tmp/linux-one-key"
-            # 注意：此处不能调用 log_warn（会触发无限递归），直接 echo 到 stderr
+            # _ENSURING_LOG_DIR guard 防止递归，此处可以安全输出
             echo -e "${YELLOW}[!]${NC} Cannot create log directory, using fallback: ${fallback_dir}" >&2
             mkdir -p "${fallback_dir}" 2>/dev/null || true
             LOG_FILE="${fallback_dir}/hardening_${TIMESTAMP}.log"
@@ -100,6 +100,8 @@ _ensure_log_dir() {
             BACKUP_DIR="${fallback_dir}/backups"
             REPORT_DIR="${fallback_dir}/reports"
             mkdir -p "${BACKUP_DIR}" "${REPORT_DIR}" 2>/dev/null || true
+            # 记录 fallback 事件到日志文件（guard 保护下不会递归）
+            echo "[WARN] $(date '+%Y-%m-%d %H:%M:%S') Log directory fallback: using ${fallback_dir}" >> "${LOG_FILE}" 2>/dev/null || true
         fi
     fi
 
@@ -400,8 +402,9 @@ check_service() {
 check_port_in_use() {
     local port="$1"
 
-    if ss -tlnp 2>/dev/null | grep -q ":${port} " || \
-       netstat -tlnp 2>/dev/null | grep -q ":${port} "; then
+    # 使用 [[:space:]] 精确匹配端口后必须有空白字符，避免 :22 匹配 :2222
+    if ss -tlnp 2>/dev/null | grep -qE ":${port}[[:space:]]" || \
+       netstat -tlnp 2>/dev/null | grep -qE ":${port}[[:space:]]"; then
         return 0  # 端口被占用
     else
         return 1  # 端口空闲
@@ -436,8 +439,16 @@ error_handler() {
 
 # 设置错误陷阱
 setup_error_trap() {
-    trap 'error_handler ${LINENO} $? "Command failed"' ERR
-    trap 'log_info "Script interrupted"; exit 130' INT TERM
+    trap 'error_handler ${LINENO} $? "${BASH_COMMAND:-Command failed}"' ERR
+    trap 'log_info "Script interrupted"; _cleanup_on_exit; exit 130' INT TERM
+}
+
+# 信号中断时的清理函数
+_cleanup_on_exit() {
+    # 清理 bootstrap 临时目录
+    if [[ -n "${_CLEANUP_DIR:-}" ]] && [[ -d "${_CLEANUP_DIR}" ]]; then
+        rm -rf "${_CLEANUP_DIR}" 2>/dev/null || true
+    fi
 }
 
 # ═══════════════════════════════════════════
@@ -573,9 +584,9 @@ generate_random_port() {
     local max_attempts=100
 
     while [[ ${attempts} -lt ${max_attempts} ]]; do
-        # Use $RANDOM for portability (bash builtin, 0-32767)
-        # Scale to 1024-65535 range
-        port=$((1024 + RANDOM % 64512))
+        # Use $RANDOM twice to cover full 1024-65535 range
+        # $RANDOM range is 0-32767, so RANDOM*32768+RANDOM covers 0-1073741823
+        port=$((1024 + (RANDOM * 32768 + RANDOM) % 64512))
 
         # Avoid well-known ports
         local is_known=0

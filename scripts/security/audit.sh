@@ -171,7 +171,9 @@ _generate_audit_rules() {
         log_warn "Failed to create ${AUDIT_RULES_DIR}, trying anyway"
     }
 
-    # 生成规则文件
+    # 生成规则文件（原子写入：先写临时文件再 mv，防止中断导致规则损坏）
+    local tmp_rules
+    tmp_rules=$(mktemp "${AUDIT_RULES_DIR}/audit.rules.XXXXXX")
     {
         echo "## ============================================"
         echo "## 审计规则 - 由 linux-one-key 自动生成"
@@ -206,9 +208,16 @@ _generate_audit_rules() {
         echo ""
         echo "## 使规则不可变（需重启才能修改）"
         echo "-e 2"
-    } > "${AUDIT_RULES_FILE}"
+    } > "${tmp_rules}"
 
-    log_success "${MSG_AUDIT_CONFIGURE_RULES_DONE}"
+    # 原子性替换目标文件
+    if mv "${tmp_rules}" "${AUDIT_RULES_FILE}"; then
+        log_success "${MSG_AUDIT_CONFIGURE_RULES_DONE}"
+    else
+        log_error "Failed to write ${AUDIT_RULES_FILE}"
+        rm -f "${tmp_rules}" 2>/dev/null
+        return 1
+    fi
 }
 
 # 配置 auditd.conf

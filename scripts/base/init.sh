@@ -129,6 +129,7 @@ setup_timezone() {
         log_success "Timezone set to ${timezone}"
     else
         log_warn "Failed to set timezone (timedatectl not available)"
+        return 1
     fi
 }
 

@@ -431,8 +431,8 @@ configure_ssh_params() {
     local failed=0
 
     val=$(prompt_input "${MSG_SSH_PARAMS_MAXAUTHTRIES}" "3")
-    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
-        log_error "Invalid MaxAuthTries value, using default 3"
+    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]] || [[ "${val}" -gt 100 ]]; then
+        log_error "Invalid MaxAuthTries value (1-100), using default 3"
         val="3"
     fi
     if ! set_ssh_config "MaxAuthTries" "${val}"; then
@@ -440,8 +440,8 @@ configure_ssh_params() {
     fi
 
     val=$(prompt_input "${MSG_SSH_PARAMS_LOGINGRACETIME}" "60")
-    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
-        log_error "Invalid LoginGraceTime value, using default 60"
+    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]] || [[ "${val}" -gt 3600 ]]; then
+        log_error "Invalid LoginGraceTime value (1-3600), using default 60"
         val="60"
     fi
     if ! set_ssh_config "LoginGraceTime" "${val}"; then
@@ -449,8 +449,8 @@ configure_ssh_params() {
     fi
 
     val=$(prompt_input "${MSG_SSH_PARAMS_CLIENTALIVEINTERVAL}" "300")
-    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
-        log_error "Invalid ClientAliveInterval value, using default 300"
+    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]] || [[ "${val}" -gt 86400 ]]; then
+        log_error "Invalid ClientAliveInterval value (1-86400), using default 300"
         val="300"
     fi
     if ! set_ssh_config "ClientAliveInterval" "${val}"; then
@@ -458,8 +458,8 @@ configure_ssh_params() {
     fi
 
     val=$(prompt_input "${MSG_SSH_PARAMS_CLIENTALIVECOUNTMAX}" "2")
-    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
-        log_error "Invalid ClientAliveCountMax value, using default 2"
+    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]] || [[ "${val}" -gt 100 ]]; then
+        log_error "Invalid ClientAliveCountMax value (1-100), using default 2"
         val="2"
     fi
     if ! set_ssh_config "ClientAliveCountMax" "${val}"; then
@@ -467,8 +467,8 @@ configure_ssh_params() {
     fi
 
     val=$(prompt_input "${MSG_SSH_PARAMS_MAXSESSIONS}" "2")
-    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]]; then
-        log_error "Invalid MaxSessions value, using default 2"
+    if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]] || [[ "${val}" -gt 100 ]]; then
+        log_error "Invalid MaxSessions value (1-100), using default 2"
         val="2"
     fi
     if ! set_ssh_config "MaxSessions" "${val}"; then
