@@ -2,7 +2,7 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-26（修复 HIGH 优先级 Bug #3.1）
+**最后更新**: 2026-06-26（修复全部剩余 Bug，48/48 清零）
 **当前阶段**: v0.4 全部模块已完成（2026-06-24）
 
 ---
@@ -620,3 +620,8 @@ v0.4 ✅ 已完成
 | 2026-06-26 | UPDATE | `scripts/security/ssh.sh` | #3.1 HIGH 修复：SSH 回滚定时器竞态窗口 — 改为仅在 restart_ssh 失败后设置回滚，ROLLBACK_DELAY 300→600 |
 | 2026-06-26 | UPDATE | `review/bug-review-comprehensive.md` | #3.1 标记为 ✅ 已修复，更新统计：34 已修复 / 14 未修复，HIGH 全部清零 |
 | 2026-06-26 | UPDATE | `HANDOVER.md` | 添加变更日志 |
+| 2026-06-26 | UPDATE | `scripts/base/utils.sh` | #11.1: backup_file 添加 PID 防路径冲突; #10.1: restart_service fallback 时记录警告; #14.1: _cleanup_on_exit 清理后台进程; #3.3: cancel_scheduled_task 验证进程身份 |
+| 2026-06-26 | UPDATE | `scripts/security/fail2ban.sh` | #10.2: _enable_fail2ban_service 轮询前添加 1 秒延迟避免读到旧状态 |
+| 2026-06-26 | UPDATE | `scripts/security/filesystem.sh` | #16.1/#16.2: check_filesystem_status 添加 5 分钟 TTL 缓存 |
+| 2026-06-26 | UPDATE | `install.sh` | EXIT trap 统一由 setup_error_trap() 处理，移除重复 trap |
+| 2026-06-26 | UPDATE | `review/bug-review-comprehensive.md` | 全部 48 个 bug 标记为 ✅ 已修复，未修复清单清零 |

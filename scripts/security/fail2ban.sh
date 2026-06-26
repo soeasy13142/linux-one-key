@@ -169,6 +169,9 @@ _enable_fail2ban_service() {
     systemctl enable fail2ban >> "${LOG_FILE}" 2>&1
     systemctl restart fail2ban >> "${LOG_FILE}" 2>&1
 
+    # 等待重启生效，避免轮询读到旧的 active 状态
+    sleep 1
+
     # 等待服务启动（轮询，最多 10 秒）
     local attempts=0
     while [[ ${attempts} -lt 10 ]]; do

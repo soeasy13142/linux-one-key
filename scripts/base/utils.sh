@@ -268,7 +268,8 @@ backup_file() {
 
     local filename
     filename="$(basename "${file}")"
-    local backup_path="${BACKUP_DIR}/${filename}.bak.${TIMESTAMP}"
+    # 使用 TIMESTAMP + PID 确保同一秒内的多次备份不会冲突
+    local backup_path="${BACKUP_DIR}/${filename}.bak.${TIMESTAMP}.$$"
 
     log_step "${description}: ${file}"
 
@@ -373,6 +374,8 @@ restart_service() {
         log_success "${service} restarted"
         return 0
     elif service "${service}" restart 2>/dev/null; then
+        # systemctl 失败时记录警告，避免掩盖配置错误
+        log_warn "${service}: systemctl failed, fell back to service command"
         log_success "${service} restarted"
         return 0
     else
@@ -441,6 +444,7 @@ error_handler() {
 setup_error_trap() {
     trap 'error_handler ${LINENO} $? "${BASH_COMMAND:-Command failed}"' ERR
     trap 'log_info "Script interrupted"; _cleanup_on_exit; exit 130' INT TERM
+    trap '_cleanup_on_exit' EXIT
 }
 
 # 信号中断时的清理函数
@@ -448,6 +452,11 @@ _cleanup_on_exit() {
     # 清理 bootstrap 临时目录
     if [[ -n "${_CLEANUP_DIR:-}" ]] && [[ -d "${_CLEANUP_DIR}" ]]; then
         rm -rf "${_CLEANUP_DIR}" 2>/dev/null || true
+    fi
+    # 清理后台定时任务（防止脚本退出后孤儿进程继续运行）
+    if [[ -n "${_SCHEDULED_PID:-}" ]] && kill -0 "${_SCHEDULED_PID}" 2>/dev/null; then
+        kill "${_SCHEDULED_PID}" 2>/dev/null || true
+        log_debug "Cleaned up scheduled task PID: ${_SCHEDULED_PID}"
     fi
 }
 
@@ -552,9 +561,17 @@ cancel_scheduled_task() {
     local pid="$1"
 
     if kill -0 "${pid}" 2>/dev/null; then
-        kill "${pid}" 2>/dev/null
-        log_debug "Cancelled scheduled task PID: ${pid}"
-        return 0
+        # 验证进程确实是我们启动的 sleep 任务（防止 PID 复用误杀）
+        local cmdline
+        cmdline=$(cat "/proc/${pid}/cmdline" 2>/dev/null | tr '\0' ' ' || echo "")
+        if [[ "${cmdline}" == *"sleep"* ]] || [[ -z "${cmdline}" ]]; then
+            kill "${pid}" 2>/dev/null
+            log_debug "Cancelled scheduled task PID: ${pid}"
+            return 0
+        else
+            log_warn "PID ${pid} does not appear to be a scheduled task, skipping kill"
+            return 1
+        fi
     fi
     return 1
 }
