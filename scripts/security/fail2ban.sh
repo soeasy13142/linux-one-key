@@ -112,8 +112,10 @@ _configure_fail2ban_jail() {
         *)                       banaction="iptables-multiport" ;;
     esac
 
-    # 生成 jail.local 配置
-    cat > "${FAIL2BAN_JAIL_LOCAL}" << EOF
+    # 生成 jail.local 配置（原子写入：先写临时文件再 mv，防止中断导致配置损坏）
+    local tmp_jail
+    tmp_jail=$(mktemp "${FAIL2BAN_JAIL_LOCAL}.XXXXXX")
+    cat > "${tmp_jail}" << EOF
 # ============================================================================
 # Fail2Ban jail 配置
 # 由 linux-one-key 自动生成
@@ -150,7 +152,14 @@ bantime = ${bantime}
 findtime = ${findtime}
 EOF
 
-    log_success "${MSG_FAIL2BAN_CONFIGURE_DONE}"
+    # 原子性替换目标文件
+    if mv "${tmp_jail}" "${FAIL2BAN_JAIL_LOCAL}"; then
+        log_success "${MSG_FAIL2BAN_CONFIGURE_DONE}"
+    else
+        log_error "Failed to write ${FAIL2BAN_JAIL_LOCAL}"
+        rm -f "${tmp_jail}" 2>/dev/null
+        return 1
+    fi
 }
 
 # 启动 Fail2Ban 服务
@@ -299,19 +308,19 @@ run_fail2ban_wizard() {
     local maxretry
     maxretry=$(prompt_input "${MSG_FAIL2BAN_MAXRETRY_PROMPT}" "5")
 
-    # Validate bantime
-    if [[ ! "${bantime}" =~ ^[0-9]+$ ]] || [[ "${bantime}" -lt 1 ]]; then
-        log_error "bantime must be a positive integer"
+    # Validate bantime (1秒 ~ 365天)
+    if [[ ! "${bantime}" =~ ^[0-9]+$ ]] || [[ "${bantime}" -lt 1 ]] || [[ "${bantime}" -gt 31536000 ]]; then
+        log_error "bantime must be a positive integer (max 31536000 = 1 year)"
         bantime="3600"
     fi
-    # Validate findtime
-    if [[ ! "${findtime}" =~ ^[0-9]+$ ]] || [[ "${findtime}" -lt 1 ]]; then
-        log_error "findtime must be a positive integer"
+    # Validate findtime (1秒 ~ 365天)
+    if [[ ! "${findtime}" =~ ^[0-9]+$ ]] || [[ "${findtime}" -lt 1 ]] || [[ "${findtime}" -gt 31536000 ]]; then
+        log_error "findtime must be a positive integer (max 31536000 = 1 year)"
         findtime="600"
     fi
-    # Validate maxretry
-    if [[ ! "${maxretry}" =~ ^[0-9]+$ ]] || [[ "${maxretry}" -lt 1 ]]; then
-        log_error "maxretry must be a positive integer"
+    # Validate maxretry (1 ~ 10000)
+    if [[ ! "${maxretry}" =~ ^[0-9]+$ ]] || [[ "${maxretry}" -lt 1 ]] || [[ "${maxretry}" -gt 10000 ]]; then
+        log_error "maxretry must be a positive integer (max 10000)"
         maxretry="5"
     fi
 

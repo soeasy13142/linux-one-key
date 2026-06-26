@@ -652,7 +652,7 @@ run_firewall_submenu_loop() {
 # ═══════════════════════════════════════════
 
 view_report() {
-    local report_dir="/var/log/linux-one-key"
+    local report_dir="${REPORT_DIR:-/var/log/linux-one-key}"
     local latest_report
 
     if [[ -d "${report_dir}" ]]; then
@@ -926,6 +926,9 @@ main() {
 
     # 设置错误陷阱
     setup_error_trap
+
+    # 确保 bootstrap 临时目录在脚本退出时被清理（包括 Ctrl+C 和 set -e 退出）
+    trap '[[ -n "${_CLEANUP_DIR:-}" ]] && rm -rf "${_CLEANUP_DIR}" 2>/dev/null' EXIT
 
     # --status mode: read-only detection, no system modification
     if [[ "${TARGET_MODULE:-}" == "status" ]]; then

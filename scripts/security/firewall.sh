@@ -33,7 +33,12 @@ _install_firewall() {
                 log_info "${MSG_FIREWALL_ALREADY_INSTALLED} (firewalld)"
                 return 0
             fi
-            yum install -y firewalld >> "${LOG_FILE}" 2>&1
+            # CentOS 8+/RHEL 8+ 使用 dnf，旧版本使用 yum
+            if command_exists dnf; then
+                dnf install -y firewalld >> "${LOG_FILE}" 2>&1
+            else
+                yum install -y firewalld >> "${LOG_FILE}" 2>&1
+            fi
             # 安装后启动 firewalld 服务
             if ! systemctl enable --now firewalld >> "${LOG_FILE}" 2>&1; then
                 log_warn "Failed to enable firewalld service"
@@ -117,7 +122,7 @@ _ufw_allow_icmp() {
 # 启用 UFW
 _ufw_enable() {
     log_step "${MSG_FIREWALL_ENABLE}"
-    if ufw --force enable >> "${LOG_FILE}" 2>&1 && ufw status | grep -q "Status: active"; then
+    if ufw --force enable >> "${LOG_FILE}" 2>&1 && ufw status 2>/dev/null | grep -q "Status: active"; then
         log_success "${MSG_FIREWALL_ENABLE_DONE}"
     else
         log_error "Failed to enable UFW"
@@ -315,8 +320,12 @@ enable_firewall() {
             _ufw_enable
             ;;
         firewalld)
-            _firewalld_reload
-            log_success "${MSG_FIREWALL_ENABLE_DONE}"
+            if _firewalld_reload; then
+                log_success "${MSG_FIREWALL_ENABLE_DONE}"
+            else
+                log_error "Failed to enable firewalld"
+                return 1
+            fi
             ;;
     esac
 }

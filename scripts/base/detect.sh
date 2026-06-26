@@ -134,8 +134,12 @@ detect_package_manager() {
 }
 
 # 检测网络连接 (静默检测，仅失败时显示错误)
+# 先尝试 ping（ICMP），失败时 fallback 到 HTTP（兼容无 ICMP 权限的容器环境）
 detect_network() {
     if check_network "8.8.8.8" 5 || check_network "114.114.114.114" 5; then
+        DETECTED_NETWORK_OK="yes"
+    elif curl -s --connect-timeout 5 --max-time 10 "http://www.msftconnecttest.com/connecttest.txt" >/dev/null 2>&1; then
+        # HTTP fallback：容器中 ping 可能因缺少 NET_RAW 权限而失败
         DETECTED_NETWORK_OK="yes"
     else
         DETECTED_NETWORK_OK="no"
