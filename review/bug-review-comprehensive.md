@@ -132,7 +132,7 @@ _ensure_log_dir() {
 
 ---
 
-### 2.3 `DETECTED_*` 变量在 `detect.sh` 顶层初始化 — source 时机问题 ❌ 未修复
+### 2.3 `DETECTED_*` 变量在 `detect.sh` 顶层初始化 — source 时机问题 ✅ 已修复
 
 **文件**: `scripts/base/detect.sh:24-31`
 **严重程度**: MEDIUM
@@ -211,7 +211,7 @@ fi
 
 ---
 
-### 3.2 `schedule_rollback()` — PID 竞态 ❌ 未修复
+### 3.2 `schedule_rollback()` — PID 竞态 ✅ 已修复
 
 **文件**: `scripts/base/utils.sh:533-546`
 **严重程度**: MEDIUM
@@ -351,7 +351,7 @@ awk '{
 
 ---
 
-### 4.6 `/proc/net/tcp` fallback — 仅支持 IPv4 ❌ 未修复
+### 4.6 `/proc/net/tcp` fallback — 仅支持 IPv4 ✅ 已修复
 
 **文件**: `scripts/security/services.sh:153-161`
 **严重程度**: MEDIUM
@@ -534,7 +534,7 @@ if printf '%s:%s\n' "${username}" "${password}" | chpasswd >> "${LOG_FILE}" 2>&1
 
 ---
 
-### 6.2 `ssh-keygen` 密码通过 `-N` 参数传递 ❌ 未修复
+### 6.2 `ssh-keygen` 密码通过 `-N` 参数传递 ✅ 已修复
 
 **文件**: `scripts/security/ssh.sh:217-221`
 **严重程度**: MEDIUM
@@ -625,7 +625,7 @@ fi
 
 ## 7. 逻辑错误
 
-### 7.1 `check_other_users()` — 检查逻辑可能遗漏用户 ❌ 未修复
+### 7.1 `check_other_users()` — 检查逻辑可能遗漏用户 ✅ 已修复
 
 **文件**: `scripts/security/ssh.sh:253-266`
 **严重程度**: MEDIUM
@@ -659,7 +659,7 @@ check_other_users() {
 
 ---
 
-### 7.3 `run_full_wizard()` — 步骤 0 (Init) 失败不影响后续步骤 ❌ 未修复
+### 7.3 `run_full_wizard()` — 步骤 0 (Init) 失败不影响后续步骤 ✅ 已修复
 
 **文件**: `install.sh:699-712`
 **严重程度**: MEDIUM
@@ -679,7 +679,7 @@ fi
 
 ---
 
-### 7.4 `run_ssh_wizard()` — 步骤顺序问题 ❌ 未修复
+### 7.4 `run_ssh_wizard()` — 步骤顺序问题 ✅ 已修复
 
 **文件**: `scripts/security/ssh.sh:592-653`
 **严重程度**: MEDIUM
@@ -853,7 +853,7 @@ check_filesystem_status() {
 
 ## 10. 进程管理 Bug
 
-### 10.1 `restart_service()` — fallback 到 `service` 命令 ❌ 未修复
+### 10.1 `restart_service()` — fallback 到 `service` 命令 ✅ 已修复
 
 **文件**: `scripts/base/utils.sh:366-382`
 **严重程度**: LOW
@@ -874,7 +874,7 @@ restart_service() {
 
 ---
 
-### 10.2 `_enable_fail2ban_service()` — 轮询超时 ❌ 未修复
+### 10.2 `_enable_fail2ban_service()` — 轮询超时 ✅ 已修复
 
 **文件**: `scripts/security/fail2ban.sh:166-190`
 **严重程度**: LOW
@@ -896,7 +896,7 @@ done
 
 ## 11. 文件操作 Bug
 
-### 11.1 `backup_file()` — 备份路径冲突 ❌ 未修复
+### 11.1 `backup_file()` — 备份路径冲突 ✅ 已修复
 
 **文件**: `scripts/base/utils.sh:260-284`
 **严重程度**: LOW
@@ -1168,8 +1168,8 @@ check_port_in_use() {
 
 | 状态 | 数量 | 说明 |
 |------|------|------|
-| ✅ 已修复 | 34 | 包含所有 CRITICAL、HIGH、大部分 MEDIUM 和 LOW |
-| ❌ 未修复 | 14 | 主要为 MEDIUM 和 LOW 级别 |
+| ✅ 已修复 | 48 | 全部 CRITICAL、HIGH、MEDIUM、LOW 均已修复 |
+| ❌ 未修复 | 0 | 全部清零 |
 
 ### 按严重程度统计（原始）
 
@@ -1177,31 +1177,33 @@ check_port_in_use() {
 |---------|------|--------|--------|
 | **CRITICAL** | 5 | 5 | 0 |
 | **HIGH** | 4 | 4 | 0 |
-| **MEDIUM** | 12 | 8 | 4 |
-| **LOW** | 27 | 17 | 10 |
+| **MEDIUM** | 12 | 12 | 0 |
+| **LOW** | 27 | 27 | 0 |
 
 ### ❌ 未修复清单（按优先级）
 
-#### P2 — MEDIUM（建议修复）
+**全部已修复，无剩余 bug。**
 
-| Bug ID | 函数 | 文件 | 影响 |
-|--------|------|------|------|
-| #3.2 | `schedule_rollback()` | utils.sh | PID 竞态和信号中断 |
-| #4.6 | `_scan_listening_ports()` | services.sh | /proc/net/tcp fallback 仅 IPv4 |
-| #6.2 | `generate_ssh_key()` | ssh.sh | ssh-keygen 密码通过 -N 参数可见 |
-| #7.1 | `check_other_users()` | ssh.sh | 不检查用户是否有 SSH 密钥 |
-| #7.3 | `run_full_wizard()` | install.sh | Init 失败不影响后续步骤 |
-| #7.4 | `run_ssh_wizard()` | ssh.sh | 回滚可能覆盖用户手动修改 |
-| #2.3 | `DETECTED_*` | detect.sh | source 时变量被重置 |
+#### P2 — MEDIUM（全部已修复）
 
-#### P3 — LOW（可选修复）
+| Bug ID | 函数 | 文件 | 修复说明 |
+|--------|------|------|----------|
+| #3.2 | `schedule_rollback()` | utils.sh | ✅ 子 shell 已用 `trap '' INT TERM` 防止信号中断 |
+| #4.6 | `_scan_listening_ports()` | services.sh | ✅ 已支持 `/proc/net/tcp` + `/proc/net/tcp6`，兼容 mawk |
+| #6.2 | `generate_ssh_key()` | ssh.sh | ✅ 已使用 `SSH_ASKPASS` 机制避免 -N 参数泄露 |
+| #7.1 | `check_other_users()` | ssh.sh | ✅ 已调用 `_check_all_users_ssh_keys()` 检查密钥 |
+| #7.3 | `run_full_wizard()` | install.sh | ✅ Init 失败时警告并要求用户确认是否继续 |
+| #7.4 | `run_ssh_wizard()` | ssh.sh | ✅ 已检测 mtime 变化并警告用户 |
+| #2.3 | `DETECTED_*` | detect.sh | ✅ 已使用 `${DETECTED_OS:-}` 模式 |
 
-| Bug ID | 函数 | 文件 | 影响 |
-|--------|------|------|------|
-| #3.3 | `cancel_scheduled_task()` | utils.sh | PID 复用风险 |
-| #10.1 | `restart_service()` | utils.sh | systemctl 失败后 fallback 掩盖错误 |
-| #10.2 | `_enable_fail2ban_service()` | fail2ban.sh | 轮询可能读到旧状态 |
-| #11.1 | `backup_file()` | utils.sh | 同一秒内备份路径冲突 |
-| #14.1 | `schedule_rollback()` | utils.sh | 后台进程无清理 |
-| #16.1 | SUID 扫描 | filesystem.sh | 全盘扫描性能 |
-| #16.2 | `check_filesystem_status()` | filesystem.sh | 重复全盘扫描 |
+#### P3 — LOW（全部已修复）
+
+| Bug ID | 函数 | 文件 | 修复说明 |
+|--------|------|------|----------|
+| #3.3 | `cancel_scheduled_task()` | utils.sh | ✅ 检查 `/proc/$pid/cmdline` 验证进程身份 |
+| #10.1 | `restart_service()` | utils.sh | ✅ fallback 到 service 命令时记录警告 |
+| #10.2 | `_enable_fail2ban_service()` | fail2ban.sh | ✅ 轮询前添加 1 秒延迟避免读到旧状态 |
+| #11.1 | `backup_file()` | utils.sh | ✅ 备份文件名添加 PID (`.$$`) 确保唯一 |
+| #14.1 | `schedule_rollback()` | utils.sh | ✅ EXIT trap 统一清理后台进程 |
+| #16.1 | SUID 扫描 | filesystem.sh | ✅ 5 分钟 TTL 缓存避免重复扫描 |
+| #16.2 | `check_filesystem_status()` | filesystem.sh | ✅ 同上，使用缓存机制 |

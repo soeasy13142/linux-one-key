@@ -368,13 +368,33 @@ run_filesystem_wizard() {
 }
 
 # 检查文件系统安全状态（用于系统状态检测）
+# 使用 5 分钟缓存避免重复全盘扫描
 check_filesystem_status() {
-    local suid_count=0
+    local cache_file="/tmp/.linux-one-key-suid-cache"
+    local cache_ttl=300  # 5 分钟
 
-    # 快速统计 SUID 文件数（与 audit_suid_sgid 保持一致的扫描范围）
+    # 使用缓存（如果存在且未过期）
+    if [[ -f "${cache_file}" ]]; then
+        local cache_mtime
+        cache_mtime=$(stat -c '%Y' "${cache_file}" 2>/dev/null || stat -f '%m' "${cache_file}" 2>/dev/null || echo 0)
+        local now
+        now=$(date +%s)
+        local cache_age=$(( now - cache_mtime ))
+        if [[ ${cache_age} -lt ${cache_ttl} ]] && [[ -s "${cache_file}" ]]; then
+            cat "${cache_file}" 2>/dev/null
+            return 0
+        fi
+    fi
+
+    # 缓存过期或不存在，重新扫描
+    local suid_count=0
     suid_count=$(find / -xdev -not -path '/proc/*' -not -path '/sys/*' -perm -4000 -type f 2>/dev/null | wc -l | tr -d ' ')
 
-    echo "fs_suid_count=${suid_count}"
+    local result="fs_suid_count=${suid_count}"
+    echo "${result}"
+
+    # 写入缓存文件
+    echo "${result}" > "${cache_file}" 2>/dev/null || true
 }
 
 # 标记 filesystem.sh 已加载
