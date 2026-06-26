@@ -217,7 +217,19 @@ generate_ssh_key() {
     if [[ -z "${passphrase}" ]]; then
         ssh-keygen -t ed25519 -f "${key_path}" -N "" -C "$(whoami)@$(hostname)"
     else
-        ssh-keygen -t ed25519 -f "${key_path}" -N "${passphrase}" -C "$(whoami)@$(hostname)"
+        # 通过 SSH_ASKPASS 传递密码，避免 -N 参数在进程列表（/proc/pid/cmdline）中可见
+        local _askpass_script
+        _askpass_script=$(mktemp /tmp/.ssh-askpass-XXXXXX)
+        printf '#!/bin/sh\necho %q\n' "${passphrase}" > "${_askpass_script}"
+        chmod 700 "${_askpass_script}"
+        if SSH_ASKPASS="${_askpass_script}" SSH_ASKPASS_REQUIRE=force \
+            ssh-keygen -t ed25519 -f "${key_path}" -N "" -C "$(whoami)@$(hostname)" < /dev/null; then
+            rm -f "${_askpass_script}"
+        else
+            rm -f "${_askpass_script}"
+            # 回退到直接 -N 方式（仅在 SSH_ASKPASS_REQUIRE 不支持时）
+            ssh-keygen -t ed25519 -f "${key_path}" -N "${passphrase}" -C "$(whoami)@$(hostname)"
+        fi
     fi
 
     log_success "${MSG_SSH_KEY_SUCCESS}: ${key_path}"
@@ -260,6 +272,17 @@ check_other_users() {
 
     if [[ -z "${users}" ]]; then
         return 1  # 没有其他用户
+    fi
+
+    # 检查这些用户是否有 SSH 密钥（无密钥用户在禁用密码登录后将无法登录）
+    local users_without_keys
+    users_without_keys=$(_check_all_users_ssh_keys) || true
+    if [[ -n "${users_without_keys}" ]]; then
+        log_warn "The following users have NO SSH keys (may be locked out if password auth is disabled):"
+        while IFS= read -r user; do
+            [[ -z "${user}" ]] && continue
+            log_warn "  - ${user}"
+        done <<< "${users_without_keys}"
     fi
 
     return 0  # 有其他用户
@@ -598,6 +621,13 @@ run_ssh_wizard() {
         return 1
     fi
 
+    # 记录配置文件原始 mtime，用于检测向导期间的外部修改
+    local _config_file="/etc/ssh/sshd_config"
+    local _original_mtime=""
+    if [[ -f "${_config_file}" ]]; then
+        _original_mtime=$(stat -c '%Y' "${_config_file}" 2>/dev/null || stat -f '%m' "${_config_file}" 2>/dev/null || echo "")
+    fi
+
     # 备份配置
     backup_ssh_config || return 1
 
@@ -618,6 +648,16 @@ run_ssh_wizard() {
 
     # 验证配置
     validate_ssh_config || return 1
+
+    # 检查配置文件是否在向导期间被外部修改
+    if [[ -n "${_original_mtime}" ]] && [[ -f "${_config_file}" ]]; then
+        local _current_mtime
+        _current_mtime=$(stat -c '%Y' "${_config_file}" 2>/dev/null || stat -f '%m' "${_config_file}" 2>/dev/null || echo "")
+        if [[ "${_current_mtime}" != "${_original_mtime}" ]]; then
+            log_warn "sshd_config was modified externally during this wizard."
+            log_warn "If rollback is triggered, external changes will be overwritten."
+        fi
+    fi
 
     # 重启 SSH 服务
     if restart_ssh; then

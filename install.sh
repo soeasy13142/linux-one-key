@@ -707,6 +707,11 @@ run_full_wizard() {
             _WIZARD_INIT_DONE=1
         else
             log_warn "${MSG_WIZARD_ERR_INIT}"
+            log_warn "System initialization failed. Subsequent steps (SSH, firewall, etc.) may not work correctly."
+            if ! confirm "Continue anyway? (NOT recommended)" "n"; then
+                log_error "Aborting wizard due to initialization failure"
+                return 1
+            fi
             wizard_rc=1
         fi
     fi
