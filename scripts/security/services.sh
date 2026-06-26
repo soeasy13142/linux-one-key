@@ -98,10 +98,25 @@ _scan_listening_ports() {
         ss -tlnp 2>/dev/null \
             | tail -n +2 \
             | awk '{
-                split($4, a, ":");
-                port = a[length(a)];
+                # 从 $4 提取端口和地址
+                # IPv6 带括号: [::1]:22 → port=22, addr=::1
+                # IPv4: 0.0.0.0:22 → port=22, addr=0.0.0.0
+                n = split($4, a, ":");
+                port = a[n];
+                if (index($4, "[") > 0) {
+                    # 带方括号的 IPv6: 去掉方括号和端口
+                    addr = $4;
+                    sub(/]:[0-9]+$/, "", addr);
+                    sub(/^\[/, "", addr);
+                } else if (n == 2) {
+                    # IPv4: 仅一个冒号，取冒号前部分
+                    addr = a[1];
+                } else {
+                    # 无括号 IPv6: 去掉最后一个 :端口
+                    addr = $4;
+                    sub(/:[0-9]+$/, "", addr);
+                }
                 proto = "tcp";
-                addr = $4;
                 proc = $6;
                 gsub(/.*users:\(\("/, "", proc);
                 gsub(/".*/, "", proc);
@@ -112,10 +127,21 @@ _scan_listening_ports() {
         netstat -tlnp 2>/dev/null \
             | tail -n +3 \
             | awk '{
-                split($4, a, ":");
-                port = a[length(a)];
+                # 从 $4 提取端口和地址
+                # netstat IPv6: :::22 或 [::1]:22
+                n = split($4, a, ":");
+                port = a[n];
+                if (index($4, "[") > 0) {
+                    addr = $4;
+                    sub(/]:[0-9]+$/, "", addr);
+                    sub(/^\[/, "", addr);
+                } else if (n == 2) {
+                    addr = a[1];
+                } else {
+                    addr = $4;
+                    sub(/:[0-9]+$/, "", addr);
+                }
                 proto = "tcp";
-                addr = $4;
                 proc = $7;
                 gsub(/\//, ":", proc);
                 split(proc, p, ":");

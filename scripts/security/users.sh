@@ -140,14 +140,16 @@ set_user_password() {
     fi
 
     local password
-    password=$(prompt_password "${MSG_USERS_ENTER_PASS}")
+    prompt_password "${MSG_USERS_ENTER_PASS}"
+    password="${_PROMPT_RESULT}"
 
     if ! _validate_password_strength "${password}"; then
         return 1
     fi
 
     local password_confirm
-    password_confirm=$(prompt_password "${MSG_USERS_CONFIRM_PASS}")
+    prompt_password "${MSG_USERS_CONFIRM_PASS}"
+    password_confirm="${_PROMPT_RESULT}"
 
     if [[ "${password}" != "${password_confirm}" ]]; then
         log_error "${MSG_USERS_PASS_MISMATCH}"
@@ -156,7 +158,8 @@ set_user_password() {
 
     log_step "${MSG_USERS_SETTING_PASS}: ${username}..."
 
-    if echo "${username}:${password}" | chpasswd >> "${LOG_FILE}" 2>&1; then
+    # 使用 here-string 传递密码，避免 echo 参数在 /proc/pid/cmdline 中暴露
+    if chpasswd >> "${LOG_FILE}" 2>&1 <<< "${username}:${password}"; then
         log_success "${MSG_USERS_PASS_SET_DONE}: ${username}"
         return 0
     else
