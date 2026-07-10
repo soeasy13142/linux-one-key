@@ -1,11 +1,16 @@
 ---
 title: "Main Menu Redesign Plan"
-status: proposed
+status: archived
 created: 2026-06-23
-updated: 2026-06-23
+updated: 2026-07-10
+superseded-by: main-menu-redesign-v2.md
 ---
 
 # Plan: 主菜单入口重设计
+
+> ⚠️ **本文件已 archived（2026-07-10）**。
+> 已合并到 [`main-menu-redesign-v2.md`](./main-menu-redesign-v2.md)，作为 v1.0 主菜单重构的理想设计快照。
+> 本文件仅作历史参考，请使用 v2 版本。
 
 **Source PRD**: `.claude/prds/main-menu-redesign.prd.md`
 **Complexity**: Medium

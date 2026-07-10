@@ -263,3 +263,6 @@ v0.4 ✅ 已完成
 | 2026-07-10 | UPDATE | `docs/design/archive/interactive-setup-spec.md` | + frontmatter status=archived, git mv 入 archive |
 | 2026-07-10 | UPDATE | `docs/design/archive/interactive-setup-plan.md` | + frontmatter status=archived, git mv 入 archive |
 | 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | 项目结构章节 +1 行（design/archive 子目录注释） |
+| 2026-07-10 | CREATE | `docs/design/main-menu-redesign-v2.md` | 主菜单重构 v2（合并 PRD+Plan 为单一文档，覆盖 v0.4 现状 + v1.0 理想，10 个 GAP，7 个 Tasks） |
+| 2026-07-10 | UPDATE | `docs/design/main-menu-redesign-prd.md` | → archived + superseded-by v2 + 顶部 added superseded notice |
+| 2026-07-10 | UPDATE | `docs/design/main-menu-redesign-plan.md` | → archived + superseded-by v2 + 顶部 added superseded notice |
