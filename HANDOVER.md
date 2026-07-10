@@ -2,8 +2,8 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-06-26（修复全部剩余 Bug，48/48 清零）
-**当前阶段**: v0.4 全部模块已完成（2026-06-24）
+**最后更新**: 2026-07-10（CLAUDE.md 规范化：迁移 my_obsidian 4 项核心原则）
+**当前阶段**: v0.4 全部模块已完成（2026-06-24）→ 项目规范化阶段
 
 ---
 
@@ -214,13 +214,14 @@ linux-one-key/
 │   │   ├── README.md
 │   │   ├── ubuntu-arm64-test.md            # Ubuntu ARM64 真机测试
 │   │   └── vm-curl-test.md                 # VM 综合测试
-│   └── design/                             # 设计文档 & 实施计划
+│   ├── design/                             # 设计文档 & 实施计划
 │       ├── README.md
 │       ├── interactive-setup-spec.md       # 交互式配置设计文档
 │       ├── interactive-setup-plan.md       # 交互式配置实施计划
 │       ├── linux-security-hardening-prd.md # 安全加固 PRD（副本）
 │       ├── main-menu-redesign-prd.md       # 主菜单重设计 PRD（副本）
 │       └── main-menu-redesign-plan.md      # 主菜单重设计计划（副本）
+│   └── plans/                              # 计划文件（Plan-First 落地目录，命名: YYYY-MM-DD_HH-MM_<topic>.md）
 ├── everything-claude-code/    # ECC 配置参考
 ├── .gitignore
 ├── install.sh                 # 主入口脚本
@@ -625,3 +626,13 @@ v0.4 ✅ 已完成
 | 2026-06-26 | UPDATE | `scripts/security/filesystem.sh` | #16.1/#16.2: check_filesystem_status 添加 5 分钟 TTL 缓存 |
 | 2026-06-26 | UPDATE | `install.sh` | EXIT trap 统一由 setup_error_trap() 处理，移除重复 trap |
 | 2026-06-26 | UPDATE | `review/bug-review-comprehensive.md` | 全部 48 个 bug 标记为 ✅ 已修复，未修复清单清零 |
+| 2026-07-10 | CREATE | `docs/plans/` | 新建计划文件目录（Plan-First Principle 落地），命名规范: `YYYY-MM-DD_HH-MM_<topic>.md` |
+| 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | 项目规范化：迁移 my_obsidian 4 项核心原则（Communication、Plan-First、Phased Improvement、Git Workflow），新增 Session Entry Point、Dos and Don'ts；保留项目概述、Shell 规范、项目结构、测试、HANDOVER 说明 |
+| 2026-07-10 | UPDATE | `HANDOVER.md` | 更新最后更新日期为 2026-07-10；当前阶段标注"项目规范化阶段"；文件清单新增 docs/plans/ |
+| 2026-07-10 | CREATE | `docs/plans/README.md` | 计划文件目录规范：命名格式 `YYYY-MM-DD_HH-MM_<topic-kebab>[_<commit-ref>].md`、frontmatter 必填字段、状态生命周期、正文结构建议、与 CLAUDE.md 的协同 |
+| 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | Plan-First Principle 章节指向 `docs/plans/README.md` 为权威规范；inline 改为快速摘要；规则上"先读 README 再写 plan" |
+| 2026-07-10 | UPDATE | `HANDOVER.md` | 变更日志追加 CLAUDE.md 引用 docs/plans/README.md |
+| 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | Git Workflow 章节细化：本地 commit "能 commit 就 commit" 原则 + 触发条件表；Push 三步走（询问 → 整理 → 推送）+ 整理方式表 + Push Policy 铁律（不 force push 等） |
+| 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | 新增 ECC Plugin Usage 章节：8 个必须规范化命令（/plan /code-review /security-scan /refactor-clean /quality-gate /build-fix /update-docs /test-coverage）+ 使用规则 + 不适用命令清单 |
+| 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | Dos and Don'ts 章节细化扩展：分 4 类（任务启动/沟通决策/开发测试/Git 文档）共 30+ 条 DO；分 5 类（决策/Plan/Git/质量/文档）共 25+ 条 DON'T |
+| 2026-07-10 | UPDATE | `HANDOVER.md` | 变更日志追加 Git Workflow / ECC / Dos and Don'ts 三项细化 |
