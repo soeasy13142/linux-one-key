@@ -62,3 +62,29 @@ setup() {
     [[ -n "${MSG_ERROR_REMOVED_ARG:-}" ]]
     [[ -n "${MSG_ERROR_REMOVED_HINT:-}" ]]
 }
+
+@test "all 6 module submenu titles are distinct from their BACK labels" {
+    [[ -n "${MSG_FAIL2BAN_MENU_TITLE}" ]]
+    [[ "${MSG_FAIL2BAN_MENU_TITLE}" != "${MSG_FAIL2BAN_MENU_BACK}" ]]
+    [[ -n "${MSG_AUDIT_MENU_TITLE}" ]]
+    [[ "${MSG_AUDIT_MENU_TITLE}" != "${MSG_AUDIT_MENU_BACK}" ]]
+    [[ -n "${MSG_USERS_MENU_TITLE}" ]]
+    [[ "${MSG_USERS_MENU_TITLE}" != "${MSG_USERS_MENU_BACK}" ]]
+    [[ -n "${MSG_KERNEL_MENU_TITLE}" ]]
+    [[ "${MSG_KERNEL_MENU_TITLE}" != "${MSG_KERNEL_MENU_BACK}" ]]
+    [[ -n "${MSG_FILESYSTEM_MENU_TITLE}" ]]
+    [[ "${MSG_FILESYSTEM_MENU_TITLE}" != "${MSG_FILESYSTEM_MENU_BACK}" ]]
+    [[ -n "${MSG_SERVICES_MENU_TITLE}" ]]
+    [[ "${MSG_SERVICES_MENU_TITLE}" != "${MSG_SERVICES_MENU_BACK}" ]]
+}
+
+@test "module submenu items contain expected numbers [1][2][0]" {
+    [[ "${MSG_FAIL2BAN_MENU_WIZARD}" =~ "1" ]]
+    [[ "${MSG_FAIL2BAN_MENU_STATUS}" =~ "2" ]]
+    [[ "${MSG_FAIL2BAN_MENU_BACK}" =~ "0" ]]
+    [[ "${MSG_AUDIT_MENU_WIZARD}" =~ "1" ]]
+    [[ "${MSG_USERS_MENU_WIZARD}" =~ "1" ]]
+    [[ "${MSG_KERNEL_MENU_WIZARD}" =~ "1" ]]
+    [[ "${MSG_FILESYSTEM_MENU_WIZARD}" =~ "1" ]]
+    [[ "${MSG_SERVICES_MENU_WIZARD}" =~ "1" ]]
+}
