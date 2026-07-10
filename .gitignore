@@ -27,3 +27,6 @@ everything-claude-code/
 # Auto-generated
 docs/file-tree.generated.md
 .superpowers/
+
+# Git worktrees (isolated dev workspaces)
+.worktrees/
