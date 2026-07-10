@@ -252,6 +252,7 @@ v0.4 ✅ 已完成
 | 2026-07-10 | CREATE | `scripts/dev/gen-file-tree.sh` | 自动生成文件树脚本，输出 docs/file-tree.generated.md |
 | 2026-07-10 | UPDATE | `.gitignore` | 忽略 docs/file-tree.generated.md + .superpowers/ |
 | 2026-07-10 | UPDATE | `HANDOVER.md` | 文件清单改为脚本引用 + 顶层目录概览表（-151 行） |
+| 2026-07-10 | FIX | `.claude/settings.local.json` | 修复 JSON 语法错误：补 `permissions` 与 `env` 之间的缺逗号（Claude Code 启动校验） |
 | 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | 项目结构章节同步新增 docs/handover-archive.md、docs/file-tree.generated.md、scripts/dev/ |
 | 2026-07-10 | CREATE | `docs/superpowers/specs/2026-07-10-design-doc-archive-design.md` | Brainstorming 设计规范（docs/design/ 归档重构） |
 | 2026-07-10 | CREATE | `docs/superpowers/plans/2026-07-10-design-doc-archive.md` | writing-plans 实施计划（4 任务） |
