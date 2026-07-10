@@ -267,3 +267,9 @@ v0.4 ✅ 已完成
 | 2026-07-10 | UPDATE | `docs/design/main-menu-redesign-prd.md` | → archived + superseded-by v2 + 顶部 added superseded notice |
 | 2026-07-10 | UPDATE | `docs/design/main-menu-redesign-plan.md` | → archived + superseded-by v2 + 顶部 added superseded notice |
 | 2026-07-10 | CREATE | `docs/plans/2026-07-10_16-00_main-menu-redesign-v2_nogit.md` | writing-plans 实施计划（7 任务，按 spec §5 推荐顺序） |
+| 2026-07-10 | CREATE | `tests/unit/menu.bats` | i18n 键 smoke tests（10 cases） |
+| 2026-07-10 | UPDATE | `scripts/lang/zh.sh` | +81 行（5 段新键：分组/状态/补全/子菜单/历史/错误） |
+| 2026-07-10 | UPDATE | `scripts/lang/en.sh` | +81 行（与 zh.sh 镜像） |
+| 2026-07-10 | UPDATE | `install.sh` | +6 show_xxx_submenu + 6 run_xxx_submenu_loop 函数（约 +240 行） |
+| 2026-07-10 | UPDATE | `install.sh` | run_main_menu_loop case 4-9 改为子菜单壳 |
+| 2026-07-10 | UPDATE | `install.sh` | show_main_menu 加 3 组分隔线 + SSH 端口状态摘要 |
