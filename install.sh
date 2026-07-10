@@ -419,7 +419,7 @@ show_system_status() {
     fi
 
     # ─── 用户管理 ───────────────────────────────────────────────────────
-    local users_color="${RED}" users_icon="❌" users_detail="${MSG_STATUS_NOT_CONFIGURED:-未配置}"
+    local users_color="${RED}" users_icon="❌" users_detail="${MSG_STATUS_NOT_CONFIGURED}"
     if type check_users_status &>/dev/null; then
         local users_status custom_users
         users_status=$(check_users_status 2>/dev/null)

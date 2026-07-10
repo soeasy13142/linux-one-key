@@ -756,6 +756,7 @@ MSG_STATUS_SSH_PORT_DEFAULT="Not hardened"
 MSG_STATUS_HARDENED="Hardened"
 MSG_STATUS_PARTIAL="Partially hardened"
 MSG_STATUS_NOT_HARDENED="Not hardened"
+MSG_STATUS_NOT_CONFIGURED="Not configured"
 MSG_STATUS_RECOMMENDATION="Recommended next step"
 
 # ═══════════════════════════════════════════

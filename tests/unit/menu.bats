@@ -50,7 +50,13 @@ setup() {
     [[ -n "${MSG_STATUS_HARDENED:-}" ]]
     [[ -n "${MSG_STATUS_PARTIAL:-}" ]]
     [[ -n "${MSG_STATUS_NOT_HARDENED:-}" ]]
+    [[ -n "${MSG_STATUS_NOT_CONFIGURED:-}" ]]
     [[ -n "${MSG_STATUS_RECOMMENDATION:-}" ]]
+}
+
+@test "install.sh has no MSG_ variable with :- fallback (GAP-8)" {
+    run bash -c "grep -cE '\$\{MSG_[A-Z_]+:-' '${SCRIPT_DIR}/install.sh'"
+    [[ "$output" -eq 0 ]]
 }
 
 @test "zh.sh has view_report history keys" {
