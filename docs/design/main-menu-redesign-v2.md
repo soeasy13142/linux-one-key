@@ -250,12 +250,14 @@ bats tests/unit/*.bats
 
 | Task | GAP | 状态 | Commit |
 |---|---|---|---|
-| T1 | GAP-3 | ⬜ 未开始 | — |
-| T2 | GAP-1, GAP-2 | ⬜ 未开始 | — |
+| T1 | GAP-3 | ✅ 完成 | 19ed671 |
+| T2 | GAP-1, GAP-2 | ✅ 完成 | 2fee51a |
 | T3 | GAP-4, GAP-5, GAP-6 | ⬜ 未开始 | — |
 | T4 | GAP-7 | ⬜ 未开始 | — |
 | T5 | GAP-8 | ⬜ 未开始 | — |
 | T6 | GAP-9 | ⬜ 未开始 | — |
+
+> ℹ️ 注：本表 T1-T6 为实施 plan (docs/plans/2026-07-10_16-00_main-menu-redesign-v2_nogit.md) 的编号，对应 spec §5 的 T5/T1/T2/T3/T4/T6（按推荐实施顺序重排）。
 
 ---
 
@@ -263,3 +265,6 @@ bats tests/unit/*.bats
 
 - 2026-07-10：创建本文件，status=proposed，合并原 PRD + Plan 内容
 - 2026-07-10：原 `main-menu-redesign-prd.md` / `plan.md` → archived + superseded-by 本文件
+- 2026-07-10：执行 T1 (i18n 补全) → commit 84f40d5
+- 2026-07-10：执行 T2 (模块 4-9 子菜单壳) → commit 19ed671
+- 2026-07-10：执行 T3 (主菜单分组 + SSH 摘要) → commit 2fee51a
