@@ -21,7 +21,7 @@ supersedes:
 
 把 `install.sh` 入口层从「v0.2 阶段、未跟上模块扩展」演进为「v1.0 理想态」：
 
-- **覆盖面**：当前 9 个安全模块（ssh/firewall/fail2ban/audit/users/kernel/filesystem/services）+ 状态检测 + 报告查看 + 全流程向导
+- **覆盖面**：当前 8 个安全模块（ssh/firewall/fail2ban/audit/users/kernel/filesystem/services）+ 状态检测 + 报告查看 + 全流程向导
 - **体验一致性**：所有模块入口体验统一（要么都有子菜单壳，要么都直接进 wizard）
 - **状态可视化**：状态检测从「逐项 echo + 空行」升级为「评分 + 颜色 + 建议下一步」
 - **历史可追溯**：加固报告支持选择历史查看，不再只能看最新
@@ -158,60 +158,59 @@ Linux Server Security Hardening v1.0
 |---|---|---|---|---|---|---|
 | **GAP-1** | 12 项平铺无分组 | 3 组分隔线（状态/加固/一键） | UX 一致性 | `show_main_menu` 加 echo 分隔 | `install.sh:471-509` | 🟡 中 |
 | **GAP-2** | 顶部只显示 OS/arch/user | + SSH 端口 + 加固状态摘要 | 一眼看清关键状态 | `show_main_menu` 顶部加一行 | `install.sh:469` | 🟡 中 |
-| **GAP-3** | view_report 在 [6] | 应在 [11]（状态分组末尾） | 菜单聚类 | 调整 case 顺序 + i18n 键 | `install.sh:880-914` + lang | 🟢 低 |
-| **GAP-4** | 模块 4-9 直接进 wizard | 统一子菜单壳 `[1]向导 [2]状态 [0]返回` | 体验一致 + 可"只查状态" | 新增 6×2 函数 | `install.sh` (新增) | 🔴 高 |
-| **GAP-5** | 状态检测无评分 | 顶部加「安全评分 / 总览」 | 用户感知强 | `show_system_status` 输出格式升级 | `install.sh:311-449` | 🟡 中 |
-| **GAP-6** | 状态检测每项单独 echo + 空行 | 表格对齐布局 + 颜色（绿/黄/红） | 可扫描性 | 重构 `show_system_status` | `install.sh:311-449` | 🟡 中 |
-| **GAP-7** | 无"建议下一步" | 检测末尾列出 ❌ 项对应菜单编号 | 引导用户行动 | `show_system_status` 末尾追加 | `install.sh:447` | 🟢 低 |
-| **GAP-8** | view_report 只看最新 | 列出最近 N 份 + 用户选 | 历史可追溯 | 重写 `view_report` + 新 i18n | `install.sh:654-672` | 🟡 中 |
-| **GAP-9** | i18n 部分用 `:-` 兜底（6 处） | 完整 zh/en 对应，无兜底 | 英文版体验降级 | 补 zh/en 翻译键 | `zh.sh` + `en.sh` | 🟢 低 |
-| **GAP-10** | 移除参数报错 5 行黄色提示 | 简化为 1 行错误 + 1 行 usage | 输出冗余 | 改 `_parse_args` 错误分支 | `install.sh:119-130` | 🟢 低 |
+| **GAP-3** | 模块 4-9 直接进 wizard | 统一子菜单壳 `[1]向导 [2]状态 [0]返回` | 体验一致 + 可"只查状态" | 新增 6×2 函数 | `install.sh` (新增) | 🔴 高 |
+| **GAP-4** | 状态检测无评分 | 顶部加「安全评分 / 总览」 | 用户感知强 | `show_system_status` 输出格式升级 | `install.sh:311-449` | 🟡 中 |
+| **GAP-5** | 状态检测每项单独 echo + 空行 | 表格对齐布局 + 颜色（绿/黄/红） | 可扫描性 | 重构 `show_system_status` | `install.sh:311-449` | 🟡 中 |
+| **GAP-6** | 无"建议下一步" | 检测末尾列出 ❌ 项对应菜单编号 | 引导用户行动 | `show_system_status` 末尾追加 | `install.sh:447` | 🟢 低 |
+| **GAP-7** | view_report 只看最新 | 列出最近 N 份 + 用户选 | 历史可追溯 | 重写 `view_report` + 新 i18n | `install.sh:654-672` | 🟡 中 |
+| **GAP-8** | i18n 部分用 `:-` 兜底（6 处） | 完整 zh/en 对应，无兜底 | 英文版体验降级 | 补 zh/en 翻译键 | `zh.sh` + `en.sh` | 🟢 低 |
+| **GAP-9** | 移除参数报错 5 行黄色提示 | 简化为 1 行错误 + 1 行 usage | 输出冗余 | 改 `_parse_args` 错误分支 | `install.sh:119-130` | 🟢 低 |
 
 ### GAP 优先级分布
 
-- 🔴 高：1 个（GAP-4）
-- 🟡 中：5 个（GAP-1/2/5/6/8）
-- 🟢 低：4 个（GAP-3/7/9/10）
+- 🔴 高：1 个（GAP-3）
+- 🟡 中：4 个（GAP-1/2/4/5/7）
+- 🟢 低：3 个（GAP-6/8/9）
 
 ### GAP 依赖关系
 
 ```
-GAP-5/6/7 → 都改 show_system_status → 合并 1 Task
+GAP-4/5/6 → 都改 show_system_status → 合并 1 Task
 GAP-1/2   → 都改 show_main_menu      → 合并 1 Task
-GAP-3 + GAP-8 都涉及 view_report，但目标不同 → 各自独立
-GAP-9     → 纯 i18n                  → 独立
-GAP-10    → 单点优化                 → 独立
+GAP-7     → view_report 升级         → 独立
+GAP-8     → 纯 i18n                  → 独立
+GAP-9     → 单点优化                 → 独立
 ```
+
+> 📝 **自检记录**：本版本经自检发现，原 [GAP-3]「view_report 在 [6]」不成立——当前 install.sh 已将 view_report 放在 [11]，原 Plan 的旧位置已被新代码自然演进覆盖。因此删除该 GAP，对应 Task 也删除。
 
 ---
 
 ## 5. 实施 Tasks
 
-7 个独立 commit，每个 commit = install.sh 改 + i18n 改 + bats 测试（如适用）。
+6 个独立 commit，每个 commit = install.sh 改 + i18n 改 + bats 测试（如适用）。
 
 | # | 标题 | 关联 GAP | 改动文件 | 测试 | 预估行数 |
 |---|---|---|---|---|---|
-| **T1** | 模块 4-9 加子菜单壳 | GAP-4 | `install.sh` (新增 6×2 函数) + `zh.sh`/`en.sh` (+18 键) | 新增 `tests/unit/menu-shells.bats` | ~150 |
+| **T1** | 模块 4-9 加子菜单壳 | GAP-3 | `install.sh` (新增 6×2 函数) + `zh.sh`/`en.sh` (+18 键) | 新增 `tests/unit/menu-shells.bats` | ~150 |
 | **T2** | 顶层菜单加分隔线 + 顶部状态摘要 | GAP-1, GAP-2 | `install.sh:show_main_menu` + lang | 同步 menu bats | ~30 |
-| **T3** | 状态检测：评分 + 颜色 + 表格 + 建议下一步 | GAP-5, GAP-6, GAP-7 | `install.sh:show_system_status` + lang | 新增 `tests/unit/system-status.bats` | ~120 |
-| **T4** | view_report 升级：历史报告列表 | GAP-8 | `install.sh:view_report` + lang | 新增 `tests/unit/view-report.bats` | ~80 |
-| **T5** | view_report 从 [6] 移到 [11] | GAP-3 | `install.sh:run_main_menu_loop` + lang | 同步 menu bats | ~10 |
-| **T6** | i18n 补全：移除 `:-` 兜底 | GAP-9 | `zh.sh` + `en.sh` | 同步 lang 相关 bats | ~20 |
-| **T7** | 非交互错误提示精简 | GAP-10 | `install.sh:_parse_args` | 新增 `tests/unit/parse-args.bats` | ~10 |
+| **T3** | 状态检测：评分 + 颜色 + 表格 + 建议下一步 | GAP-4, GAP-5, GAP-6 | `install.sh:show_system_status` + lang | 新增 `tests/unit/system-status.bats` | ~120 |
+| **T4** | view_report 升级：历史报告列表 | GAP-7 | `install.sh:view_report` + lang | 新增 `tests/unit/view-report.bats` | ~80 |
+| **T5** | i18n 补全：移除 `:-` 兜底 | GAP-8 | `zh.sh` + `en.sh` | 同步 lang 相关 bats | ~20 |
+| **T6** | 非交互错误提示精简 | GAP-9 | `install.sh:_parse_args` | 新增 `tests/unit/parse-args.bats` | ~10 |
 
 ### 任务依赖顺序
 
 ```
-T6 (i18n) 可最先做（独立、无依赖）
+T5 (i18n) 可最先做（独立、无依赖）
 T1 (子菜单壳) — 高优先级、最先做以建立新结构
 T2 (菜单分组) — 依赖 T1 的子菜单壳输出格式
-T3 (状态检测) — 独立，但 i18n 键可能与 T6 冲突 → 排在 T6 之后
+T3 (状态检测) — 独立，但 i18n 键可能与 T5 冲突 → 排在 T5 之后
 T4 (view_report 升级) — 独立
-T5 (view_report 位置) — 依赖 T4（先有历史列表，再移位置）
-T7 (错误提示) — 独立、最简单
+T6 (错误提示) — 独立、最简单
 ```
 
-**推荐实施顺序**：T6 → T1 → T2 → T3 → T4 → T5 → T7
+**推荐实施顺序**：T5 → T1 → T2 → T3 → T4 → T6
 
 ### 验证（每个 Task commit 前）
 
@@ -242,8 +241,8 @@ bats tests/unit/*.bats
 | 一次性改太多破坏交互流程 | Task 严格单 commit、可独立 revert；改前先 grep 当前 case 分支确认无遗漏引用 |
 | 子菜单壳新加 12 个函数膨胀 install.sh | 后续可抽到 `scripts/base/menu.sh`，不在本批范围（§5 范围外已声明） |
 | 新增 bats 用例覆盖不全 | 每个 Task commit 前自审 + `bats --count` 校验 |
-| i18n 同步遗漏 | T6 专项处理；后续 Task commit 前 grep `:-` 兜底确认无新增 |
-| view_report 移动位置破坏老用户习惯 | 已在 §3.1 注释迁移路径；可选在 changelog 中提示 |
+| i18n 同步遗漏 | T5 专项处理；后续 Task commit 前 grep `:-` 兜底确认无新增 |
+| view_report 移动位置破坏老用户习惯 | 已不适用（自检后删除该 GAP）|
 
 ---
 
@@ -251,13 +250,12 @@ bats tests/unit/*.bats
 
 | Task | GAP | 状态 | Commit |
 |---|---|---|---|
-| T1 | GAP-4 | ⬜ 未开始 | — |
+| T1 | GAP-3 | ⬜ 未开始 | — |
 | T2 | GAP-1, GAP-2 | ⬜ 未开始 | — |
-| T3 | GAP-5, GAP-6, GAP-7 | ⬜ 未开始 | — |
-| T4 | GAP-8 | ⬜ 未开始 | — |
-| T5 | GAP-3 | ⬜ 未开始 | — |
+| T3 | GAP-4, GAP-5, GAP-6 | ⬜ 未开始 | — |
+| T4 | GAP-7 | ⬜ 未开始 | — |
+| T5 | GAP-8 | ⬜ 未开始 | — |
 | T6 | GAP-9 | ⬜ 未开始 | — |
-| T7 | GAP-10 | ⬜ 未开始 | — |
 
 ---
 
