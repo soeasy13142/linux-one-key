@@ -134,7 +134,7 @@ linux-one-key/
 ├── config/                 # 配置文件模板（fail2ban/, sysctl/, audit/）
 ├── docs/                   # 文档
 │   ├── plans/              # 计划文件（Plan-First 落地目录，含 README）
-│   ├── design/             # 架构设计 & 实施计划
+│   ├── design/             # 架构设计 & 实施计划（含 archive/ 子目录归档已实施文档）
 │   ├── code-reviews/       # Code Review 报告
 │   ├── test-reports/       # 测试报告
 │   ├── handover-archive.md # 历史变更日志归档（2026-06-20~24）
