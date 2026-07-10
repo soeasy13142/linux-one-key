@@ -37,252 +37,35 @@
 | v0.4 服务管理 | ✅ 完成 | services.sh, services.bats, i18n 更新, 菜单集成, 35 个测试用例 |
 | v1.0 测试 + 文档 + 发布 | ⬜ 未开始 | |
 
-### 已完成的工作
-
-| 日期 | 内容 | 文件 |
-|------|------|------|
-| 2026-06-20 | 项目初始化，搭建基础目录结构 | `scripts/`, `config/`, `docs/`, `tests/` |
-| 2026-06-20 | 编写完整 PRD 需求文档 | `.claude/prds/linux-security-hardening.prd.md` |
-| 2026-06-20 | 创建交接文档和交接规则 | `HANDOVER.md`, `.claude/rules/common/handover.md` |
-| 2026-06-20 | 安装开发工具 (shellcheck, bats) | brew install shellcheck bats-core |
-| 2026-06-20 | 创建工具函数库 | `scripts/base/utils.sh` (颜色、日志、备份、SSH配置辅助) |
-| 2026-06-20 | 创建系统检测模块 | `scripts/base/detect.sh` (OS、权限、网络、包管理器) |
-| 2026-06-20 | 创建系统初始化模块 | `scripts/base/init.sh` (目录创建、系统更新) |
-| 2026-06-20 | 创建 SSH 安全加固模块 | `scripts/security/ssh.sh` (端口、密钥、root/密码登录) |
-| 2026-06-20 | 创建主入口脚本 | `install.sh` (4模式菜单、交互流程、curl执行支持) |
-| 2026-06-20 | 创建中英文语言文件 | `scripts/lang/zh.sh`, `scripts/lang/en.sh` |
-| 2026-06-20 | 创建单元测试 | `tests/unit/utils.bats` (19个测试用例) |
-| 2026-06-20 | 重新设计菜单系统 | 快速开始 + 自定义配置模式 |
-| 2026-06-20 | 创建防火墙配置模块 | `scripts/security/firewall.sh` (支持 UFW/firewalld) |
-| 2026-06-20 | 创建 Fail2Ban 配置模块 | `scripts/security/fail2ban.sh` |
-| 2026-06-20 | 创建 Fail2Ban 配置模板 | `config/fail2ban/jail.local` |
-| 2026-06-20 | 更新 i18n 翻译文件 | 添加防火墙和 Fail2Ban 相关翻译 |
-| 2026-06-20 | 集成新模块到菜单 | 更新 install.sh 集成防火墙和 Fail2Ban |
-| 2026-06-20 | 创建防火墙单元测试 | `tests/unit/firewall.bats` (9个测试用例) |
-| 2026-06-20 | 创建 Fail2Ban 单元测试 | `tests/unit/fail2ban.bats` (18个测试用例) |
-| 2026-06-20 | 修复 curl 管道模式 bug | `install.sh` (BASH_SOURCE 检测 + stdin 重定向) |
-| 2026-06-20 | 全面 Code Review Round 1 | `docs/bug-review-report.md` (2 CRITICAL + 7 HIGH + 14 MEDIUM + 9 LOW) |
-| 2026-06-20 | 全面 Code Review Round 2 | `docs/code-review-report-20260620.md` (10 CRITICAL + 15 HIGH + 13 MEDIUM + 12 LOW, 3 代理并行) |
-| 2026-06-20 | 审查代理：安全审查 | 9 项安全发现（无命令注入/硬编码密钥/路径遍历） |
-| 2026-06-20 | 审查代理：代码质量 | 12 项发现（含 RHEL 家族 OS 支持缺失 2x HIGH） |
-| 2026-06-20 | 审查代理：静默失败 | 31 项发现（核心模式：包安装/防火墙/SSH 操作无错误检查） |
-| 2026-06-20 | Ubuntu 24.04 ARM64 真机测试 | SSH 到 10.211.55.8，模拟 curl 管道模式测试全部模块，生成测试报告 |
-| 2026-06-20 | 修复 curl 管道模式无限递归 bug | `scripts/base/utils.sh` (_ensure_log_dir 防重入 + init_logging 优雅降级) ⭐ NEW |
-| 2026-06-20 | Code Review 问题修复（8 项） | SHA256SUMS 重建、install.sh 参数修复、set 选项统一、get_ssh_port 统一、独立 source 清理、README 更新 |
-| 2026-06-20 | 真机测试 Bug #1/#4 修复 | `install.sh` — SHA256SUMS URL 从 GitHub API 改为 raw URL，恢复完整性校验 |
-| 2026-06-20 | 真机测试 Bug #3 修复 | `install.sh` — grep 管道添加 `|| true` 防御 pipefail 崩溃 |
-| 2026-06-20 | 真机测试 Bug #2/#7 修复 | `scripts/base/utils.sh` — schedule_rollback 改用 echo >&2 防 PID 污染 + sleep&&callback 防回滚误触发 |
-| 2026-06-20 | 真机测试 Bug #6 修复 | `scripts/base/utils.sh` — log_info/log_success/log_warn/log_step/log_title/log_separator 统一输出到 stderr |
-| 2026-06-20 | 真机测试 Bug #5 修复 | `scripts/security/ssh.sh` — restart_ssh 自动检测 ssh vs sshd 服务名，避免 Ubuntu 误导性错误 |
-| 2026-06-20 | 真机测试 Bug #8 修复 | `scripts/lang/zh.sh`, `en.sh`, `scripts/base/detect.sh` — System Detection Summary i18n |
-| 2026-06-20 | 创建交互式重构设计文档 | `docs/superpowers/specs/2026-06-20-interactive-setup-design.md` — 交互式安装流程规范 |
-| 2026-06-20 | 创建交互式重构实施计划 | `docs/superpowers/plans/2026-06-20-interactive-setup.md` — 交互式重构实施计划 |
-| 2026-06-20 | 删除一键模式，改为完整交互式向导 | `install.sh` — 移除 --yes/--quick 参数，改为逐步交互式配置 |
-| 2026-06-20 | 新增随机端口生成函数 | `scripts/base/utils.sh` — 新增 generate_random_port() 函数 |
-| 2026-06-20 | 重构 SSH 向导为逐步交互模式 | `scripts/security/ssh.sh` — 端口支持 3 选 1（自定义/随机/保持），每参数逐步提示 |
-| 2026-06-20 | 重构防火墙向导为逐步交互模式 | `scripts/security/firewall.sh` — 重命名为 run_firewall_wizard，移除自定义变体 |
-| 2026-06-20 | 重构 Fail2Ban 向导为逐步交互模式 | `scripts/security/fail2ban.sh` — 参数可自定义，重命名为 run_fail2ban_wizard |
-| 2026-06-20 | 添加验证和 i18n 标签 | `scripts/security/fail2ban.sh`, `scripts/lang/zh.sh`, `scripts/lang/en.sh` — Fail2Ban 向导验证和翻译 |
-| 2026-06-20 | 集成向导函数并更新所有引用 | `install.sh`, `scripts/base/utils.sh`, `scripts/base/init.sh`, `scripts/base/detect.sh` — 统一向导调用 |
-| 2026-06-23 | 创建审计日志模块 | `scripts/security/audit.sh` — auditd 安装、规则生成（3级）、配置、服务管理、向导 |
-| 2026-06-23 | 创建审计配置模板 | `config/audit/audit.rules`, `config/audit/auditd.conf` — 参考模板 |
-| 2026-06-23 | 添加审计模块 i18n | `scripts/lang/zh.sh`, `scripts/lang/en.sh` — ~40 条 MSG_AUDIT_* 翻译 |
-| 2026-06-23 | 集成审计模块到主菜单 | `install.sh` — load_dependencies、菜单[5]、状态检测、full_wizard Step 4 |
-| 2026-06-23 | 更新报告模块 | `scripts/base/report.sh` — 添加审计状态、配置文件、警告信息 |
-| 2026-06-23 | 创建审计模块单元测试 | `tests/unit/audit.bats` — 44 个测试用例，覆盖常量、规则生成、配置、函数存在性 |
-| 2026-06-24 | 创建用户管理模块 | `scripts/security/users.sh` — 创建用户、密码、SSH密钥、sudo NOPASSWD、向导 |
-| 2026-06-24 | 创建内核加固模块 | `scripts/security/kernel.sh` — sysctl 参数、内核模块禁用、回滚、向导 |
-| 2026-06-24 | 创建文件系统安全模块 | `scripts/security/filesystem.sh` — 权限检查、SUID审计、无主文件、向导 |
-| 2026-06-24 | 创建 sysctl 配置模板 | `config/sysctl/hardening.conf` — CIS Benchmark 参考参数 |
-| 2026-06-24 | 添加 v0.3 i18n 翻译 | `scripts/lang/zh.sh`, `scripts/lang/en.sh` — ~120 条 MSG_USERS_*/MSG_KERNEL_*/MSG_FS_* 翻译 |
-| 2026-06-24 | 集成 v0.3 到主入口 | `install.sh` — load_dependencies、菜单[6-8]、状态检测、full_wizard Step 5-7 |
-| 2026-06-24 | 更新报告模块 | `scripts/base/report.sh` — 添加用户/内核/文件系统报告段 |
-| 2026-06-24 | 创建 v0.3 单元测试 | `tests/unit/users.bats`(33), `kernel.bats`(20), `filesystem.bats`(23) — 共 76 个测试用例 |
-| 2026-06-24 | 修复 v0.3 Code Review 问题 | eval 注入、函数顺序、find 排除、截断警告、状态函数集成等 9 项修复 |
-| 2026-06-24 | 修复 Code Review Round 3 H2 |
-| 2026-06-25 | "假成功"Bug 全面审计 | `install.sh` — 集成 `run_init()` 到向导 Step 0；`scripts/lang/zh.sh`, `en.sh` — 添加 INIT 翻译，步骤编号 /8→/9 |
-| 2026-06-25 | "假成功"Bug 全部修复（15 项） | `utils.sh`(set_ssh_config 写后验证), `ssh.sh`(端口/root/密码/参数验证), `fail2ban.sh`(安装后验证), `audit.sh`(条件打印), `init.sh`(mkdir/安装验证), `kernel.sh`(黑名单验证), `users.sh`(SSH密钥错误处理), `firewall.sh`(启动/reload验证), `filesystem.sh`(权限回读验证) |
-
 ---
+
 
 ## 3. 文件清单
 
-### 当前文件
+> 📋 **详细文件树由 [`scripts/dev/gen-file-tree.sh`](../../scripts/dev/gen-file-tree.sh) 自动生成**，输出到 `docs/file-tree.generated.md`（gitignored，避免过期）。
+> 重新生成：`bash scripts/dev/gen-file-tree.sh`
 
-```
-linux-one-key/
-├── .claude/
-│   ├── CLAUDE.md              # Claude Code 项目指令
-│   ├── prds/
-│   │   ├── linux-security-hardening.prd.md  # PRD 需求文档
-│   │   └── main-menu-redesign.prd.md        # 主菜单重设计 PRD
-│   ├── plans/
-│   │   ├── main-menu-redesign.plan.md       # 主菜单重设计实施计划
-│   │   ├── fix-commit-400933a-review.plan.md # v0.3 Code Review 修复计划
-│   ├── commands/
-│   │   ├── feature-development.md  # 功能开发命令
-│   │   ├── database-migration.md   # 数据库迁移命令
-│   │   └── add-language-rules.md   # 添加语言规则命令
-│   ├── research/
-│   │   └── everything-claude-code-research-playbook.md  # 研究工作流指南
-│   ├── reviews/
-│   │   ├── local-review-20260621.md  # 代码审查报告
-│   │   ├── commit-400933a-review.md  # v0.3 commit 代码审查报告
-│   │   └── false-success-bug-audit-20260625.md  # "假成功"Bug 全面审计报告
-│   │   └── fix-commit-400933a-review.plan.md # v0.3 Code Review 修复计划
-│   └── rules/
-│       ├── common/            # 通用规则
-│       │   ├── agents.md
-│       │   ├── code-review.md
-│       │   ├── coding-style.md
-│       │   ├── development-workflow.md
-│       │   ├── git-workflow.md
-│       │   ├── guardrails.md  # 安全防护规则
-│       │   ├── handover.md    # 交接文档规则
-│       │   ├── hooks.md
-│       │   ├── node.md        # Node.js 规则
-│       │   ├── patterns.md
-│       │   ├── performance.md
-│       │   ├── security.md
-│       │   └── testing.md
-│       └── typescript/        # TS 规则（来自 ECC，本项目未使用）
-│           ├── coding-style.md
-│           ├── hooks.md
-│           ├── patterns.md
-│           ├── security.md
-│           └── testing.md
-├── scripts/
-│   ├── README.md              # 脚本目录总览
-│   ├── base/
-│   │   ├── README.md          # 基础模块说明
-│   │   ├── utils.sh           # 工具函数库
-│   │   ├── detect.sh          # 系统检测
-│   │   ├── init.sh            # 系统初始化
-│   │   └── report.sh          # 报告生成
-│   ├── security/
-│   │   ├── README.md          # 安全模块说明
-│   │   ├── ssh.sh             # SSH 安全加固
-│   │   ├── firewall.sh        # 防火墙配置
-│   │   ├── fail2ban.sh        # Fail2Ban 入侵防护
-│   │   ├── audit.sh           # 审计日志配置 (v0.4)
-│   │   ├── users.sh           # 用户管理 (v0.3)
-│   │   ├── kernel.sh          # 内核安全加固 (v0.3)
-│   │   ├── filesystem.sh      # 文件系统安全 (v0.3)
-│   │   └── services.sh        # 服务管理 (v0.4)
-│   ├── lang/
-│   │   ├── README.md          # 语言文件说明
-│   │   ├── zh.sh              # 中文翻译
-│   │   └── en.sh              # 英文翻译
-│   ├── dev/
-│   │   └── README.md          # [规划中] 开发工具安装
-│   ├── server/
-│   │   └── README.md          # [规划中] 服务器软件安装
-│   └── utils/
-│       └── README.md          # [规划中] 通用工具
-├── tests/
-│   ├── README.md              # 测试目录总览
-│   └── unit/
-│       ├── README.md          # 单元测试说明
-│       ├── utils.bats         # 工具函数测试
-│       ├── firewall.bats      # 防火墙测试
-│       ├── fail2ban.bats      # Fail2Ban 测试
-│       ├── ssh.bats           # SSH 模块测试
-│       ├── audit.bats         # 审计模块测试 (v0.4, 45个用例)
-│       ├── users.bats         # 用户管理测试 (v0.3, 33个用例)
-│       ├── kernel.bats        # 内核加固测试 (v0.3, 20个用例)
-│       └── filesystem.bats    # 文件系统测试 (v0.3, 23个用例)
-├── config/
-│   ├── README.md              # 配置目录总览
-│   ├── fail2ban/
-│   │   ├── README.md          # Fail2Ban 配置说明
-│   │   └── jail.local         # Fail2Ban 配置模板
-│   ├── audit/
-│   │   ├── README.md          # 审计配置说明
-│   │   ├── audit.rules        # 审计规则模板 (v0.4)
-│   │   └── auditd.conf        # auditd 配置模板 (v0.4)
-│   └── sysctl/
-│       └── hardening.conf     # 内核安全参数模板 (v0.3)
-├── scripts/README.md           # 脚本目录总览
-├── docs/                      # 文档目录
-│   ├── README.md                           # 文档目录总览
-│   ├── code-reviews/                       # Code Review 报告
-│   │   ├── README.md
-│   │   ├── round-1-bug-report.md           # Round 1 Bug 报告
-│   │   ├── round-2-code-review.md          # Round 2 综合报告
-│   │   └── round-3-handover.md             # Round 3 交接文档
-│   ├── test-reports/                       # 测试报告
-│   │   ├── README.md
-│   │   ├── ubuntu-arm64-test.md            # Ubuntu ARM64 真机测试
-│   │   └── vm-curl-test.md                 # VM 综合测试
-│   ├── design/                             # 设计文档 & 实施计划
-│       ├── README.md
-│       ├── interactive-setup-spec.md       # 交互式配置设计文档
-│       ├── interactive-setup-plan.md       # 交互式配置实施计划
-│       ├── linux-security-hardening-prd.md # 安全加固 PRD（副本）
-│       ├── main-menu-redesign-prd.md       # 主菜单重设计 PRD（副本）
-│       └── main-menu-redesign-plan.md      # 主菜单重设计计划（副本）
-│   └── plans/                              # 计划文件（Plan-First 落地目录，命名: YYYY-MM-DD_HH-MM_<topic>.md）
-├── everything-claude-code/    # ECC 配置参考
-├── .gitignore
-├── install.sh                 # 主入口脚本
-├── README.md                  # 项目说明
-└── HANDOVER.md                # 本文件
-```
+### 顶层目录概览
 
-### 计划文件（待创建，v0.3+）
+| 目录/文件 | 用途 |
+|---|---|
+| `install.sh` | 主入口脚本（菜单、交互流程、curl 管道支持） |
+| `README.md` | 项目说明 |
+| `HANDOVER.md` | 本文件（强制交接文档） |
+| `CLAUDE.md` | Claude Code 项目指令（在 `.claude/CLAUDE.md`） |
+| `scripts/base/` | 基础环境（utils.sh, detect.sh, init.sh, report.sh） |
+| `scripts/security/` | 安全加固模块（ssh/firewall/fail2ban/audit/users/kernel/filesystem/services） |
+| `scripts/lang/` | i18n 文件（zh.sh, en.sh） |
+| `scripts/dev/` | 开发工具脚本（如 gen-file-tree.sh） |
+| `tests/unit/` | Bats 单元测试（utils/firewall/fail2ban/ssh/audit/users/kernel/filesystem/services） |
+| `config/` | 配置文件模板（fail2ban/, audit/, sysctl/） |
+| `docs/code-reviews/` | Code Review 报告归档 |
+| `docs/test-reports/` | 测试报告归档 |
+| `docs/design/` | 设计文档 & 实施计划 |
+| `docs/plans/` | 计划文件目录（Plan-First 落地，命名见 [README](plans/README.md)） |
+| `docs/handover-archive.md` | 历史变更日志归档（2026-06-20~24） |
 
-```
-├── scripts/
-│   ├── security/
-│   │   ├── kernel.sh          # 内核安全参数
-│   │   ├── filesystem.sh      # 文件系统安全
-│   │   └── services.sh        # 服务管理
-│   └── utils/
-│       ├── backup.sh          # 备份工具
-│       ├── rollback.sh        # 回滚工具
-│       ├── report.sh          # 报告生成（已移至 scripts/base/report.sh）
-│       └── check.sh           # 检查工具
-├── config/
-│   ├── ssh/                   # SSH 配置模板
-│   └── sysctl/                # 内核参数模板
-└── tests/
-    ├── unit/                  # 单元测试
-    └── integration/           # 集成测试
-```
-
-### 计划文件（待创建）
-
-```
-├── install.sh                 # 主入口脚本
-├── scripts/
-│   ├── base/
-│   │   ├── init.sh           # 系统初始化
-│   │   ├── detect.sh         # 系统检测
-│   │   └── utils.sh          # 通用工具函数
-│   ├── security/              # [新目录] 安全加固脚本
-│   │   ├── ssh.sh            # SSH 安全配置
-│   │   ├── firewall.sh       # 防火墙配置
-│   │   ├── fail2ban.sh       # Fail2Ban 配置
-│   │   ├── kernel.sh         # 内核安全参数
-│   │   ├── filesystem.sh     # 文件系统安全
-│   │   ├── audit.sh          # 审计日志配置
-│   │   └── services.sh       # 服务管理
-│   └── utils/
-│       ├── backup.sh         # 备份工具
-│       ├── rollback.sh       # 回滚工具
-│       ├── report.sh         # 报告生成
-│       └── check.sh          # 检查工具
-├── config/
-│   ├── ssh/                  # SSH 配置模板
-│   ├── fail2ban/             # Fail2Ban 配置模板
-│   ├── sysctl/               # 内核参数模板
-│   └── audit/                # 审计规则模板
-└── tests/
-    ├── unit/                 # 单元测试
-    └── integration/          # 集成测试
-```
-
----
+完整结构详见自动生成的 [`docs/file-tree.generated.md`](file-tree.generated.md)。
 
 ## 4. 技术决策记录
 
@@ -417,222 +200,56 @@ v0.4 ✅ 已完成
 
 ---
 
+
 ## 8. 变更日志
 
-| 日期 | 操作 | 文件 | 说明 |
-|------|------|------|------|
-| 2026-06-20 | CREATE | `.claude/prds/linux-security-hardening.prd.md` | 编写完整 PRD |
-| 2026-06-20 | CREATE | `HANDOVER.md` | 创建交接文档 |
-| 2026-06-20 | CREATE | `.claude/rules/common/handover.md` | 添加交接文档更新规则 |
-| 2026-06-20 | UPDATE | `.claude/CLAUDE.md` | 添加交接文档强制规则 |
-| 2026-06-20 | CREATE | `.claude/commands/feature-development.md` | 功能开发命令（基于 ECC 定制） |
-| 2026-06-20 | CREATE | `.claude/commands/database-migration.md` | 数据库迁移命令（来自 ECC） |
-| 2026-06-20 | CREATE | `.claude/commands/add-language-rules.md` | 添加语言规则命令（来自 ECC） |
-| 2026-06-20 | CREATE | `.claude/rules/common/guardrails.md` | 安全防护规则（来自 ECC） |
-| 2026-06-20 | CREATE | `.claude/rules/common/node.md` | Node.js 规则（来自 ECC） |
-| 2026-06-20 | CREATE | `.claude/research/research-playbook.md` | 研究工作流指南（来自 ECC） |
-| 2026-06-20 | CREATE | `scripts/base/utils.sh` | 工具函数库（颜色、日志、备份、SSH配置辅助） |
-| 2026-06-20 | CREATE | `scripts/base/detect.sh` | 系统检测模块（OS、权限、网络、包管理器） |
-| 2026-06-20 | CREATE | `scripts/base/init.sh` | 系统初始化模块（目录创建、系统更新） |
-| 2026-06-20 | CREATE | `scripts/security/ssh.sh` | SSH 安全加固模块（端口、密钥、root/密码登录） |
-| 2026-06-20 | CREATE | `install.sh` | 主入口脚本（4模式菜单、交互流程） |
-| 2026-06-20 | CREATE | `scripts/lang/zh.sh` | 中文翻译文件 |
-| 2026-06-20 | CREATE | `scripts/lang/en.sh` | 英文翻译文件 |
-| 2026-06-20 | CREATE | `tests/unit/utils.bats` | 工具函数单元测试（19个用例） |
-| 2026-06-20 | UPDATE | `HANDOVER.md` | 更新进度和文件清单 |
-| 2026-06-20 | UPDATE | `install.sh` | 重新设计菜单，快速开始+自定义配置 |
-| 2026-06-20 | UPDATE | `scripts/security/ssh.sh` | 添加 run_ssh_hardening_custom 函数 |
-| 2026-06-20 | CREATE | `scripts/security/firewall.sh` | 防火墙配置模块（支持 UFW/firewalld） |
-| 2026-06-20 | CREATE | `scripts/security/fail2ban.sh` | Fail2Ban 入侵防护模块 |
-| 2026-06-20 | CREATE | `config/fail2ban/jail.local` | Fail2Ban jail 配置模板 |
-| 2026-06-20 | UPDATE | `scripts/lang/zh.sh` | 添加防火墙和 Fail2Ban 中文翻译 |
-| 2026-06-20 | UPDATE | `scripts/lang/en.sh` | 添加防火墙和 Fail2Ban 英文翻译 |
-| 2026-06-20 | UPDATE | `install.sh` | 集成防火墙和 Fail2Ban 到菜单流程 |
-| 2026-06-20 | CREATE | `tests/unit/firewall.bats` | 防火墙模块单元测试（9个用例） |
-| 2026-06-20 | CREATE | `tests/unit/fail2ban.bats` | Fail2Ban 模块单元测试（18个用例） |
-| 2026-06-20 | UPDATE | `install.sh` | 修复 curl 管道模式两个 bug：(1) BASH_SOURCE 在函数内外行为不一致导致管道检测失败，改为顶层捕获；(2) exec 后 stdin 为 EOF，添加 /dev/tty 重定向支持交互输入 |
-| 2026-06-20 | UPDATE | `HANDOVER.md` | 更新交接文档，记录 curl 管道模式修复 |
-| 2026-06-20 | UPDATE | `.claude/prds/linux-security-hardening.prd.md` | 添加"已知问题与修复记录"章节，记录 curl 管道模式两个 bug 的根因和修复方案 |
-| 2026-06-20 | UPDATE | `scripts/security/firewall.sh` | C1: 修复 DETECT_OS → DETECTED_OS 变量名不匹配（2 处），防火墙模块现已正常工作 |
-| 2026-06-20 | UPDATE | `scripts/security/fail2ban.sh` | C1: 修复 DETECT_OS → DETECTED_OS（3 处）；H2: banaction 按 OS 自动选择（ufw/firewallcmd-ipset/iptables-multiport），修复 Ubuntu/Debian 封禁失效 |
-| 2026-06-20 | UPDATE | `scripts/base/utils.sh` | C2: set_ssh_config 正则添加词边界，防止 Port 误匹配 PortForwarding 等 |
-| 2026-06-20 | UPDATE | `scripts/security/ssh.sh` | H1: 修复回滚定时器永不取消；M10: 密码认证禁用后验证；M11: check_other_users awk；M12: FIDO2/SK 密钥；M13: 密钥去重；L1: 端口八进制 |
-| 2026-06-20 | UPDATE | `install.sh` | H4: bootstrap 临时目录清理；H5: tarball 完整性校验（SHA256SUMS）；H6: 报告仅在成功时生成；L2: default 分支；L3: 移除冗余初始化 |
-| 2026-06-20 | UPDATE | `scripts/base/utils.sh` | H3: 移除 -u；M1: eval 替换；M2: fallback 警告；M3: load_lang 校验；L9: printf 替代 echo -e |
-| 2026-06-20 | UPDATE | `scripts/base/detect.sh` | H7: /etc/os-release 子 shell 隔离 |
-| 2026-06-20 | UPDATE | `scripts/base/init.sh` | M4: 移除 --only-upgrade；M5: yum-security 检查；M6: root 检查前置；M7: 更新失败不打印成功；L7: 调用 setup_timezone |
-| 2026-06-20 | UPDATE | `scripts/security/firewall.sh` | M8: 安装后启动 firewalld；M9: root 权限检查 |
-| 2026-06-20 | UPDATE | `scripts/security/fail2ban.sh` | M9: root 权限检查；M14: journald 警告；L4: 简化 _get_ssh_service_name |
-| 2026-06-20 | CREATE | `SHA256SUMS` | 关键文件 SHA-256 校验收录，用于 tarball 完整性验证 |
-| 2026-06-20 | CREATE | `docs/bug-review-report.md` | 全面 Code Review 报告，记录 2 CRITICAL + 7 HIGH + 14 MEDIUM + 9 LOW 级别 bug，含修复方案和优先级计划 |
-| 2026-06-20 | CREATE | `docs/code-review-report-20260620.md` | 第二轮 Code Review 综合报告，3 代理并行（安全/质量/静默失败），发现 10 CRITICAL + 15 HIGH + 13 MEDIUM + 12 LOW，共 50 个问题 |
-| 2026-06-20 | UPDATE | `HANDOVER.md` | 记录第二轮 Code Review 结果、更新进度状态和下一步工作 |
-| 2026-06-20 | CREATE | `.claude/prds/main-menu-redesign.prd.md` | 主菜单入口重设计 PRD |
-| 2026-06-20 | CREATE | `.claude/plans/main-menu-redesign.plan.md` | 主菜单入口重设计实施计划 |
-| 2026-06-20 | UPDATE | `install.sh` | 重构主入口：主菜单循环、SSH/防火墙子菜单、系统状态检测、查看报告、非交互参数扩展 |
-| 2026-06-20 | UPDATE | `scripts/lang/zh.sh` | 新增主菜单、子菜单、状态检测等翻译键 (~45 条) |
-| 2026-06-20 | UPDATE | `scripts/lang/en.sh` | 新增对应英文翻译键 (~45 条) |
-| 2026-06-20 | UPDATE | `install.sh` | 移除未定义的 log_debug 调用；curl 管道模式自动追加 --yes |
-| 2026-06-20 | UPDATE | `scripts/base/utils.sh` | 新增 get_ssh_port() 公共函数 |
-| 2026-06-20 | UPDATE | `scripts/base/init.sh` | set -euo → set -eo，统一 set 选项 |
-| 2026-06-20 | UPDATE | `scripts/security/ssh.sh` | set -euo → set -eo；移除重复的 get_ssh_port() |
-| 2026-06-20 | UPDATE | `scripts/security/firewall.sh` | set -euo → set -eo；移除独立 source 逻辑和重复函数；改用 get_ssh_port() |
-| 2026-06-20 | UPDATE | `scripts/security/fail2ban.sh` | set -euo → set -eo；移除独立 source 逻辑和重复函数；改用 get_ssh_port() |
-| 2026-06-20 | UPDATE | `SHA256SUMS` | 重新生成，补充 lang/zh.sh 和 lang/en.sh |
-| 2026-06-20 | UPDATE | `README.md` | 补充 -s -- --yes 和 --ssh 参数传递示例 |
-| 2026-06-20 | UPDATE | `scripts/base/utils.sh` | 修复 curl 管道模式无限递归 bug：_ensure_log_dir 防重入保护 + init_logging 优雅降级 |
-| 2026-06-20 | CREATE | `docs/test-report-20260620.md` | Ubuntu 24.04 ARM64 真机测试报告：发现 2 CRITICAL + 3 HIGH + 3 MEDIUM + 1 LOW，curl 管道模式不可用 + SSH 回滚失效 |
-| 2026-06-20 | UPDATE | `install.sh` | Bug #1/#3/#4: SHA256SUMS URL 改用 raw URL + grep 管道添加 \|\| true 防御 |
-| 2026-06-20 | UPDATE | `scripts/base/utils.sh` | Bug #2/#6/#7: log 函数统一输出到 stderr + schedule_rollback 防 PID 污染 + sleep&&callback |
-| 2026-06-20 | UPDATE | `scripts/security/ssh.sh` | Bug #5: restart_ssh 自动检测 ssh vs sshd 服务名，消除 Ubuntu 误导错误 |
-| 2026-06-20 | UPDATE | `scripts/base/detect.sh` | Bug #8: print_detection_summary 标题改用 MSG_DETECTION_SUMMARY i18n |
-| 2026-06-20 | UPDATE | `scripts/lang/zh.sh` | Bug #8: 新增 MSG_DETECTION_SUMMARY 翻译 |
-| 2026-06-20 | UPDATE | `scripts/lang/en.sh` | Bug #8: 新增 MSG_DETECTION_SUMMARY 翻译 |
-| 2026-06-20 | UPDATE | install.sh, scripts/security/*.sh, scripts/base/utils.sh, scripts/lang/*.sh | 删除一键模式(--yes/--quick)，改为逐步交互式配置；新增随机端口生成；SSH端口支持3选1交互(自定义/随机/保持)；Fail2Ban参数可自定义；新增完整安全配置向导 |
-| 2026-06-20 | CREATE | `docs/vm-test-report-20260620.md` | curl 方式综合测试报告：15 个测试用例、8 个新问题（1 HIGH + 4 MEDIUM + 3 LOW），含报告硬编码 bug、Bats 27/46 失败等 |
-| 2026-06-20 | UPDATE | `install.sh` | P0 Issue #2 修复：generate_report() 动态生成，根据 _WIZARD_*_DONE 标志和实际系统状态，跳过步骤显示 [⊘] |
-| 2026-06-20 | UPDATE | `tests/unit/fail2ban.bats` | P0 Issue #8 修复：source utils.sh + load_lang；修复 DETECT_OS→DETECTED_OS；修复 run_fail2ban_hardening_custom→run_fail2ban_wizard；添加 get_ssh_port mock |
-| 2026-06-20 | UPDATE | `tests/unit/firewall.bats` | P0 Issue #8 修复：source utils.sh + load_lang；修复 DETECT_OS→DETECTED_OS |
-| 2026-06-20 | UPDATE | `scripts/lang/zh.sh` | 新增 MSG_WIZARD_SKIPPED="已跳过" |
-| 2026-06-20 | UPDATE | `scripts/lang/en.sh` | 新增 MSG_WIZARD_SKIPPED="Skipped" |
-| 2026-06-21 | UPDATE | `scripts/base/utils.sh` | 修复 get_os_type()/get_os_version() 环境变量污染：source → 子 shell (. /etc/os-release && echo) |
-| 2026-06-21 | UPDATE | `scripts/base/utils.sh` | 修复 set_ssh_config() grep/sed \s → POSIX [[:space:]]，提升 BSD/macOS 兼容性 |
-| 2026-06-21 | DELETE | `./.DS_Store`, `./config/.DS_Store`, `./tests/.DS_Store` | 清理 macOS .DS_Store 文件 |
-| 2026-06-21 | UPDATE | `install.sh` | 修复 ShellCheck SC2012：view_report() 中 ls -t → find -printf |
-| 2026-06-21 | CREATE | `.claude/reviews/local-review-20260621.md` | 代码审查报告：0 CRITICAL + 0 HIGH + 4 MEDIUM + 4 LOW |
-| 2026-06-23 | CREATE | `docs/code-review-handover-20260623.md` | 全项目 Code Review Round 3 交接文档：0 CRITICAL + 3 HIGH + 4 MEDIUM + 4 LOW，含待办修复方案 |
-| 2026-06-23 | UPDATE | `HANDOVER.md` | 更新当前阶段、添加变更日志 |
-| 2026-06-23 | UPDATE | `install.sh` | H1: 将 _parse_args 移入 main()（load_dependencies 之后），解决颜色变量未初始化问题；L3: 移除残留 `:` 占位符；L4: find -printf → ls -t 兼容 macOS |
-| 2026-06-23 | UPDATE | `scripts/base/utils.sh` | M1: _ENSURING_LOG_DIR 移除 export；M4: schedule_rollback 添加安全约束注释 |
-| 2026-06-23 | UPDATE | `scripts/base/report.sh` | H3: 3 处硬编码中文替换为 MSG_REPORT_WARN_* i18n 变量 |
-| 2026-06-23 | UPDATE | `scripts/lang/zh.sh` | H3: 新增 MSG_REPORT_WARN_SSH_PORT22/FIREWALL/FAIL2BAN 翻译 |
-| 2026-06-23 | UPDATE | `scripts/lang/en.sh` | H3: 新增 MSG_REPORT_WARN_SSH_PORT22/FIREWALL/FAIL2BAN 翻译 |
-| 2026-06-23 | UPDATE | `scripts/security/fail2ban.sh` | M3: sleep 2 改为轮询等待（最多 10 秒）；L2: _get_ssh_service_name 函数替换为 SSH_SERVICE_NAME 常量 |
-| 2026-06-23 | UPDATE | `scripts/security/firewall.sh` | L1: 统一引号风格 $VAR → ${VAR} |
-| 2026-06-23 | UPDATE | `tests/unit/fail2ban.bats` | L2: 更新测试用例适配 SSH_SERVICE_NAME 常量 |
-| 2026-06-23 | CREATE | `tests/unit/ssh.bats` | M2: SSH 模块单元测试（16 个用例：validate_port/check_other_users/check_ssh_keys） |
-| 2026-06-23 | DELETE | `SHA256SUMS` | 完整性校验简化为基本检查，不再需要独立校验文件（commit 33dc7e1） |
-| 2026-06-23 | UPDATE | `HANDOVER.md` | 全面核对修正：更新文件树（添加缺失文件、移除不存在的 bootstrap.sh）、修正 Code Review Round 3 状态、添加 SHA256SUMS 删除记录、更新下一步工作 |
-| 2026-06-23 | MOVE | `docs/bug-review-report.md` → `docs/code-reviews/round-1-bug-report.md` | 文档归类：Code Review 报告移入 code-reviews/ |
-| 2026-06-23 | MOVE | `docs/code-review-report-20260620.md` → `docs/code-reviews/round-2-code-review.md` | 文档归类：Code Review 报告移入 code-reviews/ |
-| 2026-06-23 | MOVE | `docs/code-review-handover-20260623.md` → `docs/code-reviews/round-3-handover.md` | 文档归类：Code Review 报告移入 code-reviews/ |
-| 2026-06-23 | MOVE | `docs/test-report-20260620.md` → `docs/test-reports/ubuntu-arm64-test.md` | 文档归类：测试报告移入 test-reports/ |
-| 2026-06-23 | MOVE | `docs/vm-test-report-20260620.md` → `docs/test-reports/vm-curl-test.md` | 文档归类：测试报告移入 test-reports/ |
-| 2026-06-23 | MOVE | `docs/superpowers/specs/...` → `docs/design/interactive-setup-spec.md` | 文档归类：设计文档移入 design/ |
-| 2026-06-23 | MOVE | `docs/superpowers/plans/...` → `docs/design/interactive-setup-plan.md` | 文档归类：实施计划移入 design/ |
-| 2026-06-23 | COPY | `.claude/prds/*.prd.md` → `docs/design/` | PRD 副本归入 design/，原件保留供 Claude Code 工作流使用 |
-| 2026-06-23 | COPY | `.claude/plans/*.plan.md` → `docs/design/` | 实施计划副本归入 design/，原件保留供 Claude Code 工作流使用 |
-| 2026-06-23 | CREATE | `docs/README.md` | 文档目录总览 |
-| 2026-06-23 | CREATE | `docs/code-reviews/README.md` | Code Review 目录说明 |
-| 2026-06-23 | CREATE | `docs/test-reports/README.md` | 测试报告目录说明 |
-| 2026-06-23 | CREATE | `docs/design/README.md` | 设计文档目录说明 |
-| 2026-06-23 | CREATE | `scripts/security/audit.sh` | v0.4 审计日志模块：auditd 安装、3 级规则生成、配置、服务管理、交互式向导 |
-| 2026-06-23 | CREATE | `config/audit/audit.rules` | 审计规则参考模板（全面规则示例） |
-| 2026-06-23 | CREATE | `config/audit/auditd.conf` | auditd 配置参考模板 |
-| 2026-06-23 | UPDATE | `scripts/lang/zh.sh` | 添加 ~40 条 MSG_AUDIT_* 中文翻译，更新菜单编号，添加向导步骤 |
-| 2026-06-23 | UPDATE | `scripts/lang/en.sh` | 添加 ~40 条 MSG_AUDIT_* 英文翻译，更新菜单编号，添加向导步骤 |
-| 2026-06-23 | UPDATE | `install.sh` | 集成 audit.sh：load_dependencies、菜单[5]、状态检测、full_wizard Step 4 |
-| 2026-06-23 | UPDATE | `scripts/base/report.sh` | 添加审计状态、配置文件路径、警告信息到报告 |
-| 2026-06-23 | CREATE | `tests/unit/audit.bats` | 审计模块单元测试：44 个用例（常量、规则生成、配置、函数存在性） |
-| 2026-06-23 | UPDATE | `HANDOVER.md` | 更新进度状态、文件清单、变更日志 |
-| 2026-06-24 | CREATE | `docs/code-reviews/round-4-audit-module-review.md` | v0.4 审计模块 Code Review：1 HIGH + 3 MEDIUM + 2 LOW |
-| 2026-06-24 | UPDATE | `scripts/lang/zh.sh` | H1: 修复 auseport→aureport 拼写错误; M2: 添加 MSG_MAIN_MENU_REPORT_DESC |
-| 2026-06-24 | UPDATE | `scripts/lang/en.sh` | M2: 添加 MSG_MAIN_MENU_REPORT_DESC |
-| 2026-06-24 | UPDATE | `scripts/security/audit.sh` | M1: 添加 case default 分支; L1: mkdir 错误记录到日志 |
-| 2026-06-24 | UPDATE | `tests/unit/audit.bats` | M3: 添加 standard 规则不含 modules 的测试（45 个用例） |
-| 2026-06-24 | UPDATE | `config/audit/audit.rules` | L2: 标注模板为 full 级别示例 |
-| 2026-06-24 | UPDATE | `install.sh` | M2: 显示报告菜单描述文本 |
-| 2026-06-24 | CREATE | `scripts/README.md` | 脚本目录总览：模块说明、加载顺序、依赖关系、编码规范 |
-| 2026-06-24 | CREATE | `scripts/base/README.md` | 基础模块说明：utils/detect/init/report 各函数清单 |
-| 2026-06-24 | CREATE | `scripts/security/README.md` | 安全模块说明：SSH/防火墙/Fail2Ban/审计功能和通用模式 |
-| 2026-06-24 | CREATE | `scripts/lang/README.md` | 语言文件说明：i18n 工作原理、翻译键命名、添加新语言指南 |
-| 2026-06-24 | CREATE | `scripts/dev/README.md` | [规划中] 开发工具安装目录说明 |
-| 2026-06-24 | CREATE | `scripts/server/README.md` | [规划中] 服务器软件安装目录说明 |
-| 2026-06-24 | CREATE | `scripts/utils/README.md` | [规划中] 通用工具脚本目录说明 |
-| 2026-06-24 | CREATE | `config/README.md` | 配置目录总览：模板与实际配置的关系 |
-| 2026-06-24 | CREATE | `config/audit/README.md` | 审计配置模板说明：3 级规则、auditd.conf 参数 |
-| 2026-06-24 | CREATE | `config/fail2ban/README.md` | Fail2Ban 配置模板说明：jail.local 参数和占位符 |
-| 2026-06-24 | CREATE | `tests/README.md` | 测试目录总览：Bats 框架、运行方式、测试规范 |
-| 2026-06-24 | CREATE | `tests/unit/README.md` | 单元测试说明：107 个用例、测试结构、运行方式 |
-| 2026-06-24 | UPDATE | `README.md` | 更新功能列表：审计日志状态 ⬜→✅ |
-| 2026-06-24 | UPDATE | `HANDOVER.md` | 更新文件清单、添加变更日志 |
-| 2026-06-24 | CREATE | `scripts/security/users.sh` | v0.3 用户管理模块：创建用户、密码、SSH密钥、sudo NOPASSWD、向导 |
-| 2026-06-24 | CREATE | `scripts/security/kernel.sh` | v0.3 内核加固模块：sysctl 参数、内核模块禁用、回滚、向导 |
-| 2026-06-24 | CREATE | `scripts/security/filesystem.sh` | v0.3 文件系统模块：权限检查、SUID审计、无主文件、向导 |
-| 2026-06-24 | CREATE | `config/sysctl/hardening.conf` | v0.3 sysctl 安全参数配置模板（CIS Benchmark） |
-| 2026-06-24 | UPDATE | `scripts/lang/zh.sh` | 添加 ~120 条 MSG_USERS_*/MSG_KERNEL_*/MSG_FS_* 中文翻译 |
-| 2026-06-24 | UPDATE | `scripts/lang/en.sh` | 添加 ~120 条对应英文翻译 |
-| 2026-06-24 | UPDATE | `install.sh` | 集成 v0.3：load_dependencies、菜单[6-8]、状态检测、full_wizard Step 5-7 |
-| 2026-06-24 | UPDATE | `scripts/base/report.sh` | 添加用户/内核/文件系统报告段 |
-| 2026-06-24 | CREATE | `tests/unit/users.bats` | 用户管理单元测试（33 个用例） |
-| 2026-06-24 | CREATE | `tests/unit/kernel.bats` | 内核加固单元测试（20 个用例） |
-| 2026-06-24 | CREATE | `tests/unit/filesystem.bats` | 文件系统单元测试（23 个用例） |
-| 2026-06-24 | CREATE | `.claude/plans/v0.3-user-kernel-filesystem.plan.md` | v0.3 实施计划文档 |
-| 2026-06-24 | CREATE | `.claude/reviews/commit-400933a-review.md` | v0.3 commit 代码审查：3 HIGH + 4 MEDIUM + 3 LOW，含 eval 注入、find 性能、函数定义顺序等问题 |
-| 2026-06-24 | UPDATE | `scripts/security/users.sh` | HIGH#1: eval 注入修复（getent passwd 替代 eval echo）；SSH 密钥无密码警告 |
-| 2026-06-24 | UPDATE | `scripts/security/kernel.sh` | HIGH#2: _generate_sysctl_config 移至 apply_sysctl_params 之前 |
-| 2026-06-24 | UPDATE | `scripts/security/filesystem.sh` | HIGH#3: find / 添加 -xdev 和排除 /proc /sys；截断警告；tail -1 改为全局变量；status 扫描范围 /usr→/ |
-| 2026-06-24 | UPDATE | `scripts/base/report.sh` | 添加文件系统 SUID 详情和警告信息 |
-| 2026-06-24 | UPDATE | `scripts/lang/en.sh` | SSH 无密码警告；截断提示；文件系统报告键 |
-| 2026-06-24 | UPDATE | `scripts/lang/zh.sh` | SSH 无密码警告；截断提示；文件系统报告键 |
-| 2026-06-24 | UPDATE | `install.sh` | show_system_status 改用 check_*_status() 函数 |
-| 2026-06-24 | CREATE | `.claude/plans/fix-commit-400933a-review.plan.md` | v0.3 Code Review 修复计划 |
-| 2026-06-24 | UPDATE | `install.sh` | H2 修复：集成 `run_init()` 到向导 Step 0，添加 `_WIZARD_INIT_DONE` 标志 |
-| 2026-06-24 | UPDATE | `scripts/lang/zh.sh` | 添加 `MSG_WIZARD_STEP_INIT`/`SKIPPED_INIT`/`ERR_INIT`，步骤编号 /8→/9 |
-| 2026-06-24 | UPDATE | `scripts/lang/en.sh` | 同上英文翻译 |
-| 2026-06-24 | UPDATE | `HANDOVER.md` | 更新 Code Review Round 3 状态为 ✅ 完成，更新下一步工作 |
-| 2026-06-24 | UPDATE | `README.md` | 更新功能特性列表：用户管理/内核加固/文件系统安全标记为 ✅，新增文件系统安全条目 |
-| 2026-06-24 | UPDATE | `README.md` | 重写为专业版：添加徽章、详细功能分类、3 种安装方式、支持系统表格、项目架构、交互式向导流程、开发指南、安全注意事项、参考资料、版本历史、致谢 |
-| 2026-06-24 | UPDATE | `scripts/security/README.md` | 更新模块状态：kernel/filesystem/users 标记为 ✅ 完成，补充详细说明 |
-| 2026-06-24 | UPDATE | `scripts/lang/README.md` | 更新翻译覆盖范围：添加用户管理/内核/文件系统翻译数量 |
-| 2026-06-24 | UPDATE | `config/README.md` | 添加 sysctl 目录，移除规划中状态 |
-| 2026-06-24 | UPDATE | `tests/README.md`, `tests/unit/README.md` | 添加 users/kernel/filesystem 测试文件，更新总数 107→183 |
-| 2026-06-24 | UPDATE | `docs/README.md`, `docs/code-reviews/README.md` | 丰富文档描述，添加 Round 4 审查记录 |
-| 2026-06-24 | UPDATE | `scripts/README.md` | 更新依赖表和目录结构 |
-| 2026-06-24 | CREATE | `scripts/security/services.sh` | v0.4 服务管理模块：审计运行服务、禁用不必要服务、端口扫描、交互式向导 |
-| 2026-06-24 | UPDATE | `scripts/lang/zh.sh` | 添加 ~35 条 MSG_SERVICES_* 中文翻译，更新菜单编号 /9→/10，添加向导步骤 |
-| 2026-06-24 | UPDATE | `scripts/lang/en.sh` | 添加 ~35 条 MSG_SERVICES_* 英文翻译，更新菜单编号，添加向导步骤 |
-| 2026-06-24 | UPDATE | `install.sh` | 集成 services.sh：load_dependencies、菜单[9]、向步→[10]报告→[11]、full wizard Step 8、状态检测 |
-| 2026-06-24 | UPDATE | `scripts/base/report.sh` | 添加服务管理报告段（运行中服务数、不必要服务数、警告信息） |
-| 2026-06-24 | CREATE | `tests/unit/services.bats` | 服务管理单元测试（35 个用例：常量、函数存在性、端口安全检查、状态输出格式） |
-| 2026-06-24 | UPDATE | `scripts/security/README.md` | 更新 services.sh 状态为 ✅ 完成，添加模块说明 |
-| 2026-06-24 | UPDATE | `HANDOVER.md` | 更新进度状态、文件清单、下一步工作、变更日志 |
-| 2026-06-25 | CREATE | `.claude/reviews/false-success-bug-audit-20260625.md` | "假成功"Bug 全面审计：审查全部脚本，发现 8 CRITICAL + 5 HIGH + 2 MEDIUM 共 15 个"报告成功但操作未生效"类 bug，含修复方案和优先级建议 |
-| 2026-06-25 | UPDATE | `scripts/base/utils.sh` | P0 修复：set_ssh_config() 添加写后验证（回读 grep 确认值已生效，不匹配返回 1） |
-| 2026-06-25 | UPDATE | `scripts/security/ssh.sh` | P0-P1 修复：change_ssh_port/disable_root_login/disable_password_auth/configure_ssh_params/generate_ssh_key 共 5 个函数添加验证 |
-| 2026-06-25 | UPDATE | `scripts/security/fail2ban.sh` | P1 修复：_install_fail2ban() 安装后 command_exists 验证 |
-| 2026-06-25 | UPDATE | `scripts/security/audit.sh` | P1 修复：_load_audit_rules() 成功/失败分支条件打印 |
-| 2026-06-25 | UPDATE | `scripts/base/init.sh` | P2 修复：init_directories() mkdir 错误检查 + install_base_tools() 去掉 \|\| true |
-| 2026-06-25 | UPDATE | `scripts/security/kernel.sh` | P2 修复：disable_kernel_modules() 黑名单写入后验证 |
-| 2026-06-25 | UPDATE | `scripts/security/users.sh` | P2 修复：setup_user_ssh_key() cat/chmod/chown 每步错误检查 |
-| 2026-06-25 | UPDATE | `scripts/security/firewall.sh` | P2 修复：_install_firewall() systemctl 验证 + _ufw_enable() 状态验证 + _firewalld_reload() 返回值 |
-| 2026-06-25 | UPDATE | `scripts/security/filesystem.sh` | P2 修复：_fix_single_permission() chmod 后回读权限验证 |
-| 2026-06-25 | UPDATE | `HANDOVER.md` | 更新进度、已完成工作、变更日志 |
-| 2026-06-26 | UPDATE | `scripts/security/firewall.sh` | #1.1: ufw status stderr 重定向; #1.2: firewalld reload 返回值检查; #7.5: CentOS 8+ 改用 dnf |
-| 2026-06-26 | UPDATE | `scripts/base/init.sh` | #1.3: setup_timezone 失败时返回错误码 |
-| 2026-06-26 | UPDATE | `scripts/base/utils.sh` | #2.1: _ensure_log_dir fallback 记录日志; #8.1: ERR trap 使用 BASH_COMMAND; #8.2: INT/TERM trap 添加清理; #9.1: generate_random_port 覆盖完整范围; #9.2: check_port_in_use 精确端口匹配 |
-| 2026-06-26 | UPDATE | `scripts/base/detect.sh` | #15.3: detect_network 添加 HTTP fallback（容器兼容） |
-| 2026-06-26 | UPDATE | `install.sh` | #6.3: EXIT trap 清理 _CLEANUP_DIR; #9.3: view_report 使用 REPORT_DIR 变量 |
-| 2026-06-26 | UPDATE | `scripts/security/ssh.sh` | #5.6: SSH 参数添加上限验证（MaxAuthTries/LoginGraceTime/ClientAliveInterval/ClientAliveCountMax/MaxSessions） |
-| 2026-06-26 | UPDATE | `scripts/security/users.sh` | #6.5: sudoers 文件创建使用 umask 防止权限窗口 |
-| 2026-06-26 | UPDATE | `scripts/security/fail2ban.sh` | #5.5: bantime/findtime/maxretry 添加上限验证; #11.2: jail.local 原子写入 |
-| 2026-06-26 | UPDATE | `scripts/security/audit.sh` | #8.3: audit.rules 原子写入 |
-| 2026-06-26 | UPDATE | `review/bug-review-comprehensive.md` | 标注全部 48 个 bug 的修复状态：33 已修复 ✅ / 15 未修复 ❌；更新总结统计和未修复清单 |
-| 2026-06-26 | UPDATE | `scripts/security/ssh.sh` | #3.1 HIGH 修复：SSH 回滚定时器竞态窗口 — 改为仅在 restart_ssh 失败后设置回滚，ROLLBACK_DELAY 300→600 |
-| 2026-06-26 | UPDATE | `review/bug-review-comprehensive.md` | #3.1 标记为 ✅ 已修复，更新统计：34 已修复 / 14 未修复，HIGH 全部清零 |
-| 2026-06-26 | UPDATE | `HANDOVER.md` | 添加变更日志 |
-| 2026-06-26 | UPDATE | `scripts/base/utils.sh` | #11.1: backup_file 添加 PID 防路径冲突; #10.1: restart_service fallback 时记录警告; #14.1: _cleanup_on_exit 清理后台进程; #3.3: cancel_scheduled_task 验证进程身份 |
-| 2026-06-26 | UPDATE | `scripts/security/fail2ban.sh` | #10.2: _enable_fail2ban_service 轮询前添加 1 秒延迟避免读到旧状态 |
-| 2026-06-26 | UPDATE | `scripts/security/filesystem.sh` | #16.1/#16.2: check_filesystem_status 添加 5 分钟 TTL 缓存 |
-| 2026-06-26 | UPDATE | `install.sh` | EXIT trap 统一由 setup_error_trap() 处理，移除重复 trap |
-| 2026-06-26 | UPDATE | `review/bug-review-comprehensive.md` | 全部 48 个 bug 标记为 ✅ 已修复，未修复清单清零 |
-| 2026-07-10 | CREATE | `docs/plans/` | 新建计划文件目录（Plan-First Principle 落地），命名规范: `YYYY-MM-DD_HH-MM_<topic>.md` |
-| 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | 项目规范化：迁移 my_obsidian 4 项核心原则（Communication、Plan-First、Phased Improvement、Git Workflow），新增 Session Entry Point、Dos and Don'ts；保留项目概述、Shell 规范、项目结构、测试、HANDOVER 说明 |
-| 2026-07-10 | UPDATE | `HANDOVER.md` | 更新最后更新日期为 2026-07-10；当前阶段标注"项目规范化阶段"；文件清单新增 docs/plans/ |
-| 2026-07-10 | CREATE | `docs/plans/README.md` | 计划文件目录规范：命名格式 `YYYY-MM-DD_HH-MM_<topic-kebab>[_<commit-ref>].md`、frontmatter 必填字段、状态生命周期、正文结构建议、与 CLAUDE.md 的协同 |
-| 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | Plan-First Principle 章节指向 `docs/plans/README.md` 为权威规范；inline 改为快速摘要；规则上"先读 README 再写 plan" |
-| 2026-07-10 | UPDATE | `HANDOVER.md` | 变更日志追加 CLAUDE.md 引用 docs/plans/README.md |
-| 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | Git Workflow 章节细化：本地 commit "能 commit 就 commit" 原则 + 触发条件表；Push 三步走（询问 → 整理 → 推送）+ 整理方式表 + Push Policy 铁律（不 force push 等） |
-| 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | 新增 ECC Plugin Usage 章节：8 个必须规范化命令（/plan /code-review /security-scan /refactor-clean /quality-gate /build-fix /update-docs /test-coverage）+ 使用规则 + 不适用命令清单 |
-| 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | Dos and Don'ts 章节细化扩展：分 4 类（任务启动/沟通决策/开发测试/Git 文档）共 30+ 条 DO；分 5 类（决策/Plan/Git/质量/文档）共 25+ 条 DON'T |
-| 2026-07-10 | UPDATE | `HANDOVER.md` | 变更日志追加 Git Workflow / ECC / Dos and Don'ts 三项细化 |
+> 仅保留近期变更。2026-06-20~24 的 176 条历史记录已归档至 [`docs/handover-archive.md`](../docs/handover-archive.md)。
+
+| 日期 | 操作 | 文件 |
+|------|------|------|
+| 2026-06-25 | CREATE | `.claude/reviews/false-success-bug-audit-20260625.md`
+| 2026-06-25 | UPDATE | `scripts/base/utils.sh`
+| 2026-06-25 | UPDATE | `scripts/security/ssh.sh`
+| 2026-06-25 | UPDATE | `scripts/security/fail2ban.sh`
+| 2026-06-25 | UPDATE | `scripts/security/audit.sh`
+| 2026-06-25 | UPDATE | `scripts/base/init.sh`
+| 2026-06-25 | UPDATE | `scripts/security/kernel.sh`
+| 2026-06-25 | UPDATE | `scripts/security/users.sh`
+| 2026-06-25 | UPDATE | `scripts/security/firewall.sh`
+| 2026-06-25 | UPDATE | `scripts/security/filesystem.sh`
+| 2026-06-25 | UPDATE | `HANDOVER.md`
+| 2026-06-26 | UPDATE | `scripts/security/firewall.sh`
+| 2026-06-26 | UPDATE | `scripts/base/init.sh`
+| 2026-06-26 | UPDATE | `scripts/base/utils.sh`
+| 2026-06-26 | UPDATE | `scripts/base/detect.sh`
+| 2026-06-26 | UPDATE | `install.sh`
+| 2026-06-26 | UPDATE | `scripts/security/ssh.sh`
+| 2026-06-26 | UPDATE | `scripts/security/users.sh`
+| 2026-06-26 | UPDATE | `scripts/security/fail2ban.sh`
+| 2026-06-26 | UPDATE | `scripts/security/audit.sh`
+| 2026-06-26 | UPDATE | `review/bug-review-comprehensive.md`
+| 2026-06-26 | UPDATE | `scripts/security/ssh.sh`
+| 2026-06-26 | UPDATE | `review/bug-review-comprehensive.md`
+| 2026-06-26 | UPDATE | `HANDOVER.md`
+| 2026-06-26 | UPDATE | `scripts/base/utils.sh`
+| 2026-06-26 | UPDATE | `scripts/security/fail2ban.sh`
+| 2026-06-26 | UPDATE | `scripts/security/filesystem.sh`
+| 2026-06-26 | UPDATE | `install.sh`
+| 2026-06-26 | UPDATE | `review/bug-review-comprehensive.md`
+| 2026-07-10 | CREATE | `docs/plans/`
+| 2026-07-10 | UPDATE | `.claude/CLAUDE.md`
+| 2026-07-10 | UPDATE | `HANDOVER.md`
+| 2026-07-10 | CREATE | `docs/plans/README.md`
+| 2026-07-10 | UPDATE | `.claude/CLAUDE.md`
+| 2026-07-10 | UPDATE | `HANDOVER.md`
+| 2026-07-10 | UPDATE | `.claude/CLAUDE.md`
+| 2026-07-10 | UPDATE | `.claude/CLAUDE.md`
+| 2026-07-10 | UPDATE | `.claude/CLAUDE.md`
+| 2026-07-10 | UPDATE | `HANDOVER.md`
+| 2026-07-10 | CREATE | `docs/handover-archive.md` | 历史变更日志归档（176 条，2026-06-20~24） |
+| 2026-07-10 | UPDATE | `HANDOVER.md` | 变更日志精简：归档 176 条 + 列精简（去说明列），保留 39 条 |
+| 2026-07-10 | UPDATE | `HANDOVER.md` | 删除重复节"已完成的工作"（-66 行） |
+| 2026-07-10 | CREATE | `scripts/dev/gen-file-tree.sh` | 自动生成文件树脚本，输出 docs/file-tree.generated.md |
+| 2026-07-10 | UPDATE | `.gitignore` | 忽略 docs/file-tree.generated.md + .superpowers/ |
+| 2026-07-10 | UPDATE | `HANDOVER.md` | 文件清单改为脚本引用 + 顶层目录概览表（-151 行） |
+| 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | 项目结构章节同步新增 docs/handover-archive.md、docs/file-tree.generated.md、scripts/dev/ |

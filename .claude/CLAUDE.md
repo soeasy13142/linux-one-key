@@ -122,21 +122,23 @@ Linux 云服务器安全加固 + 一键环境初始化脚本。用户通过 SSH 
 linux-one-key/
 ├── install.sh              # 主入口（菜单、交互流程、curl管道支持）
 ├── CLAUDE.md               # 本文件
-├── HANDOVER.md             # 强制交接文档
+├── HANDOVER.md             # 强制交接文档（精简后约 250 行）
 ├── README.md
 ├── scripts/                # 安装脚本目录
-│   ├── base/               # 基础环境（utils.sh, detect.sh, init.sh）
-│   ├── security/           # 安全加固（ssh.sh, firewall.sh, fail2ban.sh, users.sh, kernel.sh, filesystem.sh, audit.sh, services.sh）
-│   ├── dev/                # 开发工具安装（预留）
+│   ├── base/               # 基础环境（utils.sh, detect.sh, init.sh, report.sh）
+│   ├── security/           # 安全加固（ssh/firewall/fail2ban/users/kernel/filesystem/audit/services）
+│   ├── dev/                # 开发工具脚本（如 gen-file-tree.sh）
 │   ├── server/             # 服务器软件安装（预留）
 │   ├── lang/               # i18n 文件（zh.sh, en.sh）
-│   └── utils/              # 通用工具函数
+│   └── utils/              # 通用工具函数（预留）
 ├── config/                 # 配置文件模板（fail2ban/, sysctl/, audit/）
 ├── docs/                   # 文档
-│   ├── plans/              # 计划文件（Plan-First 落地目录）
-│   ├── design/             # 架构设计
+│   ├── plans/              # 计划文件（Plan-First 落地目录，含 README）
+│   ├── design/             # 架构设计 & 实施计划
 │   ├── code-reviews/       # Code Review 报告
-│   └── test-reports/       # 测试报告
+│   ├── test-reports/       # 测试报告
+│   ├── handover-archive.md # 历史变更日志归档（2026-06-20~24）
+│   └── file-tree.generated.md # 自动生成的文件树（gitignored）
 └── tests/                  # Bats 单元测试（unit/）
 ```
 
