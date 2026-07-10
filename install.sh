@@ -466,13 +466,30 @@ show_main_menu() {
     echo -e "  ${BOLD}Linux Server Security Hardening ${SCRIPT_VERSION}${NC}"
     echo -e "  ${BLUE}${MSG_WELCOME}${NC}"
     echo ""
-    echo -e "  ${MSG_MAIN_MENU_SYSTEM_INFO}: $(get_detected_os) $(get_detected_os_version) | $(get_detected_arch) | $(whoami)"
+
+    # 顶部状态摘要行（spec §3.1 GAP-2）
+    local ssh_port ssh_status_label
+    ssh_port=$(get_ssh_port 2>/dev/null || echo "22")
+    if [[ "${ssh_port}" == "22" ]]; then
+        ssh_status_label="${MSG_STATUS_SSH_PORT_DEFAULT}"
+    else
+        ssh_status_label="${MSG_STATUS_SSH_PORT_HARDENED}"
+    fi
+    echo -e "  ${MSG_MAIN_MENU_SYSTEM_INFO}: $(get_detected_os) $(get_detected_os_version) | $(get_detected_arch) | $(whoami) | SSH ${ssh_port} (${ssh_status_label})"
     echo ""
-    echo -e "${BOLD}───────────────────────────────────────────────────────────${NC}"
-    echo -e "${BOLD}${MSG_MAIN_MENU_CHOICE}${NC}"
+
+    # 分组 1：状态（spec §3.1 GAP-1）
+    echo -e "${BOLD}${MSG_SECTION_STATUS}${NC}"
     echo ""
     echo -e "  ${GREEN}${MSG_MAIN_MENU_STATUS}${NC}"
     echo -e "      ${MSG_MAIN_MENU_STATUS_DESC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_REPORT}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_REPORT_DESC}"
+    echo ""
+
+    # 分组 2：加固
+    echo -e "${BOLD}${MSG_SECTION_HARDENING}${NC}"
     echo ""
     echo -e "  ${GREEN}${MSG_MAIN_MENU_SSH}${NC}"
     echo -e "      ${MSG_MAIN_MENU_SSH_DESC}"
@@ -498,11 +515,12 @@ show_main_menu() {
     echo -e "  ${GREEN}${MSG_MAIN_MENU_SERVICES}${NC}"
     echo -e "      ${MSG_MAIN_MENU_SERVICES_DESC}"
     echo ""
+
+    # 分组 3：一键
+    echo -e "${BOLD}${MSG_SECTION_QUICK}${NC}"
+    echo ""
     echo -e "  ${GREEN}${MSG_MAIN_MENU_QUICK}${NC}"
     echo -e "      ${MSG_MAIN_MENU_QUICK_DESC}"
-    echo ""
-    echo -e "  ${GREEN}${MSG_MAIN_MENU_REPORT}${NC}"
-    echo -e "      ${MSG_MAIN_MENU_REPORT_DESC}"
     echo ""
     echo -e "  ${RED}${MSG_MAIN_MENU_EXIT}${NC}"
     echo ""
