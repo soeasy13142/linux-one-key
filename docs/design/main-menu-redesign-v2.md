@@ -1,6 +1,6 @@
 ---
 title: "Main Menu Redesign v2"
-status: proposed
+status: active
 created: 2026-07-10
 updated: 2026-07-10
 source: "原 main-menu-redesign-prd.md + main-menu-redesign-plan.md (v0.2 阶段，已 superseded)"
@@ -250,12 +250,14 @@ bats tests/unit/*.bats
 
 | Task | GAP | 状态 | Commit |
 |---|---|---|---|
-| T1 | GAP-3 | ⬜ 未开始 | — |
-| T2 | GAP-1, GAP-2 | ⬜ 未开始 | — |
-| T3 | GAP-4, GAP-5, GAP-6 | ⬜ 未开始 | — |
-| T4 | GAP-7 | ⬜ 未开始 | — |
-| T5 | GAP-8 | ⬜ 未开始 | — |
-| T6 | GAP-9 | ⬜ 未开始 | — |
+| T1 | GAP-3 | ✅ 完成 | 19ed671 |
+| T2 | GAP-1, GAP-2 | ✅ 完成 | 2fee51a |
+| T3 | GAP-4, GAP-5, GAP-6 | ✅ 完成 | 938dd1e |
+| T4 | GAP-7 | ✅ 完成 | 779e5b7 |
+| T5 | GAP-8 | ✅ 完成 | 0572863 |
+| T6 | GAP-9 | ✅ 完成 | becd79f |
+
+> ℹ️ 注：本表 T1-T6 为实施 plan (docs/plans/2026-07-10_16-00_main-menu-redesign-v2_nogit.md) 的编号，对应 spec §5 的 T5/T1/T2/T3/T4/T6（按推荐实施顺序重排）。
 
 ---
 
@@ -263,3 +265,10 @@ bats tests/unit/*.bats
 
 - 2026-07-10：创建本文件，status=proposed，合并原 PRD + Plan 内容
 - 2026-07-10：原 `main-menu-redesign-prd.md` / `plan.md` → archived + superseded-by 本文件
+- 2026-07-10：执行 T1 (i18n 补全) → commit 84f40d5
+- 2026-07-10：执行 T2 (模块 4-9 子菜单壳) → commit 19ed671
+- 2026-07-10：执行 T3 (主菜单分组 + SSH 摘要) → commit 2fee51a
+- 2026-07-10：执行 T4 (系统状态升级：评分 + 颜色 + 建议) → commit 938dd1e
+- 2026-07-10：执行 T5 (view_report 升级：历史列表) → commit 779e5b7
+- 2026-07-10：执行 T6 (i18n 补全 + 错误提示精简) → commits 0572863, becd79f
+- 2026-07-10：全部 6 个 Task 完成，本文档 status: proposed → active

@@ -120,11 +120,8 @@ _parse_args() {
                 local removed_arg="${arg#--}"
                 removed_arg="${removed_arg#-}"
                 echo ""
-                echo -e "${RED}Error: --${removed_arg} has been removed.${NC}"
-                echo -e "${YELLOW}This script is now fully interactive:${NC}"
-                echo -e "${YELLOW}  sudo bash install.sh${NC}"
-                echo -e "${BLUE}Tip: --status still works for read-only:${NC}"
-                echo -e "${BLUE}  sudo bash install.sh --status${NC}"
+                log_error "$(printf "${MSG_ERROR_REMOVED_ARG}" "${removed_arg}")"
+                log_info "${MSG_ERROR_REMOVED_HINT}"
                 echo ""
                 exit 1
                 ;;
@@ -308,140 +305,223 @@ load_dependencies() {
 # ═══════════════════════════════════════════
 
 # 显示系统安全状态
+# 打印一行加固状态：图标 + 颜色 + 标签 + 详情（对齐布局）
+# 参数: $1=label $2=status(已加固/部分/未加固) $3=color $4=detail $5=icon
+_print_status_row() {
+    local label="$1"
+    local status="$2"
+    local color="$3"
+    local detail="$4"
+    local icon="$5"
+    printf "  %-16s ${color}${icon} %s${NC}  %s\n" "${label}" "${status}" "${detail}"
+}
+
+# 显示系统安全状态：评分 + 颜色 + 表格 + 建议下一步（spec §3.3 GAP-4/5/6）
 show_system_status() {
     log_title "${MSG_STATUS_TITLE}"
 
-    # SSH 状态
-    echo -e "${GREEN}[SSH]${NC}"
-    local ssh_port
+    local passed=0 partial=0 failed=0
+    local -a recommend_items=()  # "menu_num|label"
+
+    # ─── SSH ────────────────────────────────────────────────────────────
+    local ssh_port ssh_root ssh_passwd ssh_pubkey ssh_ok=0 ssh_total=4
     ssh_port=$(get_ssh_port 2>/dev/null || echo "22")
-    if [[ "${ssh_port}" == "22" ]]; then
-        echo -e "  ${MSG_STATUS_SSH_PORT}: ${ssh_port} (${MSG_STATUS_DEFAULT_PORT})"
+    ssh_root=$(get_ssh_config "PermitRootLogin" 2>/dev/null || echo "unknown")
+    ssh_passwd=$(get_ssh_config "PasswordAuthentication" 2>/dev/null || echo "unknown")
+    ssh_pubkey=$(get_ssh_config "PubkeyAuthentication" 2>/dev/null || echo "unknown")
+    [[ "${ssh_port}" != "22" ]] && ssh_ok=$((ssh_ok + 1))
+    [[ "${ssh_root}" == "no" ]] && ssh_ok=$((ssh_ok + 1))
+    [[ "${ssh_passwd}" == "no" ]] && ssh_ok=$((ssh_ok + 1))
+    if [[ "${ssh_pubkey}" == "yes" ]] || [[ "${ssh_pubkey}" == "unknown" ]]; then
+        ssh_ok=$((ssh_ok + 1))
+    fi
+    if [[ "${ssh_ok}" -eq "${ssh_total}" ]]; then
+        _print_status_row "${MSG_MAIN_MENU_SSH}" "${MSG_STATUS_HARDENED}" "${GREEN}" "端口 ${ssh_port}" "✅"
+        passed=$((passed + 1))
+    elif [[ "${ssh_ok}" -eq 0 ]]; then
+        _print_status_row "${MSG_MAIN_MENU_SSH}" "${MSG_STATUS_NOT_HARDENED}" "${RED}" "端口 ${ssh_port}, 0/${ssh_total}" "❌"
+        failed=$((failed + 1))
+        recommend_items+=("2|${MSG_MAIN_MENU_SSH}")
     else
-        echo -e "  ${MSG_STATUS_SSH_PORT}: ${ssh_port} (${MSG_STATUS_CONFIGURED})"
+        _print_status_row "${MSG_MAIN_MENU_SSH}" "${MSG_STATUS_PARTIAL}" "${YELLOW}" "端口 ${ssh_port}, ${ssh_ok}/${ssh_total}" "⚠️"
+        partial=$((partial + 1))
+        recommend_items+=("2|${MSG_MAIN_MENU_SSH}")
     fi
 
-    local root_login
-    root_login=$(get_ssh_config "PermitRootLogin" 2>/dev/null || echo "unknown")
-    if [[ "${root_login}" == "no" ]]; then
-        echo -e "  ${MSG_STATUS_SSH_ROOT}: ${MSG_STATUS_NOT_ALLOWED}"
-    else
-        echo -e "  ${MSG_STATUS_SSH_ROOT}: ${MSG_STATUS_ALLOWED}"
-    fi
-
-    local pass_auth
-    pass_auth=$(get_ssh_config "PasswordAuthentication" 2>/dev/null || echo "unknown")
-    if [[ "${pass_auth}" == "no" ]]; then
-        echo -e "  ${MSG_STATUS_SSH_PASSWD}: ${MSG_STATUS_NOT_ALLOWED}"
-    else
-        echo -e "  ${MSG_STATUS_SSH_PASSWD}: ${MSG_STATUS_ALLOWED}"
-    fi
-
-    local pubkey_auth
-    pubkey_auth=$(get_ssh_config "PubkeyAuthentication" 2>/dev/null || echo "unknown")
-    if [[ "${pubkey_auth}" == "yes" ]] || [[ "${pubkey_auth}" == "unknown" ]]; then
-        echo -e "  ${MSG_STATUS_SSH_KEY}: ${MSG_STATUS_ENABLED}"
-    else
-        echo -e "  ${MSG_STATUS_SSH_KEY}: ${MSG_STATUS_DISABLED}"
-    fi
-
-    echo ""
-
-    # 防火墙状态
-    echo -e "${GREEN}[${MSG_STATUS_FIREWALL}]${NC}"
-    local fw_status="${MSG_STATUS_DISABLED}"
+    # ─── 防火墙 ─────────────────────────────────────────────────────────
+    local fw_status="${MSG_STATUS_DISABLED}" fw_color="${RED}" fw_icon="❌" fw_detail
     if command -v ufw &>/dev/null; then
         if ufw status 2>/dev/null | grep -q "Status: active"; then
-            fw_status="${MSG_STATUS_ENABLED}"
+            fw_status="${MSG_STATUS_ENABLED}"; fw_color="${GREEN}"; fw_icon="✅"
         fi
     elif command -v firewall-cmd &>/dev/null; then
         if firewall-cmd --state &>/dev/null; then
-            fw_status="${MSG_STATUS_ENABLED}"
+            fw_status="${MSG_STATUS_ENABLED}"; fw_color="${GREEN}"; fw_icon="✅"
         fi
     fi
-    echo -e "  ${MSG_STATUS_FIREWALL}: ${fw_status}"
+    fw_detail="${fw_status}"
+    if [[ "${fw_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_FIREWALL}" "${MSG_STATUS_HARDENED}" "${fw_color}" "${fw_detail}" "${fw_icon}"
+        passed=$((passed + 1))
+    else
+        _print_status_row "${MSG_STATUS_FIREWALL}" "${MSG_STATUS_NOT_HARDENED}" "${fw_color}" "${fw_detail}" "${fw_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("3|${MSG_STATUS_FIREWALL}")
+    fi
 
-    echo ""
-
-    # Fail2Ban 状态
-    echo -e "${GREEN}[${MSG_STATUS_FAIL2BAN}]${NC}"
-    local f2b_status="${MSG_STATUS_NOT_INSTALLED}"
+    # ─── Fail2Ban ───────────────────────────────────────────────────────
+    local f2b_status="${MSG_STATUS_NOT_INSTALLED}" f2b_color="${RED}" f2b_icon="❌"
     if command -v fail2ban-client &>/dev/null; then
+        f2b_status="${MSG_STATUS_INSTALLED}"
         if systemctl is-active fail2ban &>/dev/null; then
-            f2b_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_ENABLED})"
+            f2b_color="${GREEN}"; f2b_icon="✅"
         else
-            f2b_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_DISABLED})"
+            f2b_color="${YELLOW}"; f2b_icon="⚠️"
         fi
     fi
-    echo -e "  ${MSG_STATUS_FAIL2BAN}: ${f2b_status}"
+    if [[ "${f2b_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_HARDENED}" "${f2b_color}" "${f2b_status}" "${f2b_icon}"
+        passed=$((passed + 1))
+    elif [[ "${f2b_color}" == "${YELLOW}" ]]; then
+        _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_PARTIAL}" "${f2b_color}" "${f2b_status}" "${f2b_icon}"
+        partial=$((partial + 1))
+        recommend_items+=("4|${MSG_STATUS_FAIL2BAN}")
+    else
+        _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_NOT_HARDENED}" "${f2b_color}" "${f2b_status}" "${f2b_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("4|${MSG_STATUS_FAIL2BAN}")
+    fi
 
-    echo ""
-
-    # 审计日志状态
-    echo -e "${GREEN}[${MSG_STATUS_AUDIT}]${NC}"
-    local audit_status="${MSG_STATUS_NOT_INSTALLED}"
+    # ─── 审计日志 ───────────────────────────────────────────────────────
+    local audit_status="${MSG_STATUS_NOT_INSTALLED}" audit_color="${RED}" audit_icon="❌"
     if command -v auditctl &>/dev/null; then
+        audit_status="${MSG_STATUS_INSTALLED}"
         if systemctl is-active auditd &>/dev/null; then
-            audit_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_ENABLED})"
+            audit_color="${GREEN}"; audit_icon="✅"
         else
-            audit_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_DISABLED})"
+            audit_color="${YELLOW}"; audit_icon="⚠️"
         fi
     fi
-    echo -e "  ${MSG_STATUS_AUDIT}: ${audit_status}"
+    if [[ "${audit_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_HARDENED}" "${audit_color}" "${audit_status}" "${audit_icon}"
+        passed=$((passed + 1))
+    elif [[ "${audit_color}" == "${YELLOW}" ]]; then
+        _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_PARTIAL}" "${audit_color}" "${audit_status}" "${audit_icon}"
+        partial=$((partial + 1))
+        recommend_items+=("5|${MSG_STATUS_AUDIT}")
+    else
+        _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_NOT_HARDENED}" "${audit_color}" "${audit_status}" "${audit_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("5|${MSG_STATUS_AUDIT}")
+    fi
 
-    echo ""
-
-    # 用户管理状态
-    echo -e "${GREEN}[${MSG_STATUS_USERS:-Users}]${NC}"
+    # ─── 用户管理 ───────────────────────────────────────────────────────
+    local users_color="${RED}" users_icon="❌" users_detail="${MSG_STATUS_NOT_CONFIGURED}"
     if type check_users_status &>/dev/null; then
-        local users_status
+        local users_status custom_users
         users_status=$(check_users_status 2>/dev/null)
-        local custom_users
         custom_users=$(echo "${users_status}" | grep '^users_custom=' | cut -d= -f2)
-        echo -e "  ${MSG_STATUS_USERS_COUNT:-Custom users}: ${custom_users}"
-    fi
-
-    echo ""
-
-    # 内核加固状态
-    echo -e "${GREEN}[${MSG_STATUS_KERNEL:-Kernel}]${NC}"
-    if type check_kernel_status &>/dev/null; then
-        local kernel_status
-        kernel_status=$(check_kernel_status 2>/dev/null)
-        local kernel_conf
-        kernel_conf=$(echo "${kernel_status}" | grep '^kernel_conf=' | cut -d= -f2)
-        local kernel_conf_status="${MSG_STATUS_NOT_INSTALLED}"
-        if [[ "${kernel_conf}" == "yes" ]]; then
-            kernel_conf_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_CONFIGURED})"
+        if [[ "${custom_users}" =~ ^[1-9][0-9]*$ ]]; then
+            users_color="${GREEN}"; users_icon="✅"
+            users_detail="${MSG_STATUS_USERS_COUNT}: ${custom_users}"
         fi
-        echo -e "  ${MSG_STATUS_KERNEL_CONF:-sysctl config}: ${kernel_conf_status}"
+    fi
+    if [[ "${users_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_USERS}" "${MSG_STATUS_HARDENED}" "${users_color}" "${users_detail}" "${users_icon}"
+        passed=$((passed + 1))
+    else
+        _print_status_row "${MSG_STATUS_USERS}" "${MSG_STATUS_NOT_HARDENED}" "${users_color}" "${users_detail}" "${users_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("6|${MSG_STATUS_USERS}")
     fi
 
-    echo ""
+    # ─── 内核加固 ───────────────────────────────────────────────────────
+    local kernel_color="${RED}" kernel_icon="❌" kernel_detail="${MSG_STATUS_NOT_HARDENED}"
+    if type check_kernel_status &>/dev/null; then
+        local kernel_status kernel_conf
+        kernel_status=$(check_kernel_status 2>/dev/null)
+        kernel_conf=$(echo "${kernel_status}" | grep '^kernel_conf=' | cut -d= -f2)
+        if [[ "${kernel_conf}" == "yes" ]]; then
+            kernel_color="${GREEN}"; kernel_icon="✅"
+            kernel_detail="${MSG_STATUS_KERNEL_CONF}: ${MSG_STATUS_INSTALLED}"
+        fi
+    fi
+    if [[ "${kernel_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_KERNEL}" "${MSG_STATUS_HARDENED}" "${kernel_color}" "${kernel_detail}" "${kernel_icon}"
+        passed=$((passed + 1))
+    else
+        _print_status_row "${MSG_STATUS_KERNEL}" "${MSG_STATUS_NOT_HARDENED}" "${kernel_color}" "${kernel_detail}" "${kernel_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("7|${MSG_STATUS_KERNEL}")
+    fi
 
-    # 文件系统状态
-    echo -e "${GREEN}[${MSG_STATUS_FILESYSTEM:-Filesystem}]${NC}"
+    # ─── 文件系统 ───────────────────────────────────────────────────────
+    local fs_color="${RED}" fs_icon="❌" fs_detail="${MSG_STATUS_NOT_HARDENED}"
     if type check_filesystem_status &>/dev/null; then
-        local fs_status
+        local fs_status suid_count
         fs_status=$(check_filesystem_status 2>/dev/null)
-        local suid_count
         suid_count=$(echo "${fs_status}" | grep '^fs_suid_count=' | cut -d= -f2)
-        echo -e "  ${MSG_STATUS_FS_SUID:-SUID files}: ${suid_count}"
+        if [[ "${suid_count}" =~ ^[0-9]+$ ]] && [[ "${suid_count}" -gt 0 ]]; then
+            # 已扫描（无论数量多少都算已检查）
+            fs_color="${YELLOW}"; fs_icon="⚠️"
+            fs_detail="${MSG_STATUS_FS_SUID}: ${suid_count}"
+        fi
+    fi
+    if [[ "${fs_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_HARDENED}" "${fs_color}" "${fs_detail}" "${fs_icon}"
+        passed=$((passed + 1))
+    elif [[ "${fs_color}" == "${YELLOW}" ]]; then
+        _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_PARTIAL}" "${fs_color}" "${fs_detail}" "${fs_icon}"
+        partial=$((partial + 1))
+    else
+        _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_NOT_HARDENED}" "${fs_color}" "${fs_detail}" "${fs_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("8|${MSG_STATUS_FILESYSTEM}")
     fi
 
-    echo ""
-
-    # 服务管理状态
-    echo -e "${GREEN}[${MSG_STATUS_SERVICES:-Services}]${NC}"
+    # ─── 服务管理 ───────────────────────────────────────────────────────
+    local svc_color="${RED}" svc_icon="❌" svc_detail="${MSG_STATUS_NOT_HARDENED}"
     if type check_services_status &>/dev/null; then
-        local svc_status
+        local svc_status svc_running svc_unnecessary
         svc_status=$(check_services_status 2>/dev/null)
-        local svc_running
         svc_running=$(echo "${svc_status}" | grep '^services_running=' | cut -d= -f2)
-        local svc_unnecessary
         svc_unnecessary=$(echo "${svc_status}" | grep '^services_unnecessary=' | cut -d= -f2)
-        echo -e "  ${MSG_STATUS_SERVICES_RUNNING:-Running services}: ${svc_running}"
-        echo -e "  ${MSG_STATUS_SERVICES_UNNECESSARY:-Unnecessary services}: ${svc_unnecessary}"
+        if [[ "${svc_running}" =~ ^[0-9]+$ ]] && [[ "${svc_unnecessary}" =~ ^[0-9]+$ ]]; then
+            if [[ "${svc_unnecessary}" -eq 0 ]]; then
+                svc_color="${GREEN}"; svc_icon="✅"
+            else
+                svc_color="${YELLOW}"; svc_icon="⚠️"
+            fi
+            svc_detail="${MSG_STATUS_SERVICES_RUNNING}: ${svc_running}, ${MSG_STATUS_SERVICES_UNNECESSARY}: ${svc_unnecessary}"
+        fi
+    fi
+    if [[ "${svc_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_HARDENED}" "${svc_color}" "${svc_detail}" "${svc_icon}"
+        passed=$((passed + 1))
+    elif [[ "${svc_color}" == "${YELLOW}" ]]; then
+        _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_PARTIAL}" "${svc_color}" "${svc_detail}" "${svc_icon}"
+        partial=$((partial + 1))
+        recommend_items+=("9|${MSG_STATUS_SERVICES}")
+    else
+        _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_NOT_HARDENED}" "${svc_color}" "${svc_detail}" "${svc_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("9|${MSG_STATUS_SERVICES}")
+    fi
+
+    # ─── 顶部评分 + 建议下一步 ──────────────────────────────────────────
+    echo ""
+    local total=$((passed + partial + failed))
+    log_info "${MSG_DETECTION_SUMMARY}: ${passed}/${total} ${MSG_STATUS_HARDENED} (${partial} ${MSG_STATUS_PARTIAL}, ${failed} ${MSG_STATUS_NOT_HARDENED})"
+
+    if [[ "${#recommend_items[@]}" -gt 0 ]]; then
+        echo ""
+        echo -e "  ${BOLD}${MSG_STATUS_RECOMMENDATION}:${NC}"
+        local item num name
+        for item in "${recommend_items[@]}"; do
+            num="${item%%|*}"
+            name="${item#*|}"
+            echo -e "    ${YELLOW}[${num}]${NC} ${name}"
+        done
     fi
 
     echo ""
@@ -466,13 +546,30 @@ show_main_menu() {
     echo -e "  ${BOLD}Linux Server Security Hardening ${SCRIPT_VERSION}${NC}"
     echo -e "  ${BLUE}${MSG_WELCOME}${NC}"
     echo ""
-    echo -e "  ${MSG_MAIN_MENU_SYSTEM_INFO}: $(get_detected_os) $(get_detected_os_version) | $(get_detected_arch) | $(whoami)"
+
+    # 顶部状态摘要行（spec §3.1 GAP-2）
+    local ssh_port ssh_status_label
+    ssh_port=$(get_ssh_port 2>/dev/null || echo "22")
+    if [[ "${ssh_port}" == "22" ]]; then
+        ssh_status_label="${MSG_STATUS_SSH_PORT_DEFAULT}"
+    else
+        ssh_status_label="${MSG_STATUS_SSH_PORT_HARDENED}"
+    fi
+    echo -e "  ${MSG_MAIN_MENU_SYSTEM_INFO}: $(get_detected_os) $(get_detected_os_version) | $(get_detected_arch) | $(whoami) | SSH ${ssh_port} (${ssh_status_label})"
     echo ""
-    echo -e "${BOLD}───────────────────────────────────────────────────────────${NC}"
-    echo -e "${BOLD}${MSG_MAIN_MENU_CHOICE}${NC}"
+
+    # 分组 1：状态（spec §3.1 GAP-1）
+    echo -e "${BOLD}${MSG_SECTION_STATUS}${NC}"
     echo ""
     echo -e "  ${GREEN}${MSG_MAIN_MENU_STATUS}${NC}"
     echo -e "      ${MSG_MAIN_MENU_STATUS_DESC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_REPORT}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_REPORT_DESC}"
+    echo ""
+
+    # 分组 2：加固
+    echo -e "${BOLD}${MSG_SECTION_HARDENING}${NC}"
     echo ""
     echo -e "  ${GREEN}${MSG_MAIN_MENU_SSH}${NC}"
     echo -e "      ${MSG_MAIN_MENU_SSH_DESC}"
@@ -498,11 +595,12 @@ show_main_menu() {
     echo -e "  ${GREEN}${MSG_MAIN_MENU_SERVICES}${NC}"
     echo -e "      ${MSG_MAIN_MENU_SERVICES_DESC}"
     echo ""
+
+    # 分组 3：一键
+    echo -e "${BOLD}${MSG_SECTION_QUICK}${NC}"
+    echo ""
     echo -e "  ${GREEN}${MSG_MAIN_MENU_QUICK}${NC}"
     echo -e "      ${MSG_MAIN_MENU_QUICK_DESC}"
-    echo ""
-    echo -e "  ${GREEN}${MSG_MAIN_MENU_REPORT}${NC}"
-    echo -e "      ${MSG_MAIN_MENU_REPORT_DESC}"
     echo ""
     echo -e "  ${RED}${MSG_MAIN_MENU_EXIT}${NC}"
     echo ""
@@ -648,27 +746,306 @@ run_firewall_submenu_loop() {
 }
 
 # ═══════════════════════════════════════════
-# 查看报告
+# 模块 4-9 子菜单壳（spec §3.2 / GAP-3）
 # ═══════════════════════════════════════════
+
+# Fail2Ban 子菜单
+show_fail2ban_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_FAIL2BAN_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_FAIL2BAN_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_FAIL2BAN_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_FAIL2BAN_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_fail2ban_submenu_loop() {
+    while true; do
+        show_fail2ban_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_fail2ban_wizard || log_error "Fail2Ban config failed"
+                press_enter
+                ;;
+            2)
+                if type check_fail2ban_status &>/dev/null; then
+                    check_fail2ban_status
+                else
+                    log_info "Fail2Ban 状态：见主菜单 [1] 系统状态检测"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# Audit 子菜单
+show_audit_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_AUDIT_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_AUDIT_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_AUDIT_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_AUDIT_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_audit_submenu_loop() {
+    while true; do
+        show_audit_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_audit_wizard || log_error "Audit config failed"
+                press_enter
+                ;;
+            2)
+                if type check_audit_status &>/dev/null; then
+                    check_audit_status
+                else
+                    log_info "Audit 状态：见主菜单 [1] 系统状态检测"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# Users 子菜单
+show_users_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_USERS_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_USERS_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_USERS_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_USERS_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_users_submenu_loop() {
+    while true; do
+        show_users_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_users_wizard || log_error "User management failed"
+                press_enter
+                ;;
+            2)
+                if type check_users_status &>/dev/null; then
+                    check_users_status
+                else
+                    log_info "用户状态：见主菜单 [1] 系统状态检测"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# Kernel 子菜单
+show_kernel_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_KERNEL_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_KERNEL_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_KERNEL_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_KERNEL_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_kernel_submenu_loop() {
+    while true; do
+        show_kernel_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_kernel_wizard || log_error "Kernel hardening failed"
+                press_enter
+                ;;
+            2)
+                if type check_kernel_status &>/dev/null; then
+                    check_kernel_status
+                else
+                    log_info "内核状态：见主菜单 [1] 系统状态检测"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# Filesystem 子菜单
+show_filesystem_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_FILESYSTEM_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_FILESYSTEM_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_FILESYSTEM_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_FILESYSTEM_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_filesystem_submenu_loop() {
+    while true; do
+        show_filesystem_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_filesystem_wizard || log_error "Filesystem check failed"
+                press_enter
+                ;;
+            2)
+                if type check_filesystem_status &>/dev/null; then
+                    check_filesystem_status
+                else
+                    log_info "文件系统状态：见主菜单 [1] 系统状态检测"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# Services 子菜单
+show_services_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_SERVICES_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_SERVICES_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_SERVICES_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_SERVICES_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_services_submenu_loop() {
+    while true; do
+        show_services_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_services_wizard || log_error "Service management failed"
+                press_enter
+                ;;
+            2)
+                if type check_services_status &>/dev/null; then
+                    check_services_status
+                else
+                    log_info "服务状态：见主菜单 [1] 系统状态检测"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# ═══════════════════════════════════════════
+# 查看报告（spec §3.4 GAP-7：历史报告列表）
+# ═══════════════════════════════════════════
+
+# 把秒数格式化为相对时间字符串（i18n）
+_format_relative_time() {
+    local secs=$1
+    if [[ "${secs}" -lt 60 ]]; then
+        printf "%s" "${MSG_TIME_JUST_NOW}"
+    elif [[ "${secs}" -lt 3600 ]]; then
+        # shellcheck disable=SC2059  # i18n format string intentionally contains %d
+        printf "${MSG_TIME_MINUTES_AGO}" "$((secs / 60))"
+    elif [[ "${secs}" -lt 86400 ]]; then
+        # shellcheck disable=SC2059  # i18n format string intentionally contains %d
+        printf "${MSG_TIME_HOURS_AGO}" "$((secs / 3600))"
+    else
+        # shellcheck disable=SC2059  # i18n format string intentionally contains %d
+        printf "${MSG_TIME_DAYS_AGO}" "$((secs / 86400))"
+    fi
+}
 
 view_report() {
     local report_dir="${REPORT_DIR:-/var/log/linux-one-key}"
-    local latest_report
+    local max_reports="${REPORT_HISTORY_LIMIT:-5}"
 
-    if [[ -d "${report_dir}" ]]; then
-        # 使用 ls -t 替代 find -printf，兼容 macOS (BSD find)
-        latest_report=$(ls -t "${report_dir}"/report_*.txt 2>/dev/null | head -1)
-    fi
+    while true; do
+        log_title "${MSG_REPORT_HISTORY_TITLE}"
 
-    if [[ -n "${latest_report}" ]] && [[ -f "${latest_report}" ]]; then
+        # 收集最近 N 份报告（按 mtime 倒序）
+        local -a reports=()
+        if [[ -d "${report_dir}" ]]; then
+            while IFS= read -r f; do
+                [[ -n "${f}" ]] && reports+=("${f}")
+            done < <(ls -t "${report_dir}"/report_*.txt 2>/dev/null | head -n "${max_reports}")
+        fi
+
+        if [[ "${#reports[@]}" -eq 0 ]]; then
+            log_warn "${MSG_REPORT_NO_FILES}"
+            press_enter
+            return 0
+        fi
+
+        # 列表展示（带相对时间）
+        local now
+        now=$(date +%s)
+        local i=1 f mtime rel
+        for f in "${reports[@]}"; do
+            mtime=$(date -r "${f}" +%s 2>/dev/null || echo "${now}")
+            rel=$(_format_relative_time $((now - mtime)))
+            printf "  ${CYAN}[%d]${NC} %s ${GRAY}(%s)${NC}\n" "${i}" "$(basename "${f}")" "${rel}"
+            i=$((i + 1))
+        done
         echo ""
-        cat "${latest_report}"
+        echo -e "  ${RED}[0] ${MSG_BACK}${NC}"
         echo ""
-    else
-        log_warn "${MSG_REPORT_NOT_FOUND}"
-    fi
 
-    press_enter
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-${#reports[@]}]" "")
+        if [[ "${choice}" == "0" ]]; then
+            return 0
+        elif [[ "${choice}" =~ ^[1-9][0-9]*$ ]] && [[ "${choice}" -le "${#reports[@]}" ]]; then
+            echo ""
+            cat "${reports[$((choice - 1))]}"
+            echo ""
+            press_enter
+        else
+            log_error "${MSG_MENU_INVALID}"
+        fi
+    done
 }
 
 # ═══════════════════════════════════════════
@@ -881,30 +1258,12 @@ run_main_menu_loop() {
             1) show_system_status ;;
             2) run_ssh_submenu_loop ;;
             3) run_firewall_submenu_loop ;;
-            4)
-                run_fail2ban_wizard || log_error "Fail2Ban config failed"
-                press_enter
-                ;;
-            5)
-                run_audit_wizard || log_error "Audit config failed"
-                press_enter
-                ;;
-            6)
-                run_users_wizard || log_error "User management failed"
-                press_enter
-                ;;
-            7)
-                run_kernel_wizard || log_error "Kernel hardening failed"
-                press_enter
-                ;;
-            8)
-                run_filesystem_wizard || log_error "Filesystem check failed"
-                press_enter
-                ;;
-            9)
-                run_services_wizard || log_error "Service management failed"
-                press_enter
-                ;;
+            4) run_fail2ban_submenu_loop ;;
+            5) run_audit_submenu_loop ;;
+            6) run_users_submenu_loop ;;
+            7) run_kernel_submenu_loop ;;
+            8) run_filesystem_submenu_loop ;;
+            9) run_services_submenu_loop ;;
             10)
                 run_full_wizard
                 press_enter

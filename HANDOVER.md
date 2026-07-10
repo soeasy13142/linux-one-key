@@ -21,7 +21,7 @@
 
 ## 2. 当前进度
 
-### 总体状态：🟢 v0.3 用户管理+内核加固+文件系统安全已完成
+### 总体状态：🟢 v0.4 全部模块完成 + 主菜单重构 v2 已实施
 
 | 阶段 | 状态 | 说明 |
 |------|------|------|
@@ -35,7 +35,8 @@
 | v0.3 用户管理 + 内核加固 + 文件系统 | ✅ 完成 | users.sh, kernel.sh, filesystem.sh, sysctl 模板, i18n, 测试 76 个用例 |
 | v0.4 审计日志模块 | ✅ 完成 | audit.sh, audit.bats, config/audit/, i18n 更新, 菜单集成, 44 个测试用例 |
 | v0.4 服务管理 | ✅ 完成 | services.sh, services.bats, i18n 更新, 菜单集成, 35 个测试用例 |
-| v1.0 测试 + 文档 + 发布 | ⬜ 未开始 | |
+| v1.0 主菜单重构 v2 | ✅ 完成 | 子菜单壳 + 分组 + 状态检测升级 + view_report 历史 + i18n 完善 + 错误精简 |
+| v1.0 测试 + 文档 + 发布 | ⬜ 待定 | |
 
 ---
 
@@ -124,11 +125,10 @@
 
 ### 接下来要做
 
-1. **📋 验证其他发行版**：在 CentOS/Debian VM 中运行完整向导流程
-   - SSH 端口交互逻辑
-   - Fail2Ban 参数验证
-2. **E2E 测试**：在 Docker 容器中各发行版验证
-3. **开始 v1.0**：完整测试、文档、正式发布
+1. **✅ 主菜单重构 v2** — 全部 6 个 Task 已完成（GAP-1~9）
+2. **📋 验证其他发行版**：在 CentOS/Debian VM 中运行完整向导流程
+3. **E2E 测试**：在 Docker 容器中各发行版验证
+4. **v1.0 收尾**：完整测试、文档、正式发布
 
 ### 实现顺序建议
 
@@ -268,3 +268,14 @@ v0.4 ✅ 已完成
 | 2026-07-10 | UPDATE | `docs/design/main-menu-redesign-prd.md` | → archived + superseded-by v2 + 顶部 added superseded notice |
 | 2026-07-10 | UPDATE | `docs/design/main-menu-redesign-plan.md` | → archived + superseded-by v2 + 顶部 added superseded notice |
 | 2026-07-10 | CREATE | `docs/plans/2026-07-10_16-00_main-menu-redesign-v2_nogit.md` | writing-plans 实施计划（7 任务，按 spec §5 推荐顺序） |
+| 2026-07-10 | CREATE | `tests/unit/menu.bats` | i18n 键 smoke tests（10 cases） |
+| 2026-07-10 | UPDATE | `scripts/lang/zh.sh` | +81 行（5 段新键：分组/状态/补全/子菜单/历史/错误） |
+| 2026-07-10 | UPDATE | `scripts/lang/en.sh` | +81 行（与 zh.sh 镜像） |
+| 2026-07-10 | UPDATE | `install.sh` | +6 show_xxx_submenu + 6 run_xxx_submenu_loop 函数（约 +240 行） |
+| 2026-07-10 | UPDATE | `install.sh` | run_main_menu_loop case 4-9 改为子菜单壳 |
+| 2026-07-10 | UPDATE | `install.sh` | show_main_menu 加 3 组分隔线 + SSH 端口状态摘要 |
+| 2026-07-10 | UPDATE | `install.sh`, `tests/unit/system-status.bats` | T3: 状态检测升级（评分 + 颜色 + 表格 + 建议） |
+| 2026-07-10 | UPDATE | `install.sh`, `lang/*`, `tests/unit/view-report.bats` | T4: view_report 升级（历史列表 + 相对时间） |
+| 2026-07-10 | UPDATE | `install.sh`, `lang/*`, `tests/unit/menu.bats` | T5: 移除全部 `:-` i18n 兜底 |
+| 2026-07-10 | UPDATE | `install.sh`, `tests/unit/parse-args.bats` | T6: 移除参数错误精简为 i18n 2 行 |
+| 2026-07-10 | UPDATE | `docs/design/main-menu-redesign-v2.md` | T7: status proposed → active, 进度记录补全 |
