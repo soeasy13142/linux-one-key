@@ -1,3 +1,11 @@
+---
+title: "Interactive Setup Spec"
+status: archived
+created: 2026-06-20
+updated: 2026-06-20
+implemented: 2026-06-23
+---
+
 # Design: Interactive Step-by-Step Setup
 
 **Date**: 2026-06-20

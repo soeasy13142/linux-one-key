@@ -1,3 +1,10 @@
+---
+title: "Main Menu Redesign PRD"
+status: proposed
+created: 2026-06-20
+updated: 2026-06-23
+---
+
 # PRD: 主菜单入口重设计
 
 **日期**: 2026-06-20
