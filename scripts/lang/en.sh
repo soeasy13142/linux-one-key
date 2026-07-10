@@ -738,3 +738,84 @@ MSG_WARN_TEST_FIRST="Please test new configuration before closing current sessio
 MSG_FINISH="Security hardening script execution complete"
 MSG_FINISH_HINT="Thank you for using, please check log files if you have any questions"
 MSG_GOODBYE="Goodbye!"
+
+# ═══════════════════════════════════════════
+# Main menu section separators + SSH port status (spec §3.1 GAP-1/2)
+# ═══════════════════════════════════════════
+
+MSG_SECTION_STATUS="────── Status ──────"
+MSG_SECTION_HARDENING="────── Hardening (Recommended Order) ──────"
+MSG_SECTION_QUICK="────── One-Click ──────"
+MSG_STATUS_SSH_PORT_HARDENED="Hardened"
+MSG_STATUS_SSH_PORT_DEFAULT="Not hardened"
+
+# ═══════════════════════════════════════════
+# Status detection: score + color + recommendation (spec §3.3 GAP-4/5/6)
+# ═══════════════════════════════════════════
+
+MSG_STATUS_HARDENED="Hardened"
+MSG_STATUS_PARTIAL="Partially hardened"
+MSG_STATUS_NOT_HARDENED="Not hardened"
+MSG_STATUS_RECOMMENDATION="Recommended next step"
+
+# ═══════════════════════════════════════════
+# Status key completions (remove :- fallbacks in install.sh, spec GAP-8)
+# ═══════════════════════════════════════════
+
+MSG_STATUS_USERS="User Management"
+MSG_STATUS_USERS_COUNT="Custom users"
+MSG_STATUS_KERNEL="Kernel Hardening"
+MSG_STATUS_KERNEL_CONF="sysctl config"
+MSG_STATUS_FILESYSTEM="Filesystem"
+MSG_STATUS_FS_SUID="SUID files"
+MSG_STATUS_SERVICES="Service Management"
+MSG_STATUS_SERVICES_RUNNING="Running services"
+MSG_STATUS_SERVICES_UNNECESSARY="Unnecessary services"
+
+# ═══════════════════════════════════════════
+# Module 4-9 submenu shells (4 keys per module, spec §3.2 GAP-3)
+# ═══════════════════════════════════════════
+
+MSG_FAIL2BAN_MENU_TITLE="Fail2Ban Intrusion Prevention"
+MSG_FAIL2BAN_MENU_WIZARD="[1] Full hardening wizard"
+MSG_FAIL2BAN_MENU_STATUS="[2] Status only"
+MSG_FAIL2BAN_MENU_BACK="[0] Back to main menu"
+
+MSG_AUDIT_MENU_TITLE="Audit Logging"
+MSG_AUDIT_MENU_WIZARD="[1] Full hardening wizard"
+MSG_AUDIT_MENU_STATUS="[2] Status only"
+MSG_AUDIT_MENU_BACK="[0] Back to main menu"
+
+MSG_USERS_MENU_TITLE="User Management"
+MSG_USERS_MENU_WIZARD="[1] Full hardening wizard"
+MSG_USERS_MENU_STATUS="[2] Status only"
+MSG_USERS_MENU_BACK="[0] Back to main menu"
+
+MSG_KERNEL_MENU_TITLE="Kernel Hardening"
+MSG_KERNEL_MENU_WIZARD="[1] Full hardening wizard"
+MSG_KERNEL_MENU_STATUS="[2] Status only"
+MSG_KERNEL_MENU_BACK="[0] Back to main menu"
+
+MSG_FILESYSTEM_MENU_TITLE="Filesystem Security"
+MSG_FILESYSTEM_MENU_WIZARD="[1] Full hardening wizard"
+MSG_FILESYSTEM_MENU_STATUS="[2] Status only"
+MSG_FILESYSTEM_MENU_BACK="[0] Back to main menu"
+
+MSG_SERVICES_MENU_TITLE="Service Management"
+MSG_SERVICES_MENU_WIZARD="[1] Full hardening wizard"
+MSG_SERVICES_MENU_STATUS="[2] Status only"
+MSG_SERVICES_MENU_BACK="[0] Back to main menu"
+
+# ═══════════════════════════════════════════
+# view_report history (spec §3.4 GAP-7)
+# ═══════════════════════════════════════════
+
+MSG_REPORT_HISTORY_TITLE="Hardening Report History"
+MSG_REPORT_NO_FILES="No hardening reports found"
+
+# ═══════════════════════════════════════════
+# parse_args error (simplified, spec §3.5 GAP-9)
+# ═══════════════════════════════════════════
+
+MSG_ERROR_REMOVED_ARG="Error: --%s has been removed. This script only supports interactive mode."
+MSG_ERROR_REMOVED_HINT="Tip: use --status for read-only detection, or no argument for interactive menu."

@@ -738,3 +738,84 @@ MSG_WARN_TEST_FIRST="请测试新配置后再关闭当前会话"
 MSG_FINISH="安全加固脚本执行完成"
 MSG_FINISH_HINT="感谢使用，如有问题请查看日志文件"
 MSG_GOODBYE="再见！"
+
+# ═══════════════════════════════════════════
+# 主菜单分组分隔 + 顶部状态摘要（spec §3.1 GAP-1/2）
+# ═══════════════════════════════════════════
+
+MSG_SECTION_STATUS="────── 状态 ──────"
+MSG_SECTION_HARDENING="────── 加固（按推荐顺序）──────"
+MSG_SECTION_QUICK="────── 一键 ──────"
+MSG_STATUS_SSH_PORT_HARDENED="已加固"
+MSG_STATUS_SSH_PORT_DEFAULT="未加固"
+
+# ═══════════════════════════════════════════
+# 状态检测：评分 + 颜色 + 建议下一步（spec §3.3 GAP-4/5/6）
+# ═══════════════════════════════════════════
+
+MSG_STATUS_HARDENED="已加固"
+MSG_STATUS_PARTIAL="部分加固"
+MSG_STATUS_NOT_HARDENED="未加固"
+MSG_STATUS_RECOMMENDATION="建议下一步"
+
+# ═══════════════════════════════════════════
+# 状态键补全（移除 install.sh 中的 :- 兜底，spec GAP-8）
+# ═══════════════════════════════════════════
+
+MSG_STATUS_USERS="用户管理"
+MSG_STATUS_USERS_COUNT="自定义用户数"
+MSG_STATUS_KERNEL="内核加固"
+MSG_STATUS_KERNEL_CONF="sysctl 配置"
+MSG_STATUS_FILESYSTEM="文件系统"
+MSG_STATUS_FS_SUID="SUID 文件数"
+MSG_STATUS_SERVICES="服务管理"
+MSG_STATUS_SERVICES_RUNNING="运行中服务"
+MSG_STATUS_SERVICES_UNNECESSARY="非必要服务"
+
+# ═══════════════════════════════════════════
+# 模块 4-9 子菜单壳（每个模块 4 个键，spec §3.2 GAP-3）
+# ═══════════════════════════════════════════
+
+MSG_FAIL2BAN_MENU_TITLE="Fail2Ban 入侵防护"
+MSG_FAIL2BAN_MENU_WIZARD="[1] 全流程加固"
+MSG_FAIL2BAN_MENU_STATUS="[2] 仅查看状态"
+MSG_FAIL2BAN_MENU_BACK="[0] 返回主菜单"
+
+MSG_AUDIT_MENU_TITLE="审计日志"
+MSG_AUDIT_MENU_WIZARD="[1] 全流程加固"
+MSG_AUDIT_MENU_STATUS="[2] 仅查看状态"
+MSG_AUDIT_MENU_BACK="[0] 返回主菜单"
+
+MSG_USERS_MENU_TITLE="用户管理"
+MSG_USERS_MENU_WIZARD="[1] 全流程加固"
+MSG_USERS_MENU_STATUS="[2] 仅查看状态"
+MSG_USERS_MENU_BACK="[0] 返回主菜单"
+
+MSG_KERNEL_MENU_TITLE="内核加固"
+MSG_KERNEL_MENU_WIZARD="[1] 全流程加固"
+MSG_KERNEL_MENU_STATUS="[2] 仅查看状态"
+MSG_KERNEL_MENU_BACK="[0] 返回主菜单"
+
+MSG_FILESYSTEM_MENU_TITLE="文件系统安全"
+MSG_FILESYSTEM_MENU_WIZARD="[1] 全流程加固"
+MSG_FILESYSTEM_MENU_STATUS="[2] 仅查看状态"
+MSG_FILESYSTEM_MENU_BACK="[0] 返回主菜单"
+
+MSG_SERVICES_MENU_TITLE="服务管理"
+MSG_SERVICES_MENU_WIZARD="[1] 全流程加固"
+MSG_SERVICES_MENU_STATUS="[2] 仅查看状态"
+MSG_SERVICES_MENU_BACK="[0] 返回主菜单"
+
+# ═══════════════════════════════════════════
+# view_report 历史报告（spec §3.4 GAP-7）
+# ═══════════════════════════════════════════
+
+MSG_REPORT_HISTORY_TITLE="加固报告历史"
+MSG_REPORT_NO_FILES="未找到任何加固报告"
+
+# ═══════════════════════════════════════════
+# parse_args 错误提示（精简后，spec §3.5 GAP-9）
+# ═══════════════════════════════════════════
+
+MSG_ERROR_REMOVED_ARG="错误：参数 --%s 已移除，本脚本仅支持交互模式"
+MSG_ERROR_REMOVED_HINT="提示：使用 --status 只读检测，或不带参数进入交互菜单"
