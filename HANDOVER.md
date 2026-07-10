@@ -266,3 +266,4 @@ v0.4 ✅ 已完成
 | 2026-07-10 | CREATE | `docs/design/main-menu-redesign-v2.md` | 主菜单重构 v2（合并 PRD+Plan 为单一文档，覆盖 v0.4 现状 + v1.0 理想，10 个 GAP，7 个 Tasks） |
 | 2026-07-10 | UPDATE | `docs/design/main-menu-redesign-prd.md` | → archived + superseded-by v2 + 顶部 added superseded notice |
 | 2026-07-10 | UPDATE | `docs/design/main-menu-redesign-plan.md` | → archived + superseded-by v2 + 顶部 added superseded notice |
+| 2026-07-10 | CREATE | `docs/plans/2026-07-10_16-00_main-menu-redesign-v2_nogit.md` | writing-plans 实施计划（7 任务，按 spec §5 推荐顺序） |
