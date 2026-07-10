@@ -120,11 +120,8 @@ _parse_args() {
                 local removed_arg="${arg#--}"
                 removed_arg="${removed_arg#-}"
                 echo ""
-                echo -e "${RED}Error: --${removed_arg} has been removed.${NC}"
-                echo -e "${YELLOW}This script is now fully interactive:${NC}"
-                echo -e "${YELLOW}  sudo bash install.sh${NC}"
-                echo -e "${BLUE}Tip: --status still works for read-only:${NC}"
-                echo -e "${BLUE}  sudo bash install.sh --status${NC}"
+                log_error "$(printf "${MSG_ERROR_REMOVED_ARG}" "${removed_arg}")"
+                log_info "${MSG_ERROR_REMOVED_HINT}"
                 echo ""
                 exit 1
                 ;;
