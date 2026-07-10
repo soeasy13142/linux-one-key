@@ -812,6 +812,10 @@ MSG_SERVICES_MENU_BACK="[0] 返回主菜单"
 
 MSG_REPORT_HISTORY_TITLE="加固报告历史"
 MSG_REPORT_NO_FILES="未找到任何加固报告"
+MSG_TIME_JUST_NOW="刚刚"
+MSG_TIME_MINUTES_AGO="%d 分钟前"
+MSG_TIME_HOURS_AGO="%d 小时前"
+MSG_TIME_DAYS_AGO="%d 天前"
 
 # ═══════════════════════════════════════════
 # parse_args 错误提示（精简后，spec §3.5 GAP-9）

@@ -812,6 +812,10 @@ MSG_SERVICES_MENU_BACK="[0] Back to main menu"
 
 MSG_REPORT_HISTORY_TITLE="Hardening Report History"
 MSG_REPORT_NO_FILES="No hardening reports found"
+MSG_TIME_JUST_NOW="just now"
+MSG_TIME_MINUTES_AGO="%d minutes ago"
+MSG_TIME_HOURS_AGO="%d hours ago"
+MSG_TIME_DAYS_AGO="%d days ago"
 
 # ═══════════════════════════════════════════
 # parse_args error (simplified, spec §3.5 GAP-9)

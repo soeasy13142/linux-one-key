@@ -981,27 +981,74 @@ run_services_submenu_loop() {
 }
 
 # ═══════════════════════════════════════════
-# 查看报告
+# 查看报告（spec §3.4 GAP-7：历史报告列表）
 # ═══════════════════════════════════════════
+
+# 把秒数格式化为相对时间字符串（i18n）
+_format_relative_time() {
+    local secs=$1
+    if [[ "${secs}" -lt 60 ]]; then
+        printf "%s" "${MSG_TIME_JUST_NOW}"
+    elif [[ "${secs}" -lt 3600 ]]; then
+        # shellcheck disable=SC2059  # i18n format string intentionally contains %d
+        printf "${MSG_TIME_MINUTES_AGO}" "$((secs / 60))"
+    elif [[ "${secs}" -lt 86400 ]]; then
+        # shellcheck disable=SC2059  # i18n format string intentionally contains %d
+        printf "${MSG_TIME_HOURS_AGO}" "$((secs / 3600))"
+    else
+        # shellcheck disable=SC2059  # i18n format string intentionally contains %d
+        printf "${MSG_TIME_DAYS_AGO}" "$((secs / 86400))"
+    fi
+}
 
 view_report() {
     local report_dir="${REPORT_DIR:-/var/log/linux-one-key}"
-    local latest_report
+    local max_reports="${REPORT_HISTORY_LIMIT:-5}"
 
-    if [[ -d "${report_dir}" ]]; then
-        # 使用 ls -t 替代 find -printf，兼容 macOS (BSD find)
-        latest_report=$(ls -t "${report_dir}"/report_*.txt 2>/dev/null | head -1)
-    fi
+    while true; do
+        log_title "${MSG_REPORT_HISTORY_TITLE}"
 
-    if [[ -n "${latest_report}" ]] && [[ -f "${latest_report}" ]]; then
+        # 收集最近 N 份报告（按 mtime 倒序）
+        local -a reports=()
+        if [[ -d "${report_dir}" ]]; then
+            while IFS= read -r f; do
+                [[ -n "${f}" ]] && reports+=("${f}")
+            done < <(ls -t "${report_dir}"/report_*.txt 2>/dev/null | head -n "${max_reports}")
+        fi
+
+        if [[ "${#reports[@]}" -eq 0 ]]; then
+            log_warn "${MSG_REPORT_NO_FILES}"
+            press_enter
+            return 0
+        fi
+
+        # 列表展示（带相对时间）
+        local now
+        now=$(date +%s)
+        local i=1 f mtime rel
+        for f in "${reports[@]}"; do
+            mtime=$(date -r "${f}" +%s 2>/dev/null || echo "${now}")
+            rel=$(_format_relative_time $((now - mtime)))
+            printf "  ${CYAN}[%d]${NC} %s ${GRAY}(%s)${NC}\n" "${i}" "$(basename "${f}")" "${rel}"
+            i=$((i + 1))
+        done
         echo ""
-        cat "${latest_report}"
+        echo -e "  ${RED}[0] ${MSG_BACK}${NC}"
         echo ""
-    else
-        log_warn "${MSG_REPORT_NOT_FOUND}"
-    fi
 
-    press_enter
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-${#reports[@]}]" "")
+        if [[ "${choice}" == "0" ]]; then
+            return 0
+        elif [[ "${choice}" =~ ^[1-9][0-9]*$ ]] && [[ "${choice}" -le "${#reports[@]}" ]]; then
+            echo ""
+            cat "${reports[$((choice - 1))]}"
+            echo ""
+            press_enter
+        else
+            log_error "${MSG_MENU_INVALID}"
+        fi
+    done
 }
 
 # ═══════════════════════════════════════════
