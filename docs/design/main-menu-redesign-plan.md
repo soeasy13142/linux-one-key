@@ -1,3 +1,10 @@
+---
+title: "Main Menu Redesign Plan"
+status: proposed
+created: 2026-06-23
+updated: 2026-06-23
+---
+
 # Plan: 主菜单入口重设计
 
 **Source PRD**: `.claude/prds/main-menu-redesign.prd.md`

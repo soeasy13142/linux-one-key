@@ -1,3 +1,10 @@
+---
+title: "Linux Security Hardening PRD"
+status: active
+created: 2026-06-20
+updated: 2026-06-23
+---
+
 # PRD: Linux 云服务器安全加固一键脚本
 
 **项目名称**: linux-one-key

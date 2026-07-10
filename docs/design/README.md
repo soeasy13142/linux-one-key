@@ -1,13 +1,46 @@
 # Design Documents
 
-设计文档、PRD 需求文档和实施计划。
+> 项目设计文档、PRD、规划。**文件位置 + frontmatter `status` 双层区分状态**。
 
-| File | Date | Description |
-|------|------|-------------|
-| [interactive-setup-spec.md](interactive-setup-spec.md) | 2026-06-20 | 交互式逐步配置设计文档 |
-| [interactive-setup-plan.md](interactive-setup-plan.md) | 2026-06-20 | 交互式逐步配置实施计划 |
-| [linux-security-hardening-prd.md](linux-security-hardening-prd.md) | 2026-06-20 | Linux 安全加固 PRD（复制自 `.claude/prds/`） |
-| [main-menu-redesign-prd.md](main-menu-redesign-prd.md) | 2026-06-20 | 主菜单重设计 PRD（复制自 `.claude/prds/`） |
-| [main-menu-redesign-plan.md](main-menu-redesign-plan.md) | 2026-06-20 | 主菜单重设计实施计划（复制自 `.claude/plans/`） |
+## 维护规则
 
-> **Note**: PRD 和 Plan 原件保留在 `.claude/prds/` 和 `.claude/plans/`，供 Claude Code 工作流使用。
+- 新设计文档须含 frontmatter `status` 字段（取值见下表）
+- 状态变更须同步更新 frontmatter 与本 README
+- 已实施文档须迁入 `archive/`，不得堆在顶层
+- frontmatter schema 参考 [`docs/plans/README.md`](../../plans/README.md)
+
+## 状态语义
+
+| status | 含义 | 目录位置 |
+|---|---|---|
+| `active` | 当前活跃参考（如总 PRD） | `docs/design/` 顶层 |
+| `proposed` | 已规划 / 待审批，**未实施** | `docs/design/` 顶层 |
+| `archived` | 已实施完成，仅作历史参考 | `docs/design/archive/` |
+
+## 活跃文档 (status=active)
+
+| 文件 | 用途 |
+|---|---|
+| [linux-security-hardening-prd.md](linux-security-hardening-prd.md) | 项目总 PRD，v1.0 目标 |
+
+## 待审批文档 (status=proposed)
+
+> ⚠️ 以下文档为规划中的重设计，**尚未实施**，仅作未来参考。
+
+| 文件 | 用途 |
+|---|---|
+| [main-menu-redesign-prd.md](main-menu-redesign-prd.md) | 主菜单重设计 PRD |
+| [main-menu-redesign-plan.md](main-menu-redesign-plan.md) | 主菜单重设计实施计划 |
+
+## 已归档 (status=archived)
+
+详见 [docs/design/archive/](archive/)。
+
+| 文件 | 实施日期 | 说明 |
+|---|---|---|
+| [`archive/interactive-setup-spec.md`](archive/interactive-setup-spec.md) | 2026-06-23 | 交互式逐步配置 spec |
+| [`archive/interactive-setup-plan.md`](archive/interactive-setup-plan.md) | 2026-06-23 | 交互式逐步配置 plan |
+
+## 重新生成文件树
+
+运行 `bash scripts/dev/gen-file-tree.sh` 重新生成 [`docs/file-tree.generated.md`](../../file-tree.generated.md)（gitignored）。
