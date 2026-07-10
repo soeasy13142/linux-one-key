@@ -648,6 +648,238 @@ run_firewall_submenu_loop() {
 }
 
 # ═══════════════════════════════════════════
+# 模块 4-9 子菜单壳（spec §3.2 / GAP-3）
+# ═══════════════════════════════════════════
+
+# Fail2Ban 子菜单
+show_fail2ban_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_FAIL2BAN_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_FAIL2BAN_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_FAIL2BAN_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_FAIL2BAN_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_fail2ban_submenu_loop() {
+    while true; do
+        show_fail2ban_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_fail2ban_wizard || log_error "Fail2Ban config failed"
+                press_enter
+                ;;
+            2)
+                if type check_fail2ban_status &>/dev/null; then
+                    check_fail2ban_status
+                else
+                    log_info "Fail2Ban 状态：见主菜单 [1] 系统状态检测"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# Audit 子菜单
+show_audit_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_AUDIT_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_AUDIT_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_AUDIT_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_AUDIT_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_audit_submenu_loop() {
+    while true; do
+        show_audit_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_audit_wizard || log_error "Audit config failed"
+                press_enter
+                ;;
+            2)
+                if type check_audit_status &>/dev/null; then
+                    check_audit_status
+                else
+                    log_info "Audit 状态：见主菜单 [1] 系统状态检测"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# Users 子菜单
+show_users_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_USERS_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_USERS_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_USERS_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_USERS_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_users_submenu_loop() {
+    while true; do
+        show_users_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_users_wizard || log_error "User management failed"
+                press_enter
+                ;;
+            2)
+                if type check_users_status &>/dev/null; then
+                    check_users_status
+                else
+                    log_info "用户状态：见主菜单 [1] 系统状态检测"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# Kernel 子菜单
+show_kernel_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_KERNEL_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_KERNEL_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_KERNEL_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_KERNEL_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_kernel_submenu_loop() {
+    while true; do
+        show_kernel_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_kernel_wizard || log_error "Kernel hardening failed"
+                press_enter
+                ;;
+            2)
+                if type check_kernel_status &>/dev/null; then
+                    check_kernel_status
+                else
+                    log_info "内核状态：见主菜单 [1] 系统状态检测"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# Filesystem 子菜单
+show_filesystem_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_FILESYSTEM_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_FILESYSTEM_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_FILESYSTEM_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_FILESYSTEM_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_filesystem_submenu_loop() {
+    while true; do
+        show_filesystem_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_filesystem_wizard || log_error "Filesystem check failed"
+                press_enter
+                ;;
+            2)
+                if type check_filesystem_status &>/dev/null; then
+                    check_filesystem_status
+                else
+                    log_info "文件系统状态：见主菜单 [1] 系统状态检测"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# Services 子菜单
+show_services_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_SERVICES_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_SERVICES_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_SERVICES_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_SERVICES_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_services_submenu_loop() {
+    while true; do
+        show_services_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_services_wizard || log_error "Service management failed"
+                press_enter
+                ;;
+            2)
+                if type check_services_status &>/dev/null; then
+                    check_services_status
+                else
+                    log_info "服务状态：见主菜单 [1] 系统状态检测"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# ═══════════════════════════════════════════
 # 查看报告
 # ═══════════════════════════════════════════
 
@@ -881,30 +1113,12 @@ run_main_menu_loop() {
             1) show_system_status ;;
             2) run_ssh_submenu_loop ;;
             3) run_firewall_submenu_loop ;;
-            4)
-                run_fail2ban_wizard || log_error "Fail2Ban config failed"
-                press_enter
-                ;;
-            5)
-                run_audit_wizard || log_error "Audit config failed"
-                press_enter
-                ;;
-            6)
-                run_users_wizard || log_error "User management failed"
-                press_enter
-                ;;
-            7)
-                run_kernel_wizard || log_error "Kernel hardening failed"
-                press_enter
-                ;;
-            8)
-                run_filesystem_wizard || log_error "Filesystem check failed"
-                press_enter
-                ;;
-            9)
-                run_services_wizard || log_error "Service management failed"
-                press_enter
-                ;;
+            4) run_fail2ban_submenu_loop ;;
+            5) run_audit_submenu_loop ;;
+            6) run_users_submenu_loop ;;
+            7) run_kernel_submenu_loop ;;
+            8) run_filesystem_submenu_loop ;;
+            9) run_services_submenu_loop ;;
             10)
                 run_full_wizard
                 press_enter
