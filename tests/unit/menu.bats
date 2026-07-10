@@ -88,3 +88,15 @@ setup() {
     [[ "${MSG_FILESYSTEM_MENU_WIZARD}" =~ "1" ]]
     [[ "${MSG_SERVICES_MENU_WIZARD}" =~ "1" ]]
 }
+
+@test "main menu section labels are defined" {
+    [[ -n "${MSG_SECTION_STATUS}" ]]
+    [[ -n "${MSG_SECTION_HARDENING}" ]]
+    [[ -n "${MSG_SECTION_QUICK}" ]]
+}
+
+@test "SSH port hardened/default labels are distinct" {
+    [[ -n "${MSG_STATUS_SSH_PORT_HARDENED}" ]]
+    [[ -n "${MSG_STATUS_SSH_PORT_DEFAULT}" ]]
+    [[ "${MSG_STATUS_SSH_PORT_HARDENED}" != "${MSG_STATUS_SSH_PORT_DEFAULT}" ]]
+}
