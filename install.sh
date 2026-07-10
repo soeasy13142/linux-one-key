@@ -308,140 +308,223 @@ load_dependencies() {
 # ═══════════════════════════════════════════
 
 # 显示系统安全状态
+# 打印一行加固状态：图标 + 颜色 + 标签 + 详情（对齐布局）
+# 参数: $1=label $2=status(已加固/部分/未加固) $3=color $4=detail $5=icon
+_print_status_row() {
+    local label="$1"
+    local status="$2"
+    local color="$3"
+    local detail="$4"
+    local icon="$5"
+    printf "  %-16s ${color}${icon} %s${NC}  %s\n" "${label}" "${status}" "${detail}"
+}
+
+# 显示系统安全状态：评分 + 颜色 + 表格 + 建议下一步（spec §3.3 GAP-4/5/6）
 show_system_status() {
     log_title "${MSG_STATUS_TITLE}"
 
-    # SSH 状态
-    echo -e "${GREEN}[SSH]${NC}"
-    local ssh_port
+    local passed=0 partial=0 failed=0
+    local -a recommend_items=()  # "menu_num|label"
+
+    # ─── SSH ────────────────────────────────────────────────────────────
+    local ssh_port ssh_root ssh_passwd ssh_pubkey ssh_ok=0 ssh_total=4
     ssh_port=$(get_ssh_port 2>/dev/null || echo "22")
-    if [[ "${ssh_port}" == "22" ]]; then
-        echo -e "  ${MSG_STATUS_SSH_PORT}: ${ssh_port} (${MSG_STATUS_DEFAULT_PORT})"
+    ssh_root=$(get_ssh_config "PermitRootLogin" 2>/dev/null || echo "unknown")
+    ssh_passwd=$(get_ssh_config "PasswordAuthentication" 2>/dev/null || echo "unknown")
+    ssh_pubkey=$(get_ssh_config "PubkeyAuthentication" 2>/dev/null || echo "unknown")
+    [[ "${ssh_port}" != "22" ]] && ssh_ok=$((ssh_ok + 1))
+    [[ "${ssh_root}" == "no" ]] && ssh_ok=$((ssh_ok + 1))
+    [[ "${ssh_passwd}" == "no" ]] && ssh_ok=$((ssh_ok + 1))
+    if [[ "${ssh_pubkey}" == "yes" ]] || [[ "${ssh_pubkey}" == "unknown" ]]; then
+        ssh_ok=$((ssh_ok + 1))
+    fi
+    if [[ "${ssh_ok}" -eq "${ssh_total}" ]]; then
+        _print_status_row "${MSG_MAIN_MENU_SSH}" "${MSG_STATUS_HARDENED}" "${GREEN}" "端口 ${ssh_port}" "✅"
+        passed=$((passed + 1))
+    elif [[ "${ssh_ok}" -eq 0 ]]; then
+        _print_status_row "${MSG_MAIN_MENU_SSH}" "${MSG_STATUS_NOT_HARDENED}" "${RED}" "端口 ${ssh_port}, 0/${ssh_total}" "❌"
+        failed=$((failed + 1))
+        recommend_items+=("2|${MSG_MAIN_MENU_SSH}")
     else
-        echo -e "  ${MSG_STATUS_SSH_PORT}: ${ssh_port} (${MSG_STATUS_CONFIGURED})"
+        _print_status_row "${MSG_MAIN_MENU_SSH}" "${MSG_STATUS_PARTIAL}" "${YELLOW}" "端口 ${ssh_port}, ${ssh_ok}/${ssh_total}" "⚠️"
+        partial=$((partial + 1))
+        recommend_items+=("2|${MSG_MAIN_MENU_SSH}")
     fi
 
-    local root_login
-    root_login=$(get_ssh_config "PermitRootLogin" 2>/dev/null || echo "unknown")
-    if [[ "${root_login}" == "no" ]]; then
-        echo -e "  ${MSG_STATUS_SSH_ROOT}: ${MSG_STATUS_NOT_ALLOWED}"
-    else
-        echo -e "  ${MSG_STATUS_SSH_ROOT}: ${MSG_STATUS_ALLOWED}"
-    fi
-
-    local pass_auth
-    pass_auth=$(get_ssh_config "PasswordAuthentication" 2>/dev/null || echo "unknown")
-    if [[ "${pass_auth}" == "no" ]]; then
-        echo -e "  ${MSG_STATUS_SSH_PASSWD}: ${MSG_STATUS_NOT_ALLOWED}"
-    else
-        echo -e "  ${MSG_STATUS_SSH_PASSWD}: ${MSG_STATUS_ALLOWED}"
-    fi
-
-    local pubkey_auth
-    pubkey_auth=$(get_ssh_config "PubkeyAuthentication" 2>/dev/null || echo "unknown")
-    if [[ "${pubkey_auth}" == "yes" ]] || [[ "${pubkey_auth}" == "unknown" ]]; then
-        echo -e "  ${MSG_STATUS_SSH_KEY}: ${MSG_STATUS_ENABLED}"
-    else
-        echo -e "  ${MSG_STATUS_SSH_KEY}: ${MSG_STATUS_DISABLED}"
-    fi
-
-    echo ""
-
-    # 防火墙状态
-    echo -e "${GREEN}[${MSG_STATUS_FIREWALL}]${NC}"
-    local fw_status="${MSG_STATUS_DISABLED}"
+    # ─── 防火墙 ─────────────────────────────────────────────────────────
+    local fw_status="${MSG_STATUS_DISABLED}" fw_color="${RED}" fw_icon="❌" fw_detail
     if command -v ufw &>/dev/null; then
         if ufw status 2>/dev/null | grep -q "Status: active"; then
-            fw_status="${MSG_STATUS_ENABLED}"
+            fw_status="${MSG_STATUS_ENABLED}"; fw_color="${GREEN}"; fw_icon="✅"
         fi
     elif command -v firewall-cmd &>/dev/null; then
         if firewall-cmd --state &>/dev/null; then
-            fw_status="${MSG_STATUS_ENABLED}"
+            fw_status="${MSG_STATUS_ENABLED}"; fw_color="${GREEN}"; fw_icon="✅"
         fi
     fi
-    echo -e "  ${MSG_STATUS_FIREWALL}: ${fw_status}"
+    fw_detail="${fw_status}"
+    if [[ "${fw_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_FIREWALL}" "${MSG_STATUS_HARDENED}" "${fw_color}" "${fw_detail}" "${fw_icon}"
+        passed=$((passed + 1))
+    else
+        _print_status_row "${MSG_STATUS_FIREWALL}" "${MSG_STATUS_NOT_HARDENED}" "${fw_color}" "${fw_detail}" "${fw_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("3|${MSG_STATUS_FIREWALL}")
+    fi
 
-    echo ""
-
-    # Fail2Ban 状态
-    echo -e "${GREEN}[${MSG_STATUS_FAIL2BAN}]${NC}"
-    local f2b_status="${MSG_STATUS_NOT_INSTALLED}"
+    # ─── Fail2Ban ───────────────────────────────────────────────────────
+    local f2b_status="${MSG_STATUS_NOT_INSTALLED}" f2b_color="${RED}" f2b_icon="❌"
     if command -v fail2ban-client &>/dev/null; then
+        f2b_status="${MSG_STATUS_INSTALLED}"
         if systemctl is-active fail2ban &>/dev/null; then
-            f2b_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_ENABLED})"
+            f2b_color="${GREEN}"; f2b_icon="✅"
         else
-            f2b_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_DISABLED})"
+            f2b_color="${YELLOW}"; f2b_icon="⚠️"
         fi
     fi
-    echo -e "  ${MSG_STATUS_FAIL2BAN}: ${f2b_status}"
+    if [[ "${f2b_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_HARDENED}" "${f2b_color}" "${f2b_status}" "${f2b_icon}"
+        passed=$((passed + 1))
+    elif [[ "${f2b_color}" == "${YELLOW}" ]]; then
+        _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_PARTIAL}" "${f2b_color}" "${f2b_status}" "${f2b_icon}"
+        partial=$((partial + 1))
+        recommend_items+=("4|${MSG_STATUS_FAIL2BAN}")
+    else
+        _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_NOT_HARDENED}" "${f2b_color}" "${f2b_status}" "${f2b_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("4|${MSG_STATUS_FAIL2BAN}")
+    fi
 
-    echo ""
-
-    # 审计日志状态
-    echo -e "${GREEN}[${MSG_STATUS_AUDIT}]${NC}"
-    local audit_status="${MSG_STATUS_NOT_INSTALLED}"
+    # ─── 审计日志 ───────────────────────────────────────────────────────
+    local audit_status="${MSG_STATUS_NOT_INSTALLED}" audit_color="${RED}" audit_icon="❌"
     if command -v auditctl &>/dev/null; then
+        audit_status="${MSG_STATUS_INSTALLED}"
         if systemctl is-active auditd &>/dev/null; then
-            audit_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_ENABLED})"
+            audit_color="${GREEN}"; audit_icon="✅"
         else
-            audit_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_DISABLED})"
+            audit_color="${YELLOW}"; audit_icon="⚠️"
         fi
     fi
-    echo -e "  ${MSG_STATUS_AUDIT}: ${audit_status}"
+    if [[ "${audit_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_HARDENED}" "${audit_color}" "${audit_status}" "${audit_icon}"
+        passed=$((passed + 1))
+    elif [[ "${audit_color}" == "${YELLOW}" ]]; then
+        _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_PARTIAL}" "${audit_color}" "${audit_status}" "${audit_icon}"
+        partial=$((partial + 1))
+        recommend_items+=("5|${MSG_STATUS_AUDIT}")
+    else
+        _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_NOT_HARDENED}" "${audit_color}" "${audit_status}" "${audit_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("5|${MSG_STATUS_AUDIT}")
+    fi
 
-    echo ""
-
-    # 用户管理状态
-    echo -e "${GREEN}[${MSG_STATUS_USERS:-Users}]${NC}"
+    # ─── 用户管理 ───────────────────────────────────────────────────────
+    local users_color="${RED}" users_icon="❌" users_detail="${MSG_STATUS_NOT_CONFIGURED:-未配置}"
     if type check_users_status &>/dev/null; then
-        local users_status
+        local users_status custom_users
         users_status=$(check_users_status 2>/dev/null)
-        local custom_users
         custom_users=$(echo "${users_status}" | grep '^users_custom=' | cut -d= -f2)
-        echo -e "  ${MSG_STATUS_USERS_COUNT:-Custom users}: ${custom_users}"
-    fi
-
-    echo ""
-
-    # 内核加固状态
-    echo -e "${GREEN}[${MSG_STATUS_KERNEL:-Kernel}]${NC}"
-    if type check_kernel_status &>/dev/null; then
-        local kernel_status
-        kernel_status=$(check_kernel_status 2>/dev/null)
-        local kernel_conf
-        kernel_conf=$(echo "${kernel_status}" | grep '^kernel_conf=' | cut -d= -f2)
-        local kernel_conf_status="${MSG_STATUS_NOT_INSTALLED}"
-        if [[ "${kernel_conf}" == "yes" ]]; then
-            kernel_conf_status="${MSG_STATUS_INSTALLED} (${MSG_STATUS_CONFIGURED})"
+        if [[ "${custom_users}" =~ ^[1-9][0-9]*$ ]]; then
+            users_color="${GREEN}"; users_icon="✅"
+            users_detail="${MSG_STATUS_USERS_COUNT}: ${custom_users}"
         fi
-        echo -e "  ${MSG_STATUS_KERNEL_CONF:-sysctl config}: ${kernel_conf_status}"
+    fi
+    if [[ "${users_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_USERS}" "${MSG_STATUS_HARDENED}" "${users_color}" "${users_detail}" "${users_icon}"
+        passed=$((passed + 1))
+    else
+        _print_status_row "${MSG_STATUS_USERS}" "${MSG_STATUS_NOT_HARDENED}" "${users_color}" "${users_detail}" "${users_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("6|${MSG_STATUS_USERS}")
     fi
 
-    echo ""
+    # ─── 内核加固 ───────────────────────────────────────────────────────
+    local kernel_color="${RED}" kernel_icon="❌" kernel_detail="${MSG_STATUS_NOT_HARDENED}"
+    if type check_kernel_status &>/dev/null; then
+        local kernel_status kernel_conf
+        kernel_status=$(check_kernel_status 2>/dev/null)
+        kernel_conf=$(echo "${kernel_status}" | grep '^kernel_conf=' | cut -d= -f2)
+        if [[ "${kernel_conf}" == "yes" ]]; then
+            kernel_color="${GREEN}"; kernel_icon="✅"
+            kernel_detail="${MSG_STATUS_KERNEL_CONF}: ${MSG_STATUS_INSTALLED}"
+        fi
+    fi
+    if [[ "${kernel_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_KERNEL}" "${MSG_STATUS_HARDENED}" "${kernel_color}" "${kernel_detail}" "${kernel_icon}"
+        passed=$((passed + 1))
+    else
+        _print_status_row "${MSG_STATUS_KERNEL}" "${MSG_STATUS_NOT_HARDENED}" "${kernel_color}" "${kernel_detail}" "${kernel_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("7|${MSG_STATUS_KERNEL}")
+    fi
 
-    # 文件系统状态
-    echo -e "${GREEN}[${MSG_STATUS_FILESYSTEM:-Filesystem}]${NC}"
+    # ─── 文件系统 ───────────────────────────────────────────────────────
+    local fs_color="${RED}" fs_icon="❌" fs_detail="${MSG_STATUS_NOT_HARDENED}"
     if type check_filesystem_status &>/dev/null; then
-        local fs_status
+        local fs_status suid_count
         fs_status=$(check_filesystem_status 2>/dev/null)
-        local suid_count
         suid_count=$(echo "${fs_status}" | grep '^fs_suid_count=' | cut -d= -f2)
-        echo -e "  ${MSG_STATUS_FS_SUID:-SUID files}: ${suid_count}"
+        if [[ "${suid_count}" =~ ^[0-9]+$ ]] && [[ "${suid_count}" -gt 0 ]]; then
+            # 已扫描（无论数量多少都算已检查）
+            fs_color="${YELLOW}"; fs_icon="⚠️"
+            fs_detail="${MSG_STATUS_FS_SUID}: ${suid_count}"
+        fi
+    fi
+    if [[ "${fs_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_HARDENED}" "${fs_color}" "${fs_detail}" "${fs_icon}"
+        passed=$((passed + 1))
+    elif [[ "${fs_color}" == "${YELLOW}" ]]; then
+        _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_PARTIAL}" "${fs_color}" "${fs_detail}" "${fs_icon}"
+        partial=$((partial + 1))
+    else
+        _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_NOT_HARDENED}" "${fs_color}" "${fs_detail}" "${fs_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("8|${MSG_STATUS_FILESYSTEM}")
     fi
 
-    echo ""
-
-    # 服务管理状态
-    echo -e "${GREEN}[${MSG_STATUS_SERVICES:-Services}]${NC}"
+    # ─── 服务管理 ───────────────────────────────────────────────────────
+    local svc_color="${RED}" svc_icon="❌" svc_detail="${MSG_STATUS_NOT_HARDENED}"
     if type check_services_status &>/dev/null; then
-        local svc_status
+        local svc_status svc_running svc_unnecessary
         svc_status=$(check_services_status 2>/dev/null)
-        local svc_running
         svc_running=$(echo "${svc_status}" | grep '^services_running=' | cut -d= -f2)
-        local svc_unnecessary
         svc_unnecessary=$(echo "${svc_status}" | grep '^services_unnecessary=' | cut -d= -f2)
-        echo -e "  ${MSG_STATUS_SERVICES_RUNNING:-Running services}: ${svc_running}"
-        echo -e "  ${MSG_STATUS_SERVICES_UNNECESSARY:-Unnecessary services}: ${svc_unnecessary}"
+        if [[ "${svc_running}" =~ ^[0-9]+$ ]] && [[ "${svc_unnecessary}" =~ ^[0-9]+$ ]]; then
+            if [[ "${svc_unnecessary}" -eq 0 ]]; then
+                svc_color="${GREEN}"; svc_icon="✅"
+            else
+                svc_color="${YELLOW}"; svc_icon="⚠️"
+            fi
+            svc_detail="${MSG_STATUS_SERVICES_RUNNING}: ${svc_running}, ${MSG_STATUS_SERVICES_UNNECESSARY}: ${svc_unnecessary}"
+        fi
+    fi
+    if [[ "${svc_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_HARDENED}" "${svc_color}" "${svc_detail}" "${svc_icon}"
+        passed=$((passed + 1))
+    elif [[ "${svc_color}" == "${YELLOW}" ]]; then
+        _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_PARTIAL}" "${svc_color}" "${svc_detail}" "${svc_icon}"
+        partial=$((partial + 1))
+        recommend_items+=("9|${MSG_STATUS_SERVICES}")
+    else
+        _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_NOT_HARDENED}" "${svc_color}" "${svc_detail}" "${svc_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("9|${MSG_STATUS_SERVICES}")
+    fi
+
+    # ─── 顶部评分 + 建议下一步 ──────────────────────────────────────────
+    echo ""
+    local total=$((passed + partial + failed))
+    log_info "${MSG_DETECTION_SUMMARY}: ${passed}/${total} ${MSG_STATUS_HARDENED} (${partial} ${MSG_STATUS_PARTIAL}, ${failed} ${MSG_STATUS_NOT_HARDENED})"
+
+    if [[ "${#recommend_items[@]}" -gt 0 ]]; then
+        echo ""
+        echo -e "  ${BOLD}${MSG_STATUS_RECOMMENDATION}:${NC}"
+        local item num name
+        for item in "${recommend_items[@]}"; do
+            num="${item%%|*}"
+            name="${item#*|}"
+            echo -e "    ${YELLOW}[${num}]${NC} ${name}"
+        done
     fi
 
     echo ""
