@@ -7,17 +7,41 @@
 # ═══════════════════════════════════════════
 
 MSG_WELCOME="Welcome to Linux Server Security Hardening Script"
-MSG_VERSION="Version"
-MSG_DESCRIPTION="This script will help you quickly configure server security options"
 MSG_PRESS_ENTER="Press Enter to continue..."
-MSG_YES="Yes"
-MSG_NO="No"
 MSG_CONFIRM="Confirm"
-MSG_CANCEL="Cancel"
-MSG_SKIP="Skip"
-MSG_CONTINUE="Continue"
 MSG_BACK="Back"
-MSG_EXIT="Exit"
+
+# ═══════════════════════════════════════════
+# K3s (Lightweight Kubernetes)
+# ═══════════════════════════════════════════
+
+MSG_K3S_TITLE="K3s Lightweight Kubernetes"
+MSG_K3S_INSTALLING="Installing K3s..."
+MSG_K3S_DOWNLOADING="Downloading installation script from https://get.k3s.io..."
+MSG_K3S_INSTALLED="K3s installation complete"
+MSG_K3S_ALREADY="K3s already installed, skipping"
+MSG_K3S_FAILED="K3s installation failed"
+MSG_K3S_CANCELLED="K3s operation cancelled"
+MSG_K3S_UNINSTALLING="Uninstalling K3s..."
+MSG_K3S_UNINSTALLED="K3s has been uninstalled"
+MSG_K3S_UNINSTALL_FAILED="K3s uninstall failed"
+MSG_K3S_UNINSTALL_SCRIPT_NOT_FOUND="K3s uninstall script not found: /usr/local/bin/k3s-uninstall.sh"
+MSG_K3S_STATUS_CHECKING="Checking K3s status..."
+MSG_K3S_STATUS_RUNNING="K3s is running"
+MSG_K3S_STATUS_NOT_RUNNING="K3s is not running"
+MSG_K3S_CONFIRM="Confirm installing K3s?"
+MSG_K3S_CONFIRM_UNINSTALL="Confirm uninstalling K3s? This will delete all K3s data and configuration."
+MSG_K3S_CONFIGURING="Configuring K3s..."
+MSG_K3S_KUBECONFIG="kubeconfig copied to ~/.kube/config"
+MSG_K3S_KUBECONFIG_EXISTS="~/.kube/config already exists, skipping copy"
+MSG_K3S_NODE_READY="Cluster node status:"
+MSG_K3S_NODES_UNAVAILABLE="Unable to get node status (service may still be starting)"
+MSG_K3S_DISABLE_TRAEFIK="Traefik disabled (--disable traefik)"
+MSG_K3S_DISABLE_TRAEFIK_PROMPT="Disable the built-in Traefik Ingress Controller? (Recommended)"
+MSG_K3S_VERSION="K3s Version"
+MSG_K3S_BINARY="K3s Binary"
+MSG_K3S_NOT_INSTALLED="K3s is not installed"
+MSG_K3S_CURL_REQUIRED="K3s installation requires curl. Please install curl first."
 
 # ═══════════════════════════════════════════
 # System Detection
@@ -25,43 +49,30 @@ MSG_EXIT="Exit"
 
 MSG_DETECT_START="Detecting system environment..."
 MSG_DETECT_OS="Operating System"
-MSG_DETECT_VERSION="System Version"
 MSG_DETECT_ARCH="System Architecture"
 MSG_DETECT_USER="Current User"
 MSG_DETECT_ROOT="root user"
 MSG_DETECT_NORMAL_USER="normal user"
 MSG_DETECT_PKG_MANAGER="Package Manager"
 MSG_DETECT_NETWORK="Network Connection"
-MSG_DETECT_NETWORK_OK="OK"
 MSG_DETECT_NETWORK_FAIL="Failed"
 MSG_DETECT_COMPLETE="System detection complete"
 
 MSG_ERROR_NOT_ROOT="Error: Please run this script as root user"
 MSG_ERROR_UNSUPPORTED_OS="Error: Unsupported operating system"
-MSG_ERROR_NO_NETWORK="Error: Cannot connect to network, please check network settings"
 
 # ═══════════════════════════════════════════
 # Menu
 # ═══════════════════════════════════════════
 
-MSG_MENU_TITLE="Please select hardening mode"
-MSG_MENU_BASIC="[1] Basic Hardening (Recommended for beginners)"
-MSG_MENU_STANDARD="[2] Standard Hardening (Recommended)"
-MSG_MENU_ADVANCED="[3] Advanced Hardening (For experienced users)"
-MSG_MENU_CUSTOM="[4] Custom (Select items one by one)"
-MSG_MENU_CHOICE="Enter option number"
 MSG_MENU_INVALID="Invalid option, please try again"
+MSG_ERROR_NO_INPUT="No input detected. Use --status for non-interactive mode."
 
-MSG_MODE_BASIC="Basic Hardening"
-MSG_MODE_STANDARD="Standard Hardening"
-MSG_MODE_ADVANCED="Advanced Hardening"
-MSG_MODE_CUSTOM="Custom"
 
 # ═══════════════════════════════════════════
 # Main Menu
 # ═══════════════════════════════════════════
 
-MSG_MAIN_MENU_TITLE="Main Menu"
 MSG_MAIN_MENU_STATUS="[1] System Status Check"
 MSG_MAIN_MENU_STATUS_DESC="View current system security status (no changes)"
 MSG_MAIN_MENU_SSH="[2] SSH Security Hardening"
@@ -84,9 +95,10 @@ MSG_MAIN_MENU_QUICK="[10] Full Security Wizard"
 MSG_MAIN_MENU_QUICK_DESC="Step-by-step guided configuration, choose at each step"
 MSG_MAIN_MENU_REPORT="[11] View Last Report"
 MSG_MAIN_MENU_REPORT_DESC="View detailed report from last security hardening"
+MSG_MAIN_MENU_K3S="[12] K3s Lightweight Kubernetes"
+MSG_MAIN_MENU_K3S_DESC="Install or uninstall lightweight Kubernetes (K3s)"
 MSG_MAIN_MENU_EXIT="[0] Exit"
 MSG_MAIN_MENU_PROMPT="Enter option"
-MSG_MAIN_MENU_CHOICE="Please select an action"
 MSG_MAIN_MENU_SYSTEM_INFO="System"
 
 # SSH Submenu
@@ -106,12 +118,15 @@ MSG_FIREWALL_MENU_HTTP="[2] Open HTTP/HTTPS Ports"
 MSG_FIREWALL_MENU_ICMP="[3] Allow ICMP Ping"
 MSG_FIREWALL_MENU_BACK="[0] Back to Main Menu"
 
+# K3s Submenu
+MSG_K3S_MENU_TITLE="K3s Lightweight Kubernetes"
+MSG_K3S_MENU_INSTALL="[1] Install K3s"
+MSG_K3S_MENU_UNINSTALL="[2] Uninstall K3s"
+MSG_K3S_MENU_STATUS="[3] Check K3s Status"
+MSG_K3S_MENU_BACK="[0] Back to Main Menu"
+
 # System Status
 MSG_STATUS_TITLE="System Security Status"
-MSG_STATUS_SSH_PORT="SSH Port"
-MSG_STATUS_SSH_ROOT="Root Remote Login"
-MSG_STATUS_SSH_PASSWD="Password Authentication"
-MSG_STATUS_SSH_KEY="Key Authentication"
 MSG_STATUS_FIREWALL="Firewall"
 MSG_STATUS_FAIL2BAN="Fail2Ban"
 MSG_STATUS_AUDIT="Audit Logging"
@@ -119,29 +134,14 @@ MSG_STATUS_ENABLED="Enabled"
 MSG_STATUS_DISABLED="Disabled"
 MSG_STATUS_INSTALLED="Installed"
 MSG_STATUS_NOT_INSTALLED="Not Installed"
-MSG_STATUS_ALLOWED="Allowed"
-MSG_STATUS_NOT_ALLOWED="Disabled"
-MSG_STATUS_DEFAULT_PORT="Default port, consider changing"
-MSG_STATUS_CONFIGURED="Configured"
 MSG_DETECTION_SUMMARY="System Detection Summary:"
 
 # Report
-MSG_REPORT_NOT_FOUND="No hardening report found. Please run hardening first."
 
 # Confirmation prompts
-MSG_CONFIRM_SSH_PORT="Confirm changing SSH port?"
-MSG_CONFIRM_SSH_KEY="Confirm generating SSH key pair?"
-MSG_CONFIRM_SSH_ROOT="Confirm disabling root remote login?"
-MSG_CONFIRM_SSH_PASSWD="Confirm disabling password login?"
-MSG_CONFIRM_SSH_PARAMS="Confirm configuring SSH security parameters?"
-MSG_CONFIRM_SSH_ALL="Confirm running all SSH hardening?"
-MSG_CONFIRM_FIREWALL_ENABLE="Confirm enabling firewall?"
 MSG_CONFIRM_FIREWALL_HTTP="Confirm opening HTTP/HTTPS ports?"
-MSG_CONFIRM_FIREWALL_ICMP="Confirm allowing ICMP ping?"
-MSG_CONFIRM_FAIL2BAN="Confirm installing and configuring Fail2Ban?"
 
 # Quick Hardening
-MSG_QUICK_TITLE="Quick Hardening"
 
 # ═══════════════════════════════════════════
 # Task Descriptions
@@ -155,11 +155,7 @@ MSG_TASK_KERNEL="Kernel Security Hardening"
 MSG_TASK_FILESYSTEM="Filesystem Security"
 MSG_TASK_AUDIT="Audit Log Configuration"
 MSG_TASK_SERVICES="Service Management"
-MSG_TASK_DEV_COMING_SOON="Coming soon..."
 
-MSG_TASK_SSH_DESC="Configure SSH security options including port change, key authentication, disable root login, etc."
-MSG_TASK_FIREWALL_DESC="Configure firewall rules to restrict unnecessary network access"
-MSG_TASK_FAIL2BAN_DESC="Install and configure Fail2Ban to prevent brute force attacks"
 
 # ═══════════════════════════════════════════
 # SSH Security
@@ -174,7 +170,6 @@ MSG_SSH_BACKUP_FAIL="Backup failed"
 MSG_SSH_PORT_TITLE="Change SSH Port"
 MSG_SSH_PORT_CURRENT="Current SSH port"
 MSG_SSH_PORT_PROMPT="Enter new SSH port number"
-MSG_SSH_PORT_DEFAULT="Default"
 MSG_SSH_PORT_INVALID="Invalid port number, please enter a number between 1-65535"
 MSG_SSH_PORT_IN_USE="Port is already in use, please choose another port"
 MSG_SSH_PORT_SUCCESS="SSH port has been changed"
@@ -192,7 +187,6 @@ MSG_SSH_PORT_CONFIRM="Confirm changing SSH port from {current} to {new}?"
 MSG_SSH_PORT_SKIP="Skipping SSH port change"
 
 # SSH Parameter Customization
-MSG_SSH_PARAMS_CUSTOM_TITLE="SSH Security Parameter Configuration"
 MSG_SSH_PARAMS_CUSTOM_PROMPT="Each parameter shows its default; press Enter to accept or type a new value"
 MSG_SSH_PARAMS_MAXAUTHTRIES="Max authentication attempts (MaxAuthTries)"
 MSG_SSH_PARAMS_LOGINGRACETIME="Login grace time in seconds (LoginGraceTime)"
@@ -219,12 +213,15 @@ MSG_WIZARD_STEP_USERS="[5/10] User Management"
 MSG_WIZARD_STEP_KERNEL="[6/10] Kernel Security Hardening"
 MSG_WIZARD_STEP_FILESYSTEM="[7/10] Filesystem Security"
 MSG_WIZARD_STEP_SERVICES="[8/10] Service Management"
-MSG_WIZARD_STEP_SUMMARY="[10/10] Change Summary & Confirmation"
+MSG_WIZARD_STEP_SUMMARY="[9/10] Change Summary & Confirmation"
 MSG_WIZARD_SKIP_STEP="Skip this step? (y/N)"
 MSG_WIZARD_COMPLETE="Wizard complete"
 MSG_WIZARD_SKIPPED="Skipped"
 MSG_WIZARD_SKIPPED_INIT="Skipping system initialization"
 MSG_WIZARD_ERR_INIT="System initialization had errors"
+MSG_WIZARD_ERR_INIT_DETAIL="System initialization failed. Subsequent steps (SSH, firewall, etc.) may not work correctly."
+MSG_WIZARD_ERR_INIT_PROMPT="Continue anyway? (NOT recommended)"
+MSG_WIZARD_ERR_INIT_ABORT="Aborting wizard due to initialization failure"
 MSG_WIZARD_SKIPPED_SSH="Skipping SSH hardening"
 MSG_WIZARD_ERR_SSH="SSH hardening had errors, continuing"
 MSG_WIZARD_SKIPPED_FIREWALL="Skipping firewall configuration"
@@ -245,8 +242,6 @@ MSG_WIZARD_ERR_HINT="(some steps had errors, check logs)"
 
 # SSH Key
 MSG_SSH_KEY_TITLE="Generate SSH Key Pair"
-MSG_SSH_KEY_TYPE="Key type"
-MSG_SSH_KEY_ED25519="Ed25519 (Recommended)"
 MSG_SSH_KEY_PROMPT_PATH="Enter key save path"
 MSG_SSH_KEY_PROMPT_PASSPHRASE="Enter key passphrase (leave empty for no passphrase)"
 MSG_SSH_KEY_SUCCESS="SSH key has been generated"
@@ -290,6 +285,42 @@ MSG_SSH_ROLLBACK_EXEC="No new connections within 5 minutes, rolling back SSH con
 MSG_SSH_ROLLBACK_SUCCESS="SSH configuration rolled back to original state"
 MSG_SSH_ROLLBACK_CRON="Rollback scheduled task set"
 
+# SSH Port (continued)
+MSG_SSH_PORT_UNCHANGED="Port unchanged, skipping"
+MSG_SSH_PORT_CANCELLED="Cancelled"
+MSG_SSH_PORT_FAIL="Failed to change SSH port"
+
+# SSH Key (continued)
+MSG_SSH_KEY_EXISTS="Key already exists: {path}"
+MSG_SSH_KEY_OVERWRITE="Overwrite existing key?"
+MSG_SSH_KEY_SKIP="Skipping key generation"
+MSG_SSH_KEY_GENERATING="Generating Ed25519 key pair..."
+MSG_SSH_KEY_ALREADY_AUTHORIZED="Key already in authorized_keys, skipping"
+MSG_SSH_KEY_AUTHORIZED_FAIL="Failed to update authorized_keys"
+
+# No SSH key warnings
+MSG_SSH_USERS_NO_KEYS="The following users have NO SSH keys (may be locked out if password auth is disabled):"
+
+# Root Login (continued)
+MSG_SSH_ROOT_SKIP="Skipping root login disable"
+MSG_SSH_ROOT_FAIL="Failed to disable root login"
+
+# Password Login (continued)
+MSG_SSH_PASSWD_CONFIGURE_KEYS="Please configure SSH keys first"
+MSG_SSH_PASSWD_SKIP="Skipping password auth disable"
+MSG_SSH_PASSWD_USERS_NO_KEYS="The following users have NO SSH keys and will be locked out if password auth is disabled:"
+MSG_SSH_PASSWD_SETUP_KEYS_HINT="Please set up SSH keys for these users first, or they will be unable to log in."
+MSG_SSH_PASSWD_CONTINUE_ANYWAY="Continue anyway? (NOT recommended)"
+MSG_SSH_PASSWD_SET_FAIL="Failed to set {param}"
+
+# SSH Params (continued)
+MSG_SSH_PARAMS_INVALID="Invalid {param} value ({range}), using default {default}"
+MSG_SSH_PARAMS_FAIL="Failed to set {count} SSH parameter(s)"
+
+# Rollback (continued)
+
+# Wizard
+
 MSG_SSH_COMPLETE="SSH security hardening complete"
 
 # ═══════════════════════════════════════════
@@ -323,8 +354,6 @@ MSG_FIREWALL_DONE="Firewall configuration complete"
 MSG_FIREWALL_SSH_PORT22="Safety: Port 22 kept open (prevents SSH lockout after port change)"
 MSG_FIREWALL_SSH_PORT22_WARN="⚠ After confirming the new SSH port works, manually close port 22:"
 MSG_FIREWALL_SSH_PORT22_CLOSE="   sudo ufw deny 22/tcp"
-MSG_FIREWALL_CUSTOM_PORTS="Need to open other ports? (Enter port number, empty to finish)"
-MSG_FIREWALL_INVALID_PORT="Invalid port number, please enter a number between 1-65535"
 
 MSG_FIREWALL_TIPS_TITLE="Firewall management commands:"
 MSG_FIREWALL_TIPS_UFW_1="Check status: sudo ufw status verbose"
@@ -361,6 +390,13 @@ MSG_FAIL2BAN_NOT_INSTALLED="Fail2Ban not installed"
 MSG_FAIL2BAN_IP_BANNED="IP banned"
 MSG_FAIL2BAN_IP_UNBANNED="IP unbanned"
 MSG_FAIL2BAN_DONE="Fail2Ban configuration complete"
+
+MSG_FAIL2BAN_AUTH_LOG_NOT_FOUND="Auth log file not found: "
+MSG_FAIL2BAN_AUTH_LOG_NOT_FOUND_TAIL=", fail2ban may need journald backend"
+MSG_FAIL2BAN_INFO_SSH_PORT="SSH Port: "
+MSG_FAIL2BAN_INFO_AUTH_LOG="Auth Log: "
+MSG_FAIL2BAN_INFO_CONFIG_FILE="Config File: "
+MSG_FAIL2BAN_EPEL_FAILED="epel-release installation failed, continuing anyway..."
 
 MSG_FAIL2BAN_TIPS_TITLE="Fail2Ban management commands:"
 MSG_FAIL2BAN_TIPS_1="Check status: fail2ban-client status"
@@ -399,6 +435,8 @@ MSG_AUDIT_LOG_NOT_FOUND="Not yet generated"
 MSG_AUDIT_CONFIG_INFO="Current audit configuration:"
 MSG_AUDIT_DONE="Audit logging configuration complete!"
 MSG_AUDIT_NOT_INSTALLED="auditd not installed"
+MSG_AUDIT_RULES_FILE="Rules file"
+MSG_AUDIT_CONF_FILE="Config file"
 
 # Audit Wizard - Rule Level
 MSG_AUDIT_RULES_LEVEL_TITLE="Select audit rule level"
@@ -473,6 +511,9 @@ MSG_USERS_SSH_KEY_GENERATING="Generating Ed25519 key pair"
 MSG_USERS_SSH_KEY_FAILED="SSH key generation failed"
 MSG_USERS_SSH_KEY_DONE="SSH key generated"
 MSG_USERS_SSH_KEY_HINT="Please download the private key to local storage. WARNING: The key has no passphrase — protect it carefully."
+MSG_USERS_SSH_KEY_AUTH_ADD_FAILED="Failed to add public key to authorized_keys"
+MSG_USERS_SSH_KEY_PERM_FAILED="Failed to set permissions on {path}"
+MSG_USERS_SSH_KEY_OWNER_FAILED="Failed to set ownership on {path}"
 
 MSG_USERS_SUDO_TITLE="Configure sudo NOPASSWD"
 MSG_USERS_SUDO_SECURITY_HINT="Security: NOPASSWD allows sudo without password, use with caution"
@@ -529,6 +570,8 @@ MSG_KERNEL_MODULE_DISABLE="Disabling module"
 MSG_KERNEL_MODULE_DISABLED="Disabled"
 MSG_KERNEL_MODULE_CANNOT_DISABLE="Cannot disable"
 MSG_KERNEL_MODULE_NOT_LOADED="Module not loaded, skipped"
+MSG_KERNEL_MODULE_BLACKLISTED="Blacklisted module"
+MSG_KERNEL_MODULE_BLACKLIST_FAILED="Failed to blacklist module"
 MSG_KERNEL_MODULES_DONE="Kernel module processing complete"
 MSG_KERNEL_MODULES_DISABLED="disabled"
 MSG_KERNEL_MODULES_SKIPPED="skipped"
@@ -639,20 +682,15 @@ MSG_REPORT_WARN_SSH_PORT22="Firewall kept port 22 open. After confirming new SSH
 MSG_REPORT_WARN_FIREWALL="Firewall enabled. Ensure all required ports are properly opened."
 MSG_REPORT_WARN_FAIL2BAN="Check Fail2Ban logs regularly: sudo tail -f /var/log/fail2ban.log"
 MSG_REPORT_WARN_AUDIT="Check audit logs regularly: sudo aureport --summary or sudo ausearch -k identity"
+MSG_REPORT_WARN_KERNEL="Kernel parameters modified, may affect network/services"
+MSG_REPORT_WARN_USERS="New user created, test login before closing current session"
 MSG_REPORT_WARN_FS="Filesystem permissions changed, verify critical services still work"
-MSG_STATUS_FS_SUID="SUID files"
-MSG_STATUS_SERVICES="Service Management"
-MSG_STATUS_SERVICES_RUNNING="Running services"
-MSG_STATUS_SERVICES_UNNECESSARY="Unnecessary services"
 MSG_REPORT_WARN_SERVICES="Some services disabled, verify required services are still running"
 
 # ═══════════════════════════════════════════
 # Log
 # ═══════════════════════════════════════════
 
-MSG_LOG_START="Execution started"
-MSG_LOG_COMPLETE="Execution completed"
-MSG_LOG_ERROR="Execution error"
 MSG_LOG_BACKUP="Backing up file"
 MSG_LOG_RESTORE="Restoring file"
 
@@ -722,9 +760,7 @@ MSG_SERVICES_WIZARD_DONE="Service management configuration complete"
 # ═══════════════════════════════════════════
 
 MSG_ERROR_SCRIPT_NOT_ROOT="This script must be run with root privileges"
-MSG_ERROR_COMMAND_FAILED="Command execution failed"
 MSG_ERROR_FILE_NOT_FOUND="File not found"
-MSG_ERROR_BACKUP_FAILED="Backup failed"
 MSG_ERROR_RESTORE_FAILED="Restore failed"
 
 MSG_WARN_CONNECTION="Please test new configuration before closing current session"
@@ -735,8 +771,6 @@ MSG_WARN_TEST_FIRST="Please test new configuration before closing current sessio
 # Completion
 # ═══════════════════════════════════════════
 
-MSG_FINISH="Security hardening script execution complete"
-MSG_FINISH_HINT="Thank you for using, please check log files if you have any questions"
 MSG_GOODBYE="Goodbye!"
 
 # ═══════════════════════════════════════════
@@ -746,6 +780,7 @@ MSG_GOODBYE="Goodbye!"
 MSG_SECTION_STATUS="────── Status ──────"
 MSG_SECTION_HARDENING="────── Hardening (Recommended Order) ──────"
 MSG_SECTION_QUICK="────── One-Click ──────"
+MSG_SECTION_SERVER="────── Server Software ──────"
 MSG_STATUS_SSH_PORT_HARDENED="Hardened"
 MSG_STATUS_SSH_PORT_DEFAULT="Not hardened"
 
@@ -758,6 +793,17 @@ MSG_STATUS_PARTIAL="Partially hardened"
 MSG_STATUS_NOT_HARDENED="Not hardened"
 MSG_STATUS_NOT_CONFIGURED="Not configured"
 MSG_STATUS_RECOMMENDATION="Recommended next step"
+
+# ═══════════════════════════════════════════
+# Submenu status fallback hints (M16 fix: i18n)
+# ═══════════════════════════════════════════
+
+MSG_HINT_STATUS_FAIL2BAN="Fail2Ban status: see main menu [1] System Status Check"
+MSG_HINT_STATUS_AUDIT="Audit status: see main menu [1] System Status Check"
+MSG_HINT_STATUS_USERS="User status: see main menu [1] System Status Check"
+MSG_HINT_STATUS_KERNEL="Kernel status: see main menu [1] System Status Check"
+MSG_HINT_STATUS_FILESYSTEM="Filesystem status: see main menu [1] System Status Check"
+MSG_HINT_STATUS_SERVICES="Service status: see main menu [1] System Status Check"
 
 # ═══════════════════════════════════════════
 # Status key completions (remove :- fallbacks in install.sh, spec GAP-8)
@@ -824,3 +870,19 @@ MSG_TIME_DAYS_AGO="%d days ago"
 
 MSG_ERROR_REMOVED_ARG="Error: --%s has been removed. This script only supports interactive mode."
 MSG_ERROR_REMOVED_HINT="Tip: use --status for read-only detection, or no argument for interactive menu."
+
+# ═══════════════════════════════════════════
+# Command-line help text (M17 fix: i18n)
+# ═══════════════════════════════════════════
+
+MSG_HELP_USAGE="Usage: bash install.sh [options]"
+MSG_HELP_OPTIONS="Options:"
+MSG_HELP_STATUS="  --status       Show system security status (read-only)"
+MSG_HELP_HELP="  --help, -h     Show this help"
+MSG_HELP_NO_ARGS="No arguments: interactive menu."
+MSG_HELP_EXAMPLES="Examples:"
+MSG_HELP_EXAMPLE_INTERACTIVE="  bash install.sh                      # Interactive menu"
+MSG_HELP_EXAMPLE_STATUS="  bash install.sh --status             # Status check only"
+MSG_HELP_EXAMPLE_CURL="  curl -fsSL .../install.sh | sudo bash"
+MSG_ERROR_UNKNOWN_ARG="Error: Unknown argument: %s"
+MSG_ERROR_USE_HELP="Use --help for available options"

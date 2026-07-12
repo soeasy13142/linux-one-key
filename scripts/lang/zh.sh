@@ -7,17 +7,41 @@
 # ═══════════════════════════════════════════
 
 MSG_WELCOME="欢迎使用 Linux 云服务器安全加固脚本"
-MSG_VERSION="版本"
-MSG_DESCRIPTION="本脚本将帮助您快速配置服务器安全选项"
 MSG_PRESS_ENTER="按 Enter 继续..."
-MSG_YES="是"
-MSG_NO="否"
 MSG_CONFIRM="确认"
-MSG_CANCEL="取消"
-MSG_SKIP="跳过"
-MSG_CONTINUE="继续"
 MSG_BACK="返回"
-MSG_EXIT="退出"
+
+# ═══════════════════════════════════════════
+# K3s (Lightweight Kubernetes)
+# ═══════════════════════════════════════════
+
+MSG_K3S_TITLE="K3s 轻量级 Kubernetes"
+MSG_K3S_INSTALLING="正在安装 K3s..."
+MSG_K3S_DOWNLOADING="正在从 https://get.k3s.io 下载安装脚本..."
+MSG_K3S_INSTALLED="K3s 安装完成"
+MSG_K3S_ALREADY="K3s 已安装，跳过"
+MSG_K3S_FAILED="K3s 安装失败"
+MSG_K3S_CANCELLED="K3s 操作已取消"
+MSG_K3S_UNINSTALLING="正在卸载 K3s..."
+MSG_K3S_UNINSTALLED="K3s 已卸载"
+MSG_K3S_UNINSTALL_FAILED="K3s 卸载失败"
+MSG_K3S_UNINSTALL_SCRIPT_NOT_FOUND="K3s 卸载脚本未找到：/usr/local/bin/k3s-uninstall.sh"
+MSG_K3S_STATUS_CHECKING="正在检查 K3s 状态..."
+MSG_K3S_STATUS_RUNNING="K3s 运行中"
+MSG_K3S_STATUS_NOT_RUNNING="K3s 未运行"
+MSG_K3S_CONFIRM="确认安装 K3s？"
+MSG_K3S_CONFIRM_UNINSTALL="确认卸载 K3s？此操作将删除所有 K3s 数据和配置。"
+MSG_K3S_CONFIGURING="正在配置 K3s..."
+MSG_K3S_KUBECONFIG="kubeconfig 已复制到 ~/.kube/config"
+MSG_K3S_KUBECONFIG_EXISTS="~/.kube/config 已存在，跳过复制"
+MSG_K3S_NODE_READY="集群节点状态："
+MSG_K3S_NODES_UNAVAILABLE="暂时无法获取节点状态（服务可能仍在启动中）"
+MSG_K3S_DISABLE_TRAEFIK="Traefik 已禁用（--disable traefik）"
+MSG_K3S_DISABLE_TRAEFIK_PROMPT="是否禁用内置 Traefik Ingress Controller？（推荐禁用）"
+MSG_K3S_VERSION="K3s 版本"
+MSG_K3S_BINARY="K3s 可执行文件"
+MSG_K3S_NOT_INSTALLED="K3s 未安装"
+MSG_K3S_CURL_REQUIRED="K3s 安装需要 curl，请先安装 curl"
 
 # ═══════════════════════════════════════════
 # 系统检测
@@ -25,43 +49,30 @@ MSG_EXIT="退出"
 
 MSG_DETECT_START="正在检测系统环境..."
 MSG_DETECT_OS="操作系统"
-MSG_DETECT_VERSION="系统版本"
 MSG_DETECT_ARCH="系统架构"
 MSG_DETECT_USER="当前用户"
 MSG_DETECT_ROOT="root 用户"
 MSG_DETECT_NORMAL_USER="普通用户"
 MSG_DETECT_PKG_MANAGER="包管理器"
 MSG_DETECT_NETWORK="网络连接"
-MSG_DETECT_NETWORK_OK="正常"
 MSG_DETECT_NETWORK_FAIL="失败"
 MSG_DETECT_COMPLETE="系统检测完成"
 
 MSG_ERROR_NOT_ROOT="错误：请使用 root 用户运行此脚本"
 MSG_ERROR_UNSUPPORTED_OS="错误：不支持的操作系统"
-MSG_ERROR_NO_NETWORK="错误：无法连接网络，请检查网络设置"
 
 # ═══════════════════════════════════════════
 # 菜单
 # ═══════════════════════════════════════════
 
-MSG_MENU_TITLE="请选择加固模式"
-MSG_MENU_BASIC="[1] 基础加固（推荐新手）"
-MSG_MENU_STANDARD="[2] 标准加固（推荐）"
-MSG_MENU_ADVANCED="[3] 高级加固（有经验用户）"
-MSG_MENU_CUSTOM="[4] 自定义（逐项选择）"
-MSG_MENU_CHOICE="请输入选项编号"
 MSG_MENU_INVALID="无效选项，请重新选择"
+MSG_ERROR_NO_INPUT="未检测到输入，非交互环境请使用 --status 模式"
 
-MSG_MODE_BASIC="基础加固"
-MSG_MODE_STANDARD="标准加固"
-MSG_MODE_ADVANCED="高级加固"
-MSG_MODE_CUSTOM="自定义"
 
 # ═══════════════════════════════════════════
 # 主菜单
 # ═══════════════════════════════════════════
 
-MSG_MAIN_MENU_TITLE="主菜单"
 MSG_MAIN_MENU_STATUS="[1] 系统状态检测"
 MSG_MAIN_MENU_STATUS_DESC="查看当前系统安全状态（不修改任何配置）"
 MSG_MAIN_MENU_SSH="[2] SSH 安全加固"
@@ -84,9 +95,10 @@ MSG_MAIN_MENU_QUICK="[10] 完整安全配置向导"
 MSG_MAIN_MENU_QUICK_DESC="逐步引导完成所有安全配置，每步可选择"
 MSG_MAIN_MENU_REPORT="[11] 查看上次加固报告"
 MSG_MAIN_MENU_REPORT_DESC="查看上次安全加固的详细报告"
+MSG_MAIN_MENU_K3S="[12] K3s 轻量级 Kubernetes"
+MSG_MAIN_MENU_K3S_DESC="安装或卸载轻量级 Kubernetes (K3s)"
 MSG_MAIN_MENU_EXIT="[0] 退出"
 MSG_MAIN_MENU_PROMPT="请输入选项"
-MSG_MAIN_MENU_CHOICE="请选择操作"
 MSG_MAIN_MENU_SYSTEM_INFO="系统"
 
 # SSH 子菜单
@@ -106,12 +118,15 @@ MSG_FIREWALL_MENU_HTTP="[2] 开放 HTTP/HTTPS 端口"
 MSG_FIREWALL_MENU_ICMP="[3] 允许 ICMP ping"
 MSG_FIREWALL_MENU_BACK="[0] 返回主菜单"
 
+# K3s 子菜单
+MSG_K3S_MENU_TITLE="K3s 轻量级 Kubernetes"
+MSG_K3S_MENU_INSTALL="[1] 安装 K3s"
+MSG_K3S_MENU_UNINSTALL="[2] 卸载 K3s"
+MSG_K3S_MENU_STATUS="[3] 查看 K3s 状态"
+MSG_K3S_MENU_BACK="[0] 返回主菜单"
+
 # 系统状态检测
 MSG_STATUS_TITLE="系统安全状态检测"
-MSG_STATUS_SSH_PORT="SSH 端口"
-MSG_STATUS_SSH_ROOT="root 远程登录"
-MSG_STATUS_SSH_PASSWD="密码认证"
-MSG_STATUS_SSH_KEY="密钥认证"
 MSG_STATUS_FIREWALL="防火墙"
 MSG_STATUS_FAIL2BAN="Fail2Ban"
 MSG_STATUS_AUDIT="审计日志"
@@ -119,29 +134,14 @@ MSG_STATUS_ENABLED="已启用"
 MSG_STATUS_DISABLED="未启用"
 MSG_STATUS_INSTALLED="已安装"
 MSG_STATUS_NOT_INSTALLED="未安装"
-MSG_STATUS_ALLOWED="允许"
-MSG_STATUS_NOT_ALLOWED="禁止"
-MSG_STATUS_DEFAULT_PORT="默认端口，建议修改"
-MSG_STATUS_CONFIGURED="已配置"
 MSG_DETECTION_SUMMARY="系统检测摘要:"
 
 # 报告查看
-MSG_REPORT_NOT_FOUND="暂无加固报告，请先执行安全加固"
 
 # 操作确认
-MSG_CONFIRM_SSH_PORT="确认修改 SSH 端口？"
-MSG_CONFIRM_SSH_KEY="确认生成 SSH 密钥对？"
-MSG_CONFIRM_SSH_ROOT="确认禁止 root 远程登录？"
-MSG_CONFIRM_SSH_PASSWD="确认禁止密码登录？"
-MSG_CONFIRM_SSH_PARAMS="确认配置 SSH 安全参数？"
-MSG_CONFIRM_SSH_ALL="确认执行全部 SSH 加固？"
-MSG_CONFIRM_FIREWALL_ENABLE="确认启用防火墙？"
 MSG_CONFIRM_FIREWALL_HTTP="确认开放 HTTP/HTTPS 端口？"
-MSG_CONFIRM_FIREWALL_ICMP="确认允许 ICMP ping？"
-MSG_CONFIRM_FAIL2BAN="确认安装并配置 Fail2Ban？"
 
 # 快速加固
-MSG_QUICK_TITLE="一键快速加固"
 
 # ═══════════════════════════════════════════
 # 任务描述
@@ -155,11 +155,7 @@ MSG_TASK_KERNEL="内核安全加固"
 MSG_TASK_FILESYSTEM="文件系统安全"
 MSG_TASK_AUDIT="审计日志配置"
 MSG_TASK_SERVICES="服务管理"
-MSG_TASK_DEV_COMING_SOON="开发中..."
 
-MSG_TASK_SSH_DESC="配置 SSH 安全选项，包括修改端口、密钥认证、禁止 root 登录等"
-MSG_TASK_FIREWALL_DESC="配置防火墙规则，限制不必要的网络访问"
-MSG_TASK_FAIL2BAN_DESC="安装并配置 Fail2Ban，防止暴力破解"
 
 # ═══════════════════════════════════════════
 # SSH 安全
@@ -174,7 +170,6 @@ MSG_SSH_BACKUP_FAIL="备份失败"
 MSG_SSH_PORT_TITLE="修改 SSH 端口"
 MSG_SSH_PORT_CURRENT="当前 SSH 端口"
 MSG_SSH_PORT_PROMPT="请输入新的 SSH 端口号"
-MSG_SSH_PORT_DEFAULT="默认"
 MSG_SSH_PORT_INVALID="端口号无效，请输入 1-65535 之间的数字"
 MSG_SSH_PORT_IN_USE="端口已被占用，请选择其他端口"
 MSG_SSH_PORT_SUCCESS="SSH 端口已修改"
@@ -192,7 +187,6 @@ MSG_SSH_PORT_CONFIRM="确认将 SSH 端口从 {current} 修改为 {new}？"
 MSG_SSH_PORT_SKIP="跳过 SSH 端口修改"
 
 # SSH 参数自定义
-MSG_SSH_PARAMS_CUSTOM_TITLE="SSH 安全参数配置"
 MSG_SSH_PARAMS_CUSTOM_PROMPT="每个参数将展示默认值，您可以直接回车接受或输入新值"
 MSG_SSH_PARAMS_MAXAUTHTRIES="最大认证尝试次数 (MaxAuthTries)"
 MSG_SSH_PARAMS_LOGINGRACETIME="登录超时秒数 (LoginGraceTime)"
@@ -219,12 +213,15 @@ MSG_WIZARD_STEP_USERS="[5/10] 用户管理"
 MSG_WIZARD_STEP_KERNEL="[6/10] 内核安全加固"
 MSG_WIZARD_STEP_FILESYSTEM="[7/10] 文件系统安全"
 MSG_WIZARD_STEP_SERVICES="[8/10] 服务管理"
-MSG_WIZARD_STEP_SUMMARY="[10/10] 变更摘要与确认"
+MSG_WIZARD_STEP_SUMMARY="[9/10] 变更摘要与确认"
 MSG_WIZARD_SKIP_STEP="跳过此步骤？(y/N)"
 MSG_WIZARD_COMPLETE="向导完成"
 MSG_WIZARD_SKIPPED="已跳过"
 MSG_WIZARD_SKIPPED_INIT="跳过系统初始化"
 MSG_WIZARD_ERR_INIT="系统初始化出现错误"
+MSG_WIZARD_ERR_INIT_DETAIL="系统初始化失败，后续步骤（SSH、防火墙等）可能无法正常工作"
+MSG_WIZARD_ERR_INIT_PROMPT="仍然继续？（不推荐）"
+MSG_WIZARD_ERR_INIT_ABORT="因初始化失败终止向导"
 MSG_WIZARD_SKIPPED_SSH="跳过 SSH 安全加固"
 MSG_WIZARD_ERR_SSH="SSH 加固出现错误，继续后续步骤"
 MSG_WIZARD_SKIPPED_FIREWALL="跳过防火墙配置"
@@ -245,8 +242,6 @@ MSG_WIZARD_ERR_HINT="（部分步骤出现错误，请查看日志）"
 
 # SSH 密钥
 MSG_SSH_KEY_TITLE="生成 SSH 密钥对"
-MSG_SSH_KEY_TYPE="密钥类型"
-MSG_SSH_KEY_ED25519="Ed25519（推荐）"
 MSG_SSH_KEY_PROMPT_PATH="请输入密钥保存路径"
 MSG_SSH_KEY_PROMPT_PASSPHRASE="请输入密钥密码（留空则无密码）"
 MSG_SSH_KEY_SUCCESS="SSH 密钥已生成"
@@ -290,6 +285,42 @@ MSG_SSH_ROLLBACK_EXEC="5 分钟内无新连接，正在回滚 SSH 配置..."
 MSG_SSH_ROLLBACK_SUCCESS="SSH 配置已回滚到原始状态"
 MSG_SSH_ROLLBACK_CRON="已设置回滚定时任务"
 
+# SSH 端口（续）
+MSG_SSH_PORT_UNCHANGED="端口未变化，跳过"
+MSG_SSH_PORT_CANCELLED="已取消"
+MSG_SSH_PORT_FAIL="SSH 端口修改失败"
+
+# SSH 密钥（续）
+MSG_SSH_KEY_EXISTS="密钥已存在：{path}"
+MSG_SSH_KEY_OVERWRITE="是否覆盖现有密钥？"
+MSG_SSH_KEY_SKIP="跳过密钥生成"
+MSG_SSH_KEY_GENERATING="正在生成 Ed25519 密钥对..."
+MSG_SSH_KEY_ALREADY_AUTHORIZED="公钥已在 authorized_keys 中，跳过"
+MSG_SSH_KEY_AUTHORIZED_FAIL="更新 authorized_keys 失败"
+
+# 无 SSH 密钥警告
+MSG_SSH_USERS_NO_KEYS="以下用户没有 SSH 密钥（禁用密码认证后可能无法登录）："
+
+# Root 登录（续）
+MSG_SSH_ROOT_SKIP="跳过禁止 root 登录"
+MSG_SSH_ROOT_FAIL="禁止 root 登录失败"
+
+# 密码登录（续）
+MSG_SSH_PASSWD_CONFIGURE_KEYS="请先配置 SSH 密钥"
+MSG_SSH_PASSWD_SKIP="跳过禁止密码登录"
+MSG_SSH_PASSWD_USERS_NO_KEYS="以下用户没有 SSH 密钥，禁用密码认证后将被锁定："
+MSG_SSH_PASSWD_SETUP_KEYS_HINT="请先为这些用户配置 SSH 密钥，否则他们将无法登录。"
+MSG_SSH_PASSWD_CONTINUE_ANYWAY="仍然继续？（不推荐）"
+MSG_SSH_PASSWD_SET_FAIL="设置 {param} 失败"
+
+# SSH 参数配置（续）
+MSG_SSH_PARAMS_INVALID="{param} 值无效（{range}），使用默认值 {default}"
+MSG_SSH_PARAMS_FAIL="设置 {count} 个 SSH 参数失败"
+
+# 回滚保护（续）
+
+# 向导
+
 MSG_SSH_COMPLETE="SSH 安全加固完成"
 
 # ═══════════════════════════════════════════
@@ -323,8 +354,6 @@ MSG_FIREWALL_DONE="防火墙配置完成"
 MSG_FIREWALL_SSH_PORT22="安全保护：已保留放通 22 端口（防止 SSH 端口变更后锁死）"
 MSG_FIREWALL_SSH_PORT22_WARN="⚠ 请在确认新 SSH 端口可用后，手动关闭 22 端口："
 MSG_FIREWALL_SSH_PORT22_CLOSE="   sudo ufw deny 22/tcp"
-MSG_FIREWALL_CUSTOM_PORTS="需要开放其他端口吗？（输入端口号，留空结束）"
-MSG_FIREWALL_INVALID_PORT="端口号无效，请输入 1-65535 之间的数字"
 
 MSG_FIREWALL_TIPS_TITLE="防火墙管理命令："
 MSG_FIREWALL_TIPS_UFW_1="查看状态: sudo ufw status verbose"
@@ -361,6 +390,13 @@ MSG_FAIL2BAN_NOT_INSTALLED="Fail2Ban 未安装"
 MSG_FAIL2BAN_IP_BANNED="已封禁 IP"
 MSG_FAIL2BAN_IP_UNBANNED="已解封 IP"
 MSG_FAIL2BAN_DONE="Fail2Ban 配置完成"
+
+MSG_FAIL2BAN_AUTH_LOG_NOT_FOUND="认证日志文件未找到: "
+MSG_FAIL2BAN_AUTH_LOG_NOT_FOUND_TAIL="，fail2ban 可能需要 journald backend"
+MSG_FAIL2BAN_INFO_SSH_PORT="SSH 端口: "
+MSG_FAIL2BAN_INFO_AUTH_LOG="认证日志: "
+MSG_FAIL2BAN_INFO_CONFIG_FILE="配置文件: "
+MSG_FAIL2BAN_EPEL_FAILED="epel-release 安装失败，继续执行..."
 
 MSG_FAIL2BAN_TIPS_TITLE="Fail2Ban 管理命令："
 MSG_FAIL2BAN_TIPS_1="查看状态: fail2ban-client status"
@@ -399,6 +435,8 @@ MSG_AUDIT_LOG_NOT_FOUND="尚未生成"
 MSG_AUDIT_CONFIG_INFO="当前审计配置信息："
 MSG_AUDIT_DONE="审计日志配置完成！"
 MSG_AUDIT_NOT_INSTALLED="auditd 未安装"
+MSG_AUDIT_RULES_FILE="规则文件"
+MSG_AUDIT_CONF_FILE="配置文件"
 
 # 审计向导 - 规则级别
 MSG_AUDIT_RULES_LEVEL_TITLE="请选择审计规则级别"
@@ -473,6 +511,9 @@ MSG_USERS_SSH_KEY_GENERATING="正在生成 Ed25519 密钥对"
 MSG_USERS_SSH_KEY_FAILED="SSH 密钥生成失败"
 MSG_USERS_SSH_KEY_DONE="SSH 密钥已生成"
 MSG_USERS_SSH_KEY_HINT="请将私钥下载到本地安全保存。警告：密钥无密码保护，请妥善保管。"
+MSG_USERS_SSH_KEY_AUTH_ADD_FAILED="公钥添加到 authorized_keys 失败"
+MSG_USERS_SSH_KEY_PERM_FAILED="设置 {path} 权限失败"
+MSG_USERS_SSH_KEY_OWNER_FAILED="设置 {path} 所有权失败"
 
 MSG_USERS_SUDO_TITLE="配置 sudo NOPASSWD"
 MSG_USERS_SUDO_SECURITY_HINT="安全提示：NOPASSWD 允许该用户无密码执行 sudo，存在安全风险"
@@ -529,6 +570,8 @@ MSG_KERNEL_MODULE_DISABLE="正在禁用模块"
 MSG_KERNEL_MODULE_DISABLED="已禁用"
 MSG_KERNEL_MODULE_CANNOT_DISABLE="无法禁用"
 MSG_KERNEL_MODULE_NOT_LOADED="模块未加载，已跳过"
+MSG_KERNEL_MODULE_BLACKLISTED="已加入黑名单模块"
+MSG_KERNEL_MODULE_BLACKLIST_FAILED="模块加入黑名单失败"
 MSG_KERNEL_MODULES_DONE="内核模块处理完成"
 MSG_KERNEL_MODULES_DISABLED="个已禁用"
 MSG_KERNEL_MODULES_SKIPPED="个已跳过"
@@ -639,20 +682,15 @@ MSG_REPORT_WARN_SSH_PORT22="防火墙已保留放通 22 端口，确认新 SSH �
 MSG_REPORT_WARN_FIREWALL="防火墙已启用，请确保已正确放通所需端口"
 MSG_REPORT_WARN_FAIL2BAN="请定期检查 Fail2Ban 日志: sudo tail -f /var/log/fail2ban.log"
 MSG_REPORT_WARN_AUDIT="请定期检查审计日志: sudo aureport --summary 或 sudo ausearch -k identity"
+MSG_REPORT_WARN_KERNEL="内核参数已修改，可能影响网络/服务运行"
+MSG_REPORT_WARN_USERS="已创建新用户，关闭当前会话前请测试登录"
 MSG_REPORT_WARN_FS="文件系统权限已更改，请验证关键服务是否正常工作"
-MSG_STATUS_FS_SUID="SUID 文件数"
-MSG_STATUS_SERVICES="服务管理"
-MSG_STATUS_SERVICES_RUNNING="运行中服务"
-MSG_STATUS_SERVICES_UNNECESSARY="不必要服务"
 MSG_REPORT_WARN_SERVICES="已禁用部分服务，请验证所需服务是否正常运行"
 
 # ═══════════════════════════════════════════
 # 日志
 # ═══════════════════════════════════════════
 
-MSG_LOG_START="开始执行"
-MSG_LOG_COMPLETE="执行完成"
-MSG_LOG_ERROR="执行出错"
 MSG_LOG_BACKUP="备份文件"
 MSG_LOG_RESTORE="恢复文件"
 
@@ -722,9 +760,7 @@ MSG_SERVICES_WIZARD_DONE="服务管理配置完成"
 # ═══════════════════════════════════════════
 
 MSG_ERROR_SCRIPT_NOT_ROOT="此脚本必须以 root 权限运行"
-MSG_ERROR_COMMAND_FAILED="命令执行失败"
 MSG_ERROR_FILE_NOT_FOUND="文件不存在"
-MSG_ERROR_BACKUP_FAILED="备份失败"
 MSG_ERROR_RESTORE_FAILED="恢复失败"
 
 MSG_WARN_CONNECTION="请确保在关闭当前会话前测试新配置"
@@ -735,8 +771,6 @@ MSG_WARN_TEST_FIRST="请测试新配置后再关闭当前会话"
 # 完成信息
 # ═══════════════════════════════════════════
 
-MSG_FINISH="安全加固脚本执行完成"
-MSG_FINISH_HINT="感谢使用，如有问题请查看日志文件"
 MSG_GOODBYE="再见！"
 
 # ═══════════════════════════════════════════
@@ -746,6 +780,7 @@ MSG_GOODBYE="再见！"
 MSG_SECTION_STATUS="────── 状态 ──────"
 MSG_SECTION_HARDENING="────── 加固（按推荐顺序）──────"
 MSG_SECTION_QUICK="────── 一键 ──────"
+MSG_SECTION_SERVER="────── 服务器软件 ──────"
 MSG_STATUS_SSH_PORT_HARDENED="已加固"
 MSG_STATUS_SSH_PORT_DEFAULT="未加固"
 
@@ -758,6 +793,17 @@ MSG_STATUS_PARTIAL="部分加固"
 MSG_STATUS_NOT_HARDENED="未加固"
 MSG_STATUS_NOT_CONFIGURED="未配置"
 MSG_STATUS_RECOMMENDATION="建议下一步"
+
+# ═══════════════════════════════════════════
+# 子菜单状态回退提示（M16 fix: i18n）
+# ═══════════════════════════════════════════
+
+MSG_HINT_STATUS_FAIL2BAN="Fail2Ban 状态：见主菜单 [1] 系统状态检测"
+MSG_HINT_STATUS_AUDIT="Audit 状态：见主菜单 [1] 系统状态检测"
+MSG_HINT_STATUS_USERS="用户状态：见主菜单 [1] 系统状态检测"
+MSG_HINT_STATUS_KERNEL="内核状态：见主菜单 [1] 系统状态检测"
+MSG_HINT_STATUS_FILESYSTEM="文件系统状态：见主菜单 [1] 系统状态检测"
+MSG_HINT_STATUS_SERVICES="服务状态：见主菜单 [1] 系统状态检测"
 
 # ═══════════════════════════════════════════
 # 状态键补全（移除 install.sh 中的 :- 兜底，spec GAP-8）
@@ -824,3 +870,19 @@ MSG_TIME_DAYS_AGO="%d 天前"
 
 MSG_ERROR_REMOVED_ARG="错误：参数 --%s 已移除，本脚本仅支持交互模式"
 MSG_ERROR_REMOVED_HINT="提示：使用 --status 只读检测，或不带参数进入交互菜单"
+
+# ═══════════════════════════════════════════
+# 命令行帮助文本（M17 fix: i18n）
+# ═══════════════════════════════════════════
+
+MSG_HELP_USAGE="用法：bash install.sh [选项]"
+MSG_HELP_OPTIONS="选项："
+MSG_HELP_STATUS="  --status       查看系统安全状态（只读）"
+MSG_HELP_HELP="  --help, -h     显示此帮助"
+MSG_HELP_NO_ARGS="无参数：交互式菜单。"
+MSG_HELP_EXAMPLES="示例："
+MSG_HELP_EXAMPLE_INTERACTIVE="  bash install.sh                        # 交互式菜单"
+MSG_HELP_EXAMPLE_STATUS="  bash install.sh --status               # 仅状态检测"
+MSG_HELP_EXAMPLE_CURL="  curl -fsSL .../install.sh | sudo bash"
+MSG_ERROR_UNKNOWN_ARG="错误：未知参数：%s"
+MSG_ERROR_USE_HELP="使用 --help 查看可用选项"

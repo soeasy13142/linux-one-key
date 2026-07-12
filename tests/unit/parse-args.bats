@@ -6,17 +6,27 @@ setup() {
     export INSTALL_SH="${SCRIPT_DIR}/install.sh"
 }
 
+teardown() {
+    # No resources to clean up -- all tests are read-only grep checks on install.sh
+    true
+}
+
 @test "_parse_args function exists" {
     run grep -E "^_parse_args\(\)" "${INSTALL_SH}"
     [[ "$status" -eq 0 ]]
 }
 
-@test "removed arg branch uses MSG_ERROR_REMOVED_ARG" {
+# 以下为结构性测试：验证 _parse_args 函数在 install.sh 中的 i18n 契约。
+# 这些测试依赖于 grep 函数体内容而非外部调用行为，重构 _parse_args
+# 时需同步更新这些模式。
+@test "removed arg branch references MSG_ERROR_REMOVED_ARG" {
+    # 测试 _parse_args 中 --yes 处理分支引用了 i18n 键，
+    # 而非硬编码错误信息
     run bash -c "grep -A 100 '^_parse_args()' '${INSTALL_SH}' | grep -F -A 15 -e '--yes' | grep -F 'MSG_ERROR_REMOVED_ARG'"
     [[ "$status" -eq 0 ]]
 }
 
-@test "removed arg branch uses MSG_ERROR_REMOVED_HINT" {
+@test "removed arg branch references MSG_ERROR_REMOVED_HINT" {
     run bash -c "grep -A 100 '^_parse_args()' '${INSTALL_SH}' | grep -F -A 15 -e '--yes' | grep -F 'MSG_ERROR_REMOVED_HINT'"
     [[ "$status" -eq 0 ]]
 }

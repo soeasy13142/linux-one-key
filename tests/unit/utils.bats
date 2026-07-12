@@ -61,7 +61,8 @@ teardown() {
 
 # 日志文件测试
 @test "log_info writes to log file" {
-    log_info "Test log entry"
+    run log_info "Test log entry"
+    [[ "${status}" -eq 0 ]]
     [[ -f "${LOG_FILE}" ]]
     grep -q "Test log entry" "${LOG_FILE}"
 }

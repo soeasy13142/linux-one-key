@@ -32,37 +32,6 @@ teardown() {
     rm -rf "${TEST_DIR}"
 }
 
-# 测试 _get_ssh_port 函数
-@test "_get_ssh_port returns custom port" {
-    local config_file="${TEST_DIR}/sshd_config"
-    echo "Port 2222" > "${config_file}"
-
-    # Mock the function to use test config
-    _get_ssh_port() {
-        local port
-        port=$(grep -E "^Port\s+" "${config_file}" 2>/dev/null | awk '{print $2}' | head -1)
-        echo "${port:-22}"
-    }
-
-    result=$(_get_ssh_port)
-    [[ "${result}" == "2222" ]]
-}
-
-@test "_get_ssh_port returns default port 22" {
-    local config_file="${TEST_DIR}/sshd_config"
-    touch "${config_file}"
-
-    # Mock the function to use test config
-    _get_ssh_port() {
-        local port
-        port=$(grep -E "^Port\s+" "${config_file}" 2>/dev/null | awk '{print $2}' | head -1)
-        echo "${port:-22}"
-    }
-
-    result=$(_get_ssh_port)
-    [[ "${result}" == "22" ]]
-}
-
 # 测试 _get_auth_log_path 函数
 @test "_get_auth_log_path returns auth.log for ubuntu" {
     export DETECTED_OS="ubuntu"
@@ -213,11 +182,6 @@ teardown() {
 
 # 测试 get_fail2ban_info 函数
 @test "get_fail2ban_info shows configuration info" {
-    # Mock _get_ssh_port
-    _get_ssh_port() {
-        echo "2222"
-    }
-
     # Mock get_ssh_port and _get_auth_log_path
     get_ssh_port() {
         echo "2222"
@@ -234,5 +198,5 @@ teardown() {
 
 # 测试 run_fail2ban_hardening_custom 函数
 @test "run_fail2ban_wizard exists and is callable" {
-    type run_fail2ban_wizard | grep -q "function"
+    type -t run_fail2ban_wizard | grep -q "function"
 }

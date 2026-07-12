@@ -193,9 +193,9 @@ disable_kernel_modules() {
             if echo "install ${module} /bin/true" > "${blacklist_file}" 2>/dev/null \
                 && echo "blacklist ${module}" >> "${blacklist_file}" 2>/dev/null \
                 && grep -q "blacklist ${module}" "${blacklist_file}" 2>/dev/null; then
-                log_debug "Blacklisted module: ${module}"
+                log_debug "${MSG_KERNEL_MODULE_BLACKLISTED}: ${module}"
             else
-                log_warn "Failed to blacklist module: ${module}"
+                log_warn "${MSG_KERNEL_MODULE_BLACKLIST_FAILED}: ${module}"
                 blacklist_failed=$((blacklist_failed + 1))
             fi
         fi

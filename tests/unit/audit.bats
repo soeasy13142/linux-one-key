@@ -323,11 +323,14 @@ teardown() {
 }
 
 # 测试 get_audit_info 函数
+# 注意：这些测试 mock 了 auditctl 命令。如果 get_audit_info 内部重构了
+# auditctl 调用方式（如改为 auditctl 参数不同），需同步更新 mock。
 @test "get_audit_info shows rules file path" {
-    # Mock auditctl
+    # Mock auditctl — 返回 "No rules" 模拟 auditd 未运行状态
     auditctl() { echo "No rules"; }
 
     run get_audit_info
+    [[ "$status" -eq 0 ]]
     [[ "${output}" == *"/etc/audit/rules.d/audit.rules"* ]]
 }
 
@@ -335,26 +338,27 @@ teardown() {
     auditctl() { echo "No rules"; }
 
     run get_audit_info
+    [[ "$status" -eq 0 ]]
     [[ "${output}" == *"/etc/audit/auditd.conf"* ]]
 }
 
 # 测试函数存在性
 @test "run_audit_wizard exists and is callable" {
-    type run_audit_wizard | grep -q "function"
+    type -t run_audit_wizard | grep -q "function"
 }
 
 @test "show_audit_status exists and is callable" {
-    type show_audit_status | grep -q "function"
+    type -t show_audit_status | grep -q "function"
 }
 
 @test "get_audit_info exists and is callable" {
-    type get_audit_info | grep -q "function"
+    type -t get_audit_info | grep -q "function"
 }
 
 @test "search_audit_log exists and is callable" {
-    type search_audit_log | grep -q "function"
+    type -t search_audit_log | grep -q "function"
 }
 
 @test "show_audit_report exists and is callable" {
-    type show_audit_report | grep -q "function"
+    type -t show_audit_report | grep -q "function"
 }

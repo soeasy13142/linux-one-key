@@ -41,7 +41,8 @@ _install_firewall() {
             fi
             # 安装后启动 firewalld 服务
             if ! systemctl enable --now firewalld >> "${LOG_FILE}" 2>&1; then
-                log_warn "Failed to enable firewalld service"
+                log_error "firewalld service failed to start"
+                return 1
             fi
             ;;
         fedora)
@@ -51,7 +52,8 @@ _install_firewall() {
             fi
             dnf install -y firewalld >> "${LOG_FILE}" 2>&1
             if ! systemctl enable --now firewalld >> "${LOG_FILE}" 2>&1; then
-                log_warn "Failed to enable firewalld service"
+                log_error "firewalld service failed to start"
+                return 1
             fi
             ;;
         *)
@@ -122,7 +124,7 @@ _ufw_allow_icmp() {
 # 启用 UFW
 _ufw_enable() {
     log_step "${MSG_FIREWALL_ENABLE}"
-    if ufw --force enable >> "${LOG_FILE}" 2>&1 && ufw status 2>/dev/null | grep -q "Status: active"; then
+    if ufw --force enable >> "${LOG_FILE}" 2>&1 && LC_ALL=C ufw status 2>/dev/null | grep -q "Status: active"; then
         log_success "${MSG_FIREWALL_ENABLE_DONE}"
     else
         log_error "Failed to enable UFW"
@@ -153,9 +155,23 @@ _firewalld_start() {
 # 配置 firewalld 默认策略
 _firewalld_set_defaults() {
     log_step "${MSG_FIREWALL_DEFAULT_POLICY}"
+
+    # 记录旧默认 zone，以便迁移现有接口
+    local old_zone
+    old_zone=$(firewall-cmd --get-default-zone 2>/dev/null || echo "")
+
     # firewalld 默认 zone 就是 drop，已经是拒绝入站
     firewall-cmd --set-default-zone=drop >> "${LOG_FILE}" 2>&1
     firewall-cmd --zone=drop --set-target=DROP >> "${LOG_FILE}" 2>&1
+
+    # 将旧默认 zone 中的现有接口迁移到 drop zone
+    if [[ -n "${old_zone}" ]]; then
+        local iface
+        for iface in $(firewall-cmd --zone="${old_zone}" --list-interfaces 2>/dev/null); do
+            firewall-cmd --zone=drop --add-interface="${iface}" --permanent 2>/dev/null || true
+        done
+    fi
+
     log_success "${MSG_FIREWALL_DEFAULT_POLICY_DONE}"
 }
 
@@ -163,7 +179,6 @@ _firewalld_set_defaults() {
 _firewalld_allow_port() {
     local port="$1"
     local proto="${2:-tcp}"
-    local comment="${3:-}"
 
     firewall-cmd --permanent --zone=drop --add-port="${port}/${proto}" >> "${LOG_FILE}" 2>&1
     log_info "${MSG_FIREWALL_PORT_OPENED}: $port/$proto"
@@ -391,7 +406,7 @@ run_firewall_wizard() {
     fi
 
     # 启用防火墙
-    enable_firewall
+    enable_firewall || { log_error "Failed to enable firewall"; return 1; }
 
     # 显示最终状态
     show_firewall_status

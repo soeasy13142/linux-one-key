@@ -81,12 +81,17 @@ _disable_service() {
         fi
     fi
 
-    # 验证
-    if ! systemctl is-active --quiet "${svc_name}" 2>/dev/null; then
+    # 验证：检查服务已停止且已禁用
+    if systemctl is-active --quiet "${svc_name}" 2>/dev/null; then
+        log_error "${MSG_SERVICES_DISABLE_ERROR}: ${svc_name}"
+        return 1
+    fi
+
+    if systemctl is-enabled "${svc_name}" 2>/dev/null | grep -q "disabled"; then
         log_success "${MSG_SERVICES_DISABLED}: ${svc_name}"
         return 0
     else
-        log_error "${MSG_SERVICES_DISABLE_ERROR}: ${svc_name}"
+        log_warn "${MSG_SERVICES_DISABLE_FAILED}: ${svc_name}"
         return 1
     fi
 }
@@ -268,9 +273,9 @@ scan_open_ports() {
         [[ -z "${line}" ]] && continue
 
         local proto port proc
-        proto=$(echo "${line}" | cut -d: -f1)
-        port=$(echo "${line}" | cut -d: -f2)
-        proc=$(echo "${line}" | cut -d: -f4)
+        proto=$(echo "${line}" | awk -F: '{print $1}')
+        port=$(echo "${line}" | awk -F: '{print $2}')
+        proc=$(echo "${line}" | awk -F: '{print $NF}')
 
         # 去重（同端口可能多地址监听）
         if echo "${seen_ports}" | grep -q ":${port}:"; then

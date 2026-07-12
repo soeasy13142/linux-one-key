@@ -95,7 +95,7 @@ change_ssh_port() {
                     fi
 
                     if [[ "${new_port}" == "${current_port}" ]]; then
-                        log_info "Port unchanged, skipping"
+                        log_info "${MSG_SSH_PORT_UNCHANGED}"
                         return 0
                     fi
 
@@ -164,13 +164,13 @@ change_ssh_port() {
     local confirm_msg="${MSG_SSH_PORT_CONFIRM//\{current\}/${current_port}}"
     confirm_msg="${confirm_msg//\{new\}/${new_port}}"
     if ! confirm "${confirm_msg}" "y"; then
-        log_info "Cancelled"
+        log_info "${MSG_SSH_PORT_CANCELLED}"
         return 0
     fi
 
     # Apply
     if ! set_ssh_config "Port" "${new_port}"; then
-        log_error "Failed to change SSH port"
+        log_error "${MSG_SSH_PORT_FAIL}"
         return 1
     fi
 
@@ -196,9 +196,10 @@ generate_ssh_key() {
 
     # 检查是否已存在
     if [[ -f "${key_path}" ]]; then
-        log_warn "Key already exists: ${key_path}"
-        if ! confirm "Overwrite existing key?" "n"; then
-            log_info "Skipping key generation"
+        local _key_exists_msg="${MSG_SSH_KEY_EXISTS//\{path\}/${key_path}}"
+        log_warn "${_key_exists_msg}"
+        if ! confirm "${MSG_SSH_KEY_OVERWRITE}" "n"; then
+            log_info "${MSG_SSH_KEY_SKIP}"
             return 0
         fi
     fi
@@ -212,7 +213,7 @@ generate_ssh_key() {
     chmod 700 "$(dirname "${key_path}")"
 
     # 生成密钥
-    log_step "Generating Ed25519 key pair..."
+    log_step "${MSG_SSH_KEY_GENERATING}"
 
     if [[ -z "${passphrase}" ]]; then
         ssh-keygen -t ed25519 -f "${key_path}" -N "" -C "$(whoami)@$(hostname)"
@@ -239,12 +240,12 @@ generate_ssh_key() {
     local auth_ok=true
     if [[ -f "${key_path}.pub" ]]; then
         if grep -qF "$(cat "${key_path}.pub")" "${auth_keys}" 2>/dev/null; then
-            log_info "Key already in authorized_keys, skipping"
+            log_info "${MSG_SSH_KEY_ALREADY_AUTHORIZED}"
         else
             if cat "${key_path}.pub" >> "${auth_keys}" 2>/dev/null && chmod 600 "${auth_keys}" 2>/dev/null; then
                 log_success "${MSG_SSH_KEY_AUTHORIZED}"
             else
-                log_warn "Failed to update authorized_keys"
+                log_warn "${MSG_SSH_KEY_AUTHORIZED_FAIL}"
                 auth_ok=false
             fi
         fi
@@ -278,7 +279,7 @@ check_other_users() {
     local users_without_keys
     users_without_keys=$(_check_all_users_ssh_keys) || true
     if [[ -n "${users_without_keys}" ]]; then
-        log_warn "The following users have NO SSH keys (may be locked out if password auth is disabled):"
+        log_warn "${MSG_SSH_USERS_NO_KEYS}"
         while IFS= read -r user; do
             [[ -z "${user}" ]] && continue
             log_warn "  - ${user}"
@@ -298,7 +299,7 @@ disable_root_login() {
     if ! check_other_users; then
         log_warn "${MSG_SSH_ROOT_NO_USER}"
         log_warn "${MSG_SSH_ROOT_CREATE_USER}"
-        log_info "Skipping root login disable"
+        log_info "${MSG_SSH_ROOT_SKIP}"
         return 0
     fi
 
@@ -313,7 +314,7 @@ disable_root_login() {
 
     # 修改配置
     if ! set_ssh_config "PermitRootLogin" "no"; then
-        log_error "Failed to disable root login"
+        log_error "${MSG_SSH_ROOT_FAIL}"
         return 1
     fi
 
@@ -389,8 +390,8 @@ disable_password_auth() {
     # 检查当前用户是否有 SSH 密钥
     if ! check_ssh_keys; then
         log_warn "${MSG_SSH_PASSWD_NO_KEY}"
-        log_warn "Please configure SSH keys first"
-        log_info "Skipping password auth disable"
+        log_warn "${MSG_SSH_PASSWD_CONFIGURE_KEYS}"
+        log_info "${MSG_SSH_PASSWD_SKIP}"
         return 0
     fi
 
@@ -398,14 +399,14 @@ disable_password_auth() {
     local users_without_keys
     users_without_keys=$(_check_all_users_ssh_keys) || true
     if [[ -n "${users_without_keys}" ]]; then
-        log_warn "The following users have NO SSH keys and will be locked out if password auth is disabled:"
+        log_warn "${MSG_SSH_PASSWD_USERS_NO_KEYS}"
         while IFS= read -r user; do
             [[ -z "${user}" ]] && continue
             log_warn "  - ${user}"
         done <<< "${users_without_keys}"
-        log_warn "Please set up SSH keys for these users first, or they will be unable to log in."
-        if ! confirm "Continue anyway? (NOT recommended)" "n"; then
-            log_info "Skipping password auth disable"
+        log_warn "${MSG_SSH_PASSWD_SETUP_KEYS_HINT}"
+        if ! confirm "${MSG_SSH_PASSWD_CONTINUE_ANYWAY}" "n"; then
+            log_info "${MSG_SSH_PASSWD_SKIP}"
             return 0
         fi
     fi
@@ -421,15 +422,15 @@ disable_password_auth() {
 
     # 修改配置（set_ssh_config 内部已有写后验证）
     if ! set_ssh_config "PasswordAuthentication" "no"; then
-        log_error "Failed to set PasswordAuthentication"
+        log_error "${MSG_SSH_PASSWD_SET_FAIL//\{param\}/PasswordAuthentication}"
         return 1
     fi
     if ! set_ssh_config "PubkeyAuthentication" "yes"; then
-        log_error "Failed to set PubkeyAuthentication"
+        log_error "${MSG_SSH_PASSWD_SET_FAIL//\{param\}/PubkeyAuthentication}"
         return 1
     fi
     if ! set_ssh_config "ChallengeResponseAuthentication" "no"; then
-        log_error "Failed to set ChallengeResponseAuthentication"
+        log_error "${MSG_SSH_PASSWD_SET_FAIL//\{param\}/ChallengeResponseAuthentication}"
         return 1
     fi
 
@@ -453,9 +454,14 @@ configure_ssh_params() {
     local val
     local failed=0
 
+    local _param_err
+
     val=$(prompt_input "${MSG_SSH_PARAMS_MAXAUTHTRIES}" "3")
     if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]] || [[ "${val}" -gt 100 ]]; then
-        log_error "Invalid MaxAuthTries value (1-100), using default 3"
+        _param_err="${MSG_SSH_PARAMS_INVALID//\{param\}/MaxAuthTries}"
+        _param_err="${_param_err//\{range\}/1-100}"
+        _param_err="${_param_err//\{default\}/3}"
+        log_error "${_param_err}"
         val="3"
     fi
     if ! set_ssh_config "MaxAuthTries" "${val}"; then
@@ -464,7 +470,10 @@ configure_ssh_params() {
 
     val=$(prompt_input "${MSG_SSH_PARAMS_LOGINGRACETIME}" "60")
     if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]] || [[ "${val}" -gt 3600 ]]; then
-        log_error "Invalid LoginGraceTime value (1-3600), using default 60"
+        _param_err="${MSG_SSH_PARAMS_INVALID//\{param\}/LoginGraceTime}"
+        _param_err="${_param_err//\{range\}/1-3600}"
+        _param_err="${_param_err//\{default\}/60}"
+        log_error "${_param_err}"
         val="60"
     fi
     if ! set_ssh_config "LoginGraceTime" "${val}"; then
@@ -473,7 +482,10 @@ configure_ssh_params() {
 
     val=$(prompt_input "${MSG_SSH_PARAMS_CLIENTALIVEINTERVAL}" "300")
     if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]] || [[ "${val}" -gt 86400 ]]; then
-        log_error "Invalid ClientAliveInterval value (1-86400), using default 300"
+        _param_err="${MSG_SSH_PARAMS_INVALID//\{param\}/ClientAliveInterval}"
+        _param_err="${_param_err//\{range\}/1-86400}"
+        _param_err="${_param_err//\{default\}/300}"
+        log_error "${_param_err}"
         val="300"
     fi
     if ! set_ssh_config "ClientAliveInterval" "${val}"; then
@@ -482,7 +494,10 @@ configure_ssh_params() {
 
     val=$(prompt_input "${MSG_SSH_PARAMS_CLIENTALIVECOUNTMAX}" "2")
     if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]] || [[ "${val}" -gt 100 ]]; then
-        log_error "Invalid ClientAliveCountMax value (1-100), using default 2"
+        _param_err="${MSG_SSH_PARAMS_INVALID//\{param\}/ClientAliveCountMax}"
+        _param_err="${_param_err//\{range\}/1-100}"
+        _param_err="${_param_err//\{default\}/2}"
+        log_error "${_param_err}"
         val="2"
     fi
     if ! set_ssh_config "ClientAliveCountMax" "${val}"; then
@@ -491,7 +506,10 @@ configure_ssh_params() {
 
     val=$(prompt_input "${MSG_SSH_PARAMS_MAXSESSIONS}" "2")
     if [[ ! "${val}" =~ ^[0-9]+$ ]] || [[ "${val}" -lt 1 ]] || [[ "${val}" -gt 100 ]]; then
-        log_error "Invalid MaxSessions value (1-100), using default 2"
+        _param_err="${MSG_SSH_PARAMS_INVALID//\{param\}/MaxSessions}"
+        _param_err="${_param_err//\{range\}/1-100}"
+        _param_err="${_param_err//\{default\}/2}"
+        log_error "${_param_err}"
         val="2"
     fi
     if ! set_ssh_config "MaxSessions" "${val}"; then
@@ -504,7 +522,8 @@ configure_ssh_params() {
     fi
 
     if [[ "${failed}" -gt 0 ]]; then
-        log_error "Failed to set ${failed} SSH parameter(s)"
+        _param_err="${MSG_SSH_PARAMS_FAIL//\{count\}/${failed}}"
+        log_error "${_param_err}"
         return 1
     fi
 
@@ -561,7 +580,7 @@ rollback_ssh() {
     latest_backup=$(find "${BACKUP_DIR}" -name "sshd_config.bak.*" -type f 2>/dev/null | sort -r | head -1)
 
     if [[ -z "${latest_backup}" ]]; then
-        log_error "No backup found for rollback"
+        log_error "${MSG_SSH_ROLLBACK_NO_BACKUP}"
         return 1
     fi
 
@@ -582,7 +601,7 @@ setup_rollback_timer() {
     # 使用 at 命令设置定时任务
     if command_exists at; then
         local at_output
-        at_output=$(echo "bash -c 'source ${SCRIPT_DIR}/scripts/base/utils.sh && source ${SCRIPT_DIR}/scripts/security/ssh.sh && rollback_ssh'" | at now + 5 minutes 2>&1)
+        at_output=$(echo "bash -c 'source ${SCRIPT_DIR}/scripts/base/utils.sh && source ${SCRIPT_DIR}/scripts/security/ssh.sh && rollback_ssh'" | at now + $(( ROLLBACK_DELAY / 60 )) minutes 2>&1)
         # 提取 at job ID（兼容不同系统的输出格式）
         ROLLBACK_AT_JOB=$(echo "${at_output}" | awk '{for(i=1;i<=NF;i++) if($i=="job") print $(i+1); exit}')
         log_success "${MSG_SSH_ROLLBACK_CRON} (at job: ${ROLLBACK_AT_JOB:-unknown})"
@@ -637,11 +656,11 @@ run_ssh_wizard() {
     # 生成 SSH 密钥
     generate_ssh_key || return 1
 
-    # 禁止 root 远程登录
-    disable_root_login || return 1
-
     # 禁止密码登录
     disable_password_auth || return 1
+
+    # 禁止 root 远程登录
+    disable_root_login || return 1
 
     # 配置其他安全参数
     configure_ssh_params || return 1
@@ -654,18 +673,19 @@ run_ssh_wizard() {
         local _current_mtime
         _current_mtime=$(stat -c '%Y' "${_config_file}" 2>/dev/null || stat -f '%m' "${_config_file}" 2>/dev/null || echo "")
         if [[ "${_current_mtime}" != "${_original_mtime}" ]]; then
-            log_warn "sshd_config was modified externally during this wizard."
-            log_warn "If rollback is triggered, external changes will be overwritten."
+            log_warn "${MSG_SSH_WIZARD_EXTERNAL_MOD}"
+            log_warn "${MSG_SSH_WIZARD_ROLLBACK_OVERWRITE}"
         fi
     fi
 
     # 重启 SSH 服务
     if restart_ssh; then
         # SSH 重启成功，无需回滚
-        log_success "SSH service restarted successfully"
+        log_success "${MSG_SSH_RESTART_SUCCESS}"
     else
         # SSH 重启失败，设置回滚定时器以自动恢复旧配置
-        log_error "SSH restart failed, setting up auto-rollback in ${ROLLBACK_DELAY}s"
+        local _rollback_err="${MSG_SSH_RESTART_FAIL_ROLLBACK//\{delay\}/${ROLLBACK_DELAY}}"
+        log_error "${_rollback_err}"
         setup_rollback_timer
         return 1
     fi

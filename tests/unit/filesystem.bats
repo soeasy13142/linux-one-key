@@ -85,13 +85,13 @@ teardown() {
 
 # ── _get_file_mode 测试 ──
 
-@test "_get_file_mode returns correct mode for /etc/passwd" {
-    if [[ -f /etc/passwd ]]; then
-        run _get_file_mode "/etc/passwd"
-        [[ "${output}" =~ ^[0-9]+$ ]]
-    else
-        skip "/etc/passwd not found"
-    fi
+@test "_get_file_mode returns correct mode" {
+    local temp_file="${TEST_DIR}/test_mode_file"
+    touch "${temp_file}"
+    chmod 644 "${temp_file}"
+    run _get_file_mode "${temp_file}"
+    [[ "${status}" -eq 0 ]]
+    [[ "${output}" == "644" ]]
 }
 
 @test "_get_file_mode returns NOT_FOUND for missing file" {
@@ -110,6 +110,18 @@ teardown() {
 
 @test "_is_known_suid_file rejects empty string" {
     ! _is_known_suid_file ""
+}
+
+@test "_is_known_suid_file recognizes known SUID files" {
+    # bats v1 不传递 readonly 数组到测试子进程，须在 run 内重新 source
+    # _is_known_suid_file 只依赖 KNOWN_SUID_FILES，是纯函数，独立 source 即可验证
+    run bash -c "
+        source '${SCRIPT_DIR}/scripts/base/utils.sh'
+        export DETECTED_OS='ubuntu'
+        source '${SCRIPT_DIR}/scripts/security/filesystem.sh'
+        _is_known_suid_file '/usr/bin/passwd'
+    "
+    [[ "${status}" -eq 0 ]]
 }
 
 # ── check_filesystem_status 测试 ──

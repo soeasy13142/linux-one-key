@@ -364,12 +364,12 @@ show_audit_status() {
 
 # 获取审计配置信息
 get_audit_info() {
-    echo "规则文件: ${AUDIT_RULES_FILE}"
-    echo "配置文件: ${AUDITD_CONF}"
+    echo "${MSG_AUDIT_RULES_FILE}: ${AUDIT_RULES_FILE}"
+    echo "${MSG_AUDIT_CONF_FILE}: ${AUDITD_CONF}"
     if command_exists auditctl; then
         local rule_count
         rule_count=$(auditctl -l 2>/dev/null | wc -l | tr -d ' ')
-        echo "规则数量: ${rule_count}"
+        echo "${MSG_AUDIT_RULES_COUNT} ${rule_count}"
     fi
 }
 
@@ -384,7 +384,7 @@ search_audit_log() {
     fi
 
     log_step "${MSG_AUDIT_SEARCH//\{key\}/${key}}"
-    ausearch -k "${key}" -i 2>/dev/null | head -n "${max_results}"
+    ausearch -k "${key}" -i 2>/dev/null | head -n "${max_results}" || true
 }
 
 # 生成审计报告

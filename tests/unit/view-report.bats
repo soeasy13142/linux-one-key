@@ -9,6 +9,11 @@ setup() {
     export INSTALL_SH="${SCRIPT_DIR}/install.sh"
 }
 
+teardown() {
+    # No resources to clean up -- all tests are read-only grep/pattern checks on install.sh/zh.sh
+    true
+}
+
 @test "view_report function exists in install.sh" {
     run grep -E "^view_report\(\)" "${INSTALL_SH}"
     [[ "$status" -eq 0 ]]
@@ -41,11 +46,11 @@ setup() {
 }
 
 @test "zh.sh has relative time format keys" {
-    run grep -E "^MSG_TIME_(JUST_NOW|MINUTES_AGO|HOURS_AGO|DAYS_AGO)=" \
-        "${SCRIPT_DIR}/scripts/lang/zh.sh"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == *"MSG_TIME_JUST_NOW="* ]]
-    [[ "$output" == *"MSG_TIME_MINUTES_AGO="* ]]
-    [[ "$output" == *"MSG_TIME_HOURS_AGO="* ]]
-    [[ "$output" == *"MSG_TIME_DAYS_AGO="* ]]
+    # 验证 zh.sh 中定义了 MSG_TIME_* 系列变量（非空）
+    local zh_file="${SCRIPT_DIR}/scripts/lang/zh.sh"
+    for key in MSG_TIME_JUST_NOW MSG_TIME_MINUTES_AGO MSG_TIME_HOURS_AGO MSG_TIME_DAYS_AGO; do
+        run bash -c "source '${zh_file}' && echo \"\${${key}:+set}\""
+        [[ "$status" -eq 0 ]]
+        [[ "$output" == "set" ]]
+    done
 }

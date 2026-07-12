@@ -28,5 +28,8 @@ everything-claude-code/
 docs/file-tree.generated.md
 .superpowers/
 
+# Docker test outputs
+tests/docker/results/
+
 # Git worktrees (isolated dev workspaces)
 .worktrees/

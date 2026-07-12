@@ -213,25 +213,25 @@ setup_user_ssh_key() {
 
     # 添加公钥到 authorized_keys
     if ! cat "${key_file}.pub" >> "${auth_file}" 2>> "${LOG_FILE}"; then
-        log_error "Failed to add public key to authorized_keys"
+        log_error "${MSG_USERS_SSH_KEY_AUTH_ADD_FAILED}"
         return 1
     fi
 
     # 设置权限（任一步失败则中止）
     if ! chmod 700 "${ssh_dir}"; then
-        log_error "Failed to set permissions on ${ssh_dir}"
+        log_error "${MSG_USERS_SSH_KEY_PERM_FAILED//\{path\}/${ssh_dir}}"
         return 1
     fi
     if ! chmod 600 "${key_file}"; then
-        log_error "Failed to set permissions on ${key_file}"
+        log_error "${MSG_USERS_SSH_KEY_PERM_FAILED//\{path\}/${key_file}}"
         return 1
     fi
     if ! chmod 600 "${auth_file}"; then
-        log_error "Failed to set permissions on ${auth_file}"
+        log_error "${MSG_USERS_SSH_KEY_PERM_FAILED//\{path\}/${auth_file}}"
         return 1
     fi
     if ! chown -R "${username}:${username}" "${ssh_dir}"; then
-        log_error "Failed to set ownership on ${ssh_dir}"
+        log_error "${MSG_USERS_SSH_KEY_OWNER_FAILED//\{path\}/${ssh_dir}}"
         return 1
     fi
 

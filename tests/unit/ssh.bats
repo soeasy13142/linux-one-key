@@ -4,6 +4,7 @@
 # 测试前设置
 setup() {
     export TEST_DIR="$(mktemp -d)"
+    export _ORIG_HOME="${HOME}"
     export SCRIPT_DIR="${BATS_TEST_DIRNAME}/../.."
     export LOG_DIR="${TEST_DIR}/log"
     export BACKUP_DIR="${TEST_DIR}/backups"
@@ -28,6 +29,7 @@ setup() {
 
 teardown() {
     rm -rf "${TEST_DIR}"
+    export HOME="${_ORIG_HOME}"
 }
 
 # ── validate_port 测试 ──

@@ -186,15 +186,18 @@ teardown() {
 # ═══════════════════════════════════════════
 
 @test "_is_safe_port returns 0 for port 22" {
-    _is_safe_port "22"
+    run _is_safe_port "22"
+    [[ "${status}" -eq 0 ]]
 }
 
 @test "_is_safe_port returns 0 for port 80" {
-    _is_safe_port "80"
+    run _is_safe_port "80"
+    [[ "${status}" -eq 0 ]]
 }
 
 @test "_is_safe_port returns 0 for port 443" {
-    _is_safe_port "443"
+    run _is_safe_port "443"
+    [[ "${status}" -eq 0 ]]
 }
 
 @test "_is_safe_port returns 1 for port 8080" {

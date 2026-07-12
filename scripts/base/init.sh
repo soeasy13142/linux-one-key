@@ -5,6 +5,10 @@
 set -eo pipefail
 # 注意: 不使用 -u (nounset)，与 utils.sh 保持一致，避免未绑定变量导致脚本意外退出
 
+# 源加载保护：防止重复 source 导致 readonly 变量错误
+[ -n "${_INIT_LOADED:-}" ] && return 0
+readonly _INIT_LOADED=1
+
 # 检查依赖
 if [[ "${_UTILS_LOADED:-}" != "1" ]]; then
     echo "Error: utils.sh must be loaded before init.sh"
@@ -44,7 +48,7 @@ update_system_packages() {
 
     case "${pkg_manager}" in
         apt)
-            apt-get update -qq 2>/dev/null
+            apt-get update -qq 2>/dev/null || log_warn "apt update failed, proceeding with available cache"
             if apt-get upgrade -y -qq 2>/dev/null; then
                 log_success "System packages updated"
             else
@@ -163,8 +167,5 @@ run_init() {
 
     return 0
 }
-
-# 标记 init.sh 已加载
-readonly _INIT_LOADED=1
 
 log_debug "init.sh loaded successfully"

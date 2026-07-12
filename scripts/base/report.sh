@@ -5,6 +5,10 @@
 set -eo pipefail
 # 注意: 不使用 -u (nounset)，与 utils.sh 保持一致，避免未绑定变量导致脚本意外退出
 
+# Source guard: prevent double-source crash under set -eo pipefail
+[ -n "${_REPORT_LOADED:-}" ] && return 0
+readonly _REPORT_LOADED=1
+
 # 检查依赖
 if [[ "${_UTILS_LOADED:-}" != "1" ]]; then
     echo "Error: utils.sh must be loaded before report.sh"
@@ -20,22 +24,23 @@ fi
 # 报告生成
 # ═══════════════════════════════════════════
 
+# Helper: format a task line with done/skipped/failed status
+_report_task_line() {
+    local done_flag="${1:-0}"
+    local task_name="${2}"
+    if [[ "${done_flag}" == "1" ]]; then
+        echo "[✓] ${task_name}"
+    else
+        echo "[⊘] ${task_name} — ${MSG_WIZARD_SKIPPED}"
+    fi
+}
+
+# 生成安全加固报告，包含系统信息、任务完成状态、配置备份、安全建议
 generate_report() {
     local report_path
     report_path=$(get_report_path)
 
     log_step "Generating report..."
-
-    # Helper: format a task line with done/skipped/failed status
-    _report_task_line() {
-        local done_flag="${1:-0}"
-        local task_name="${2}"
-        if [[ "${done_flag}" == "1" ]]; then
-            echo "[✓] ${task_name}"
-        else
-            echo "[⊘] ${task_name} — ${MSG_WIZARD_SKIPPED}"
-        fi
-    }
 
     # Build report
     {
@@ -113,7 +118,7 @@ generate_report() {
             if command -v auditctl &>/dev/null; then
                 local rule_count
                 rule_count=$(auditctl -l 2>/dev/null | wc -l | tr -d ' ')
-                echo "    - ${MSG_AUDIT_RULES_COUNT:-Rules}: ${rule_count}"
+                echo "    - ${MSG_AUDIT_RULES_COUNT}: ${rule_count}"
             fi
         fi
 
@@ -122,7 +127,7 @@ generate_report() {
         if [[ "${_WIZARD_USERS_DONE:-0}" == "1" ]]; then
             local custom_users
             custom_users=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd 2>/dev/null | wc -l | tr -d ' ')
-            echo "    - ${MSG_STATUS_USERS_COUNT:-Custom users}: ${custom_users}"
+            echo "    - ${MSG_STATUS_USERS_COUNT}: ${custom_users}"
         fi
 
         # Kernel
@@ -132,11 +137,11 @@ generate_report() {
             if [[ -f "/etc/sysctl.d/99-hardening.conf" ]]; then
                 kernel_conf_status="${MSG_STATUS_ENABLED}"
             fi
-            echo "    - ${MSG_STATUS_KERNEL_CONF:-sysctl config}: ${kernel_conf_status}"
+            echo "    - ${MSG_STATUS_KERNEL_CONF}: ${kernel_conf_status}"
             if [[ -f "/etc/sysctl.d/99-hardening.conf" ]]; then
                 local kernel_param_count
                 kernel_param_count=$(grep -cE "^[^#]" "/etc/sysctl.d/99-hardening.conf" 2>/dev/null || echo "0")
-                echo "    - ${MSG_KERNEL_SUMMARY_PARAMS:-Parameters}: ${kernel_param_count}"
+                echo "    - ${MSG_KERNEL_SUMMARY_PARAMS}: ${kernel_param_count}"
             fi
         fi
 
@@ -145,7 +150,7 @@ generate_report() {
         if [[ "${_WIZARD_FS_DONE:-0}" == "1" ]]; then
             local fs_suid_count
             fs_suid_count=$(find / -xdev -not -path '/proc/*' -not -path '/sys/*' -perm -4000 -type f 2>/dev/null | wc -l | tr -d ' ')
-            echo "    - ${MSG_STATUS_FS_SUID:-SUID files}: ${fs_suid_count}"
+            echo "    - ${MSG_STATUS_FS_SUID}: ${fs_suid_count}"
         fi
 
         # Services
@@ -158,8 +163,8 @@ generate_report() {
                 svc_running=$(echo "${svc_status}" | grep '^services_running=' | cut -d= -f2)
                 local svc_unnecessary
                 svc_unnecessary=$(echo "${svc_status}" | grep '^services_unnecessary=' | cut -d= -f2)
-                echo "    - ${MSG_STATUS_SERVICES_RUNNING:-Running services}: ${svc_running}"
-                echo "    - ${MSG_STATUS_SERVICES_UNNECESSARY:-Unnecessary services}: ${svc_unnecessary}"
+                echo "    - ${MSG_STATUS_SERVICES_RUNNING}: ${svc_running}"
+                echo "    - ${MSG_STATUS_SERVICES_UNNECESSARY}: ${svc_unnecessary}"
             fi
         fi
 
@@ -211,16 +216,16 @@ generate_report() {
             echo "  ⚠ ${MSG_REPORT_WARN_AUDIT}"
         fi
         if [[ "${_WIZARD_KERNEL_DONE:-0}" == "1" ]]; then
-            echo "  ⚠ ${MSG_REPORT_WARN_KERNEL:-Kernel parameters modified, may affect network/services}"
+            echo "  ⚠ ${MSG_REPORT_WARN_KERNEL}"
         fi
         if [[ "${_WIZARD_USERS_DONE:-0}" == "1" ]]; then
-            echo "  ⚠ ${MSG_REPORT_WARN_USERS:-New user created, test login before closing current session}"
+            echo "  ⚠ ${MSG_REPORT_WARN_USERS}"
         fi
         if [[ "${_WIZARD_FS_DONE:-0}" == "1" ]]; then
-            echo "  ⚠ ${MSG_REPORT_WARN_FS:-Filesystem permissions changed, verify critical services still work}"
+            echo "  ⚠ ${MSG_REPORT_WARN_FS}"
         fi
         if [[ "${_WIZARD_SERVICES_DONE:-0}" == "1" ]]; then
-            echo "  ⚠ ${MSG_REPORT_WARN_SERVICES:-Some services disabled, verify required services are still running}"
+            echo "  ⚠ ${MSG_REPORT_WARN_SERVICES}"
         fi
 
         echo ""
@@ -231,8 +236,5 @@ generate_report() {
 
     log_success "${MSG_REPORT_SAVED}: ${report_path}"
 }
-
-# 标记 report.sh 已加载
-readonly _REPORT_LOADED=1
 
 log_debug "report.sh loaded successfully"
