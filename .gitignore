@@ -20,9 +20,8 @@ tmp/
 test-results/
 everything-claude-code/
 
-# Claude Code
-.claude/reviews/
-.claude/settings.local.json
+# Claude Code (local config, not pushed to remote)
+.claude/
 
 # Auto-generated
 docs/file-tree.generated.md
