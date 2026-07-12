@@ -1,3 +1,12 @@
+---
+title: "Fix Code Review Findings (commit 400933a)"
+created: 2026-06-24
+updated: 2026-06-24
+status: done
+source: ".claude/reviews/commit-400933a-review.md"
+topic: "code-review"
+---
+
 # Plan: Fix Code Review Findings (commit 400933a)
 
 **Source**: `.claude/reviews/commit-400933a-review.md`

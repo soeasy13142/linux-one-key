@@ -40,6 +40,8 @@
 |---|---|---|
 | [`archive/interactive-setup-spec.md`](archive/interactive-setup-spec.md) | 2026-06-23 | 交互式逐步配置 spec |
 | [`archive/interactive-setup-plan.md`](archive/interactive-setup-plan.md) | 2026-06-23 | 交互式逐步配置 plan |
+| [`archive/2026-07-10-design-doc-archive-design.md`](archive/2026-07-10-design-doc-archive-design.md) | 2026-07-10 | 设计文档归档规范设计 |
+| [`archive/2026-07-10-design-doc-archive.md`](archive/2026-07-10-design-doc-archive.md) | 2026-07-10 | 设计文档归档实施计划 |
 
 ## 重新生成文件树
 
