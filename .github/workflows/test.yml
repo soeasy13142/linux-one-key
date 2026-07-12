@@ -1,0 +1,44 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ShellCheck
+        run: sudo apt-get install -y shellcheck
+      - name: Run ShellCheck
+        run: |
+          shellcheck -x scripts/base/*.sh
+          shellcheck -x scripts/security/*.sh
+          shellcheck -x install.sh
+
+  bats:
+    name: Bats Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Bats
+        run: |
+          git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats
+          sudo /tmp/bats/install.sh /usr/local
+          rm -rf /tmp/bats
+      - name: Run unit tests
+        run: bats tests/unit/*.bats
+
+  docker-phase1:
+    name: Docker Phase 1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Phase 1 Docker tests
+        run: |
+          cd tests/docker
+          bash test-all.sh --phase 1

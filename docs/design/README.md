@@ -31,6 +31,7 @@
 |---|---|
 | [main-menu-redesign-prd.md](main-menu-redesign-prd.md) | 主菜单重设计 PRD |
 | [main-menu-redesign-plan.md](main-menu-redesign-plan.md) | 主菜单重设计实施计划 |
+| [docker-test-design.md](docker-test-design.md) | v1.0 Docker 自动化测试方案 |
 
 ## 已归档 (status=archived)
 
