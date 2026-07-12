@@ -2,8 +2,9 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![ShellCheck](https://img.shields.io/badge/ShellCheck-Passing-brightgreen.svg)](https://www.shellcheck.net/)
-[![Bats Tests](https://img.shields.io/badge/Tests-218+-brightgreen.svg)](https://github.com/bats-core/bats-core)
+[![Bats Tests](https://img.shields.io/badge/Tests-259-brightgreen.svg)](tests/unit/)
 [![Docker Phase1](https://img.shields.io/badge/Docker%20Phase1-72%2F72-brightgreen.svg)](tests/docker/)
+[![Docker Phase2](https://img.shields.io/badge/Docker%20Phase2-21%2F21-brightgreen.svg)](tests/docker/)
 
 **Linux 云服务器安全加固 + 一键环境初始化脚本** — 通过交互式向导，几步完成 SSH、防火墙、Fail2Ban、审计日志等安全配置。
 
@@ -95,14 +96,15 @@ sudo bash install.sh
 | RHEL | 7+ | x86_64 | 🔄 待验证 |
 | Fedora | 最新版 | x86_64 | 🔄 待验证 |
 
-> 所有标记 "Docker Phase 1 通过" 的发行版均已在 Docker 容器中完成配置文件验证（非特权容器）。
-> Phase 2（特权容器 + systemd 服务验证）将在后续完成。其他基于 systemd 的 Linux 发行版也可能兼容，但未经充分测试。
+> 所有标记 "Docker Phase 1 通过" 的发行版均已在 Docker 容器中完成配置文件验证。
+> Phase 2（特权容器 + systemd 服务验证）已在 Ubuntu 22.04, CentOS 7, Debian 12 上 21/21 通过。
+> 调试文档：[20 个已修复问题](docs/docker-test-debug-log.md) | Debug log: [20 resolved issues](docs/docker-test-debug-log.md)
 
 ---
 
 ## 测试覆盖 / Test Coverage
 
-### Phase 1：配置验证（已完成）
+### Phase 1：配置验证（Configuration Validation）✅
 
 9 个发行版 × 8 个安全模块 = **72/72 全部通过**
 
@@ -117,18 +119,39 @@ sudo bash install.sh
 | Filesystem | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Services | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-### 单元测试
+> 📄 [Phase 1 详细测试报告](tests/docker/phase2-report.md) · [调试日志（20 个已修复问题）](docs/docker-test-debug-log.md)
+> 📄 [Phase 1 test report](tests/docker/phase2-report.md) · [Debug log (20 resolved issues)](docs/docker-test-debug-log.md)
 
-- **218+** 个 Bats 测试用例覆盖全部模块
-- 覆盖正常路径、边界条件、幂等性、回滚验证
+### Phase 2：服务验证（Service Verification）✅
+
+3 个代表性发行版 × 7 个验证模块 = **21/21 全部通过**
+
+| 模块 \ 发行版 | Ubuntu 22.04 | CentOS 7 | Debian 12 |
+|----------------|:------------:|:--------:|:---------:|
+| SSH 服务监听 | ✅ | ✅ | ✅ |
+| 防火墙运行状态 | ✅ | ✅ | ✅ |
+| Fail2Ban 服务 | ✅ | ✅ | ✅ |
+| auditd 规则加载 | ✅ | ✅ | ✅ |
+| 用户 SSH 登录 | ✅ | ✅ | ✅ |
+| 安全扫描（nmap） | ✅ | ✅ | ✅ |
+| 回滚验证 | ✅ | ✅ | ✅ |
+
+> Phase 2 使用 `--privileged` Docker 容器，验证服务实际启动及安全效果。
+> 详细测试日志见 [调试文档 §3.13-3.20](docs/docker-test-debug-log.md)（8 个 Phase 2 运行时问题）。
+
+### 单元测试 / Unit Tests
+
+- **259 个** Bats 测试用例覆盖全部模块（259 test cases across all modules）
+- 覆盖正常路径、边界条件、幂等性、回滚验证（normal, edge, idempotency, rollback）
 - 持续集成中自动运行（ShellCheck + Bats）
 
-### Phase 2：服务验证（待启动）
+### 调试日志 / Debug Log
 
-- 特权容器 + systemd 环境
-- 服务启动验证（sshd, fail2ban, auditd）
-- 安全效果扫描（nmap, ssh-audit, 模拟攻击）
-- 回滚功能验证
+完整的调试记录（20 个已修复问题）保存在 [`docs/docker-test-debug-log.md`](docs/docker-test-debug-log.md)，涵盖：
+- Phase 1（12 个）：子 Shell 变量丢失、容器状态丢失、RHEL 包冲突、CentOS 7 EOL 等
+- Phase 2（8 个）：build_image stdout 泄露、容器内 SSH/D-Bus/firewalld 兼容性问题等
+
+> Full debug log at [`docs/docker-test-debug-log.md`](docs/docker-test-debug-log.md) — 20 issues documented with root causes and fixes.
 
 ---
 
@@ -160,7 +183,7 @@ linux-one-key/
 │   ├── audit/                 # auditd 配置和规则模板
 │   └── sysctl/                # sysctl 安全参数模板
 ├── tests/
-│   ├── unit/                  # 218+ Bats 单元测试
+│   ├── unit/                  # 259 Bats 单元测试
 │   └── docker/                # Docker 自动化测试框架
 │       ├── images/            # 9 个发行版 Dockerfile
 │       ├── tests/             # 8 个模块测试脚本 + Phase 2 目录
