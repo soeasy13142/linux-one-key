@@ -3,10 +3,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![ShellCheck](https://img.shields.io/badge/ShellCheck-Passing-brightgreen.svg)](https://www.shellcheck.net/)
 [![Bats Tests](https://img.shields.io/badge/Tests-218+-brightgreen.svg)](https://github.com/bats-core/bats-core)
+[![Docker Phase1](https://img.shields.io/badge/Docker%20Phase1-72%2F72-brightgreen.svg)](tests/docker/)
 
-**Linux 云服务器安全加固一键脚本** — 通过交互式向导，几步完成 SSH、防火墙、Fail2Ban、审计日志等安全配置。
+**Linux 云服务器安全加固 + 一键环境初始化脚本** — 通过交互式向导，几步完成 SSH、防火墙、Fail2Ban、审计日志等安全配置。
 
-**A one-key security hardening script for Linux cloud servers** — Complete SSH, firewall, Fail2Ban, and audit configuration through an interactive wizard.
+**A one-key security hardening + environment setup script for Linux cloud servers** — Complete SSH, firewall, Fail2Ban, and audit configuration through an interactive wizard.
 
 ---
 
@@ -14,10 +15,12 @@
 
 - [功能特性 / Features](#功能特性--features)
 - [快速开始 / Quick Start](#快速开始--quick-start)
-- [支持系统 / Supported Systems](#支持系统--supported-systems)
-- [项目架构 / Project Architecture](#项目架构--project-architecture)
+- [系统要求 / System Requirements](#系统要求--system-requirements)
+- [测试覆盖 / Test Coverage](#测试覆盖--test-coverage)
+- [项目结构 / Project Architecture](#项目结构--project-architecture)
 - [交互式向导 / Interactive Wizard](#交互式向导--interactive-wizard)
 - [开发指南 / Development Guide](#开发指南--development-guide)
+- [文档 / Documentation](#文档--documentation)
 - [安全注意事项 / Security Notes](#安全注意事项--security-notes)
 - [参考资料 / References](#参考资料--references)
 - [版本历史 / Changelog](#版本历史--changelog)
@@ -27,62 +30,20 @@
 
 ## 功能特性 / Features
 
-### SSH 安全加固
-
-- 修改 SSH 端口（支持自定义、随机生成、保持默认三种方式）
-- 生成 Ed25519 密钥对（比 RSA 更安全、更短）
-- 禁用 root 远程登录
-- 禁用密码登录，强制密钥认证
-- 配置前自动检测端口占用和密钥状态，避免锁定服务器
-
-### 防火墙配置
-
-- **Ubuntu / Debian**：基于 UFW 的防火墙规则
-- **CentOS / Rocky / Alma**：基于 firewalld 的防火墙规则
-- 自动放行 SSH 端口，支持自定义额外放行端口
-- 安装后自动启动并启用开机自启
-
-### Fail2Ban 入侵防护
-
-- 自动安装和配置 Fail2Ban
-- 根据操作系统自动选择 banaction（ufw / firewallcmd-ipset / iptables-multiport）
-- 支持自定义封禁时间、最大重试次数、检测窗口
-- 自动检测 SSH 服务名（ssh / sshd）
-
-### 审计日志
-
-- 安装和配置 auditd
-- 三级审计规则：basic（基础）/ standard（标准）/ full（全面）
-- 覆盖认证、文件访问、权限变更、网络连接等关键事件
-- 支持开机自启和服务状态检测
-
-### 用户管理
-
-- 创建新用户并配置密码
-- 为用户生成 SSH Ed25519 密钥对
-- 配置 sudo NOPASSWD 权限
-- 创建用户前自动检查用户名冲突
-
-### 内核安全加固
-
-- 基于 CIS Benchmark 的 sysctl 安全参数配置
-- 禁用不必要的内核模块（cramfs、freevxfs、hfs 等）
-- 配置前自动备份原始参数，支持回滚
-- 涵盖网络协议安全、内存保护、日志记录等方面
-
-### 文件系统安全
-
-- 全局 SUID/SGID 文件审计
-- 扫描无主文件和目录
-- 检查关键目录权限（/etc/passwd、/etc/shadow 等）
-- 发现问题后提供修复建议
-
-### 服务管理
-
-- 审计运行中的 systemd 服务
-- 检测并禁用不必要服务（telnet、rsh、vsftpd、avahi-daemon 等）
-- 扫描开放端口，标记非标准端口并警告
-- 支持 ss/netstat/proc 多种端口检测方式
+- [x] SSH 安全加固（端口、密钥、算法、登录策略）
+- [x] 防火墙配置（UFW / firewalld 自动适配）
+- [x] Fail2Ban 入侵防护（SSH 暴力破解防护）
+- [x] 用户管理（创建、sudo 授权、密钥部署）
+- [x] 内核参数加固（sysctl 安全优化）
+- [x] 文件系统安全审计（SUID/SGID、权限异常）
+- [x] 系统服务安全审计（开放端口、监听服务）
+- [x] auditd 审计规则（CIS 基准，三档级别）
+- [x] 交互式菜单向导，每步确认
+- [x] 快速开始 + 自定义配置双模式
+- [x] 多发行版支持（CentOS 7+ / Ubuntu 20.04+ / Debian 11+ / Rocky / Alma）
+- [x] i18n 国际化（中文 / English）
+- [x] 所有修改前自动备份，支持回滚
+- [x] 幂等设计，重复运行安全
 
 ---
 
@@ -122,23 +83,56 @@ sudo bash install.sh
 
 ---
 
-## 支持系统 / Supported Systems
+## 系统要求 / System Requirements
 
 | 发行版 / Distribution | 版本 / Version | 架构 / Architecture | 状态 / Status |
 |------------------------|----------------|---------------------|---------------|
-| Ubuntu | 20.04+ | x86_64, ARM64 | ✅ 已测试 |
-| Debian | 11+ | x86_64 | ✅ 已测试 |
-| CentOS | 7+ | x86_64 | 🔄 待验证 |
-| Rocky Linux | 8 / 9 | x86_64 | 🔄 待验证 |
-| AlmaLinux | 8 / 9 | x86_64 | 🔄 待验证 |
+| Ubuntu | 20.04, 22.04, 24.04 | x86_64, ARM64 | ✅ Docker Phase 1 通过 |
+| Debian | 11, 12 | x86_64 | ✅ Docker Phase 1 通过 |
+| CentOS | 7 | x86_64 | ✅ Docker Phase 1 通过 |
+| Rocky Linux | 8, 9 | x86_64 | ✅ Docker Phase 1 通过 |
+| AlmaLinux | 9 | x86_64 | ✅ Docker Phase 1 通过 |
 | RHEL | 7+ | x86_64 | 🔄 待验证 |
 | Fedora | 最新版 | x86_64 | 🔄 待验证 |
 
-> 其他基于 systemd 的 Linux 发行版也可能兼容，但未经充分测试。
+> 所有标记 "Docker Phase 1 通过" 的发行版均已在 Docker 容器中完成配置文件验证（非特权容器）。
+> Phase 2（特权容器 + systemd 服务验证）将在后续完成。其他基于 systemd 的 Linux 发行版也可能兼容，但未经充分测试。
 
 ---
 
-## 项目架构 / Project Architecture
+## 测试覆盖 / Test Coverage
+
+### Phase 1：配置验证（已完成）
+
+9 个发行版 × 8 个安全模块 = **72/72 全部通过**
+
+| 模块 \ 发行版 | Ubuntu 20.04 | Ubuntu 22.04 | Ubuntu 24.04 | Debian 11 | Debian 12 | CentOS 7 | Rocky 8 | Rocky 9 | Alma 9 |
+|----------------|:------------:|:------------:|:------------:|:---------:|:---------:|:--------:|:-------:|:-------:|:------:|
+| SSH | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Firewall | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Fail2Ban | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| auditd | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Users | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Kernel | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Filesystem | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Services | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+### 单元测试
+
+- **218+** 个 Bats 测试用例覆盖全部模块
+- 覆盖正常路径、边界条件、幂等性、回滚验证
+- 持续集成中自动运行（ShellCheck + Bats）
+
+### Phase 2：服务验证（待启动）
+
+- 特权容器 + systemd 环境
+- 服务启动验证（sshd, fail2ban, auditd）
+- 安全效果扫描（nmap, ssh-audit, 模拟攻击）
+- 回滚功能验证
+
+---
+
+## 项目结构 / Project Architecture
 
 ```
 linux-one-key/
@@ -165,12 +159,20 @@ linux-one-key/
 │   ├── fail2ban/jail.local    # Fail2Ban 配置模板
 │   ├── audit/                 # auditd 配置和规则模板
 │   └── sysctl/                # sysctl 安全参数模板
-├── tests/                     # 单元测试（Bats）
-│   └── unit/                  # 218+ 测试用例
-└── docs/                      # 文档
-    ├── code-reviews/          # 代码审查报告
-    ├── test-reports/          # 测试报告
-    └── design/                # 设计文档和实施计划
+├── tests/
+│   ├── unit/                  # 218+ Bats 单元测试
+│   └── docker/                # Docker 自动化测试框架
+│       ├── images/            # 9 个发行版 Dockerfile
+│       ├── tests/             # 8 个模块测试脚本 + Phase 2 目录
+│       ├── lib/common.bash    # 公共测试函数库
+│       ├── run-test.sh        # 单模块单发行版测试入口
+│       └── test-all.sh        # 全量测试运行器
+├── docs/                      # 文档
+│   ├── design/                # 设计文档（PRD、测试方案）
+│   ├── plans/                 # 计划文件（Plan-First 落地）
+│   ├── code-reviews/          # 代码审查报告
+│   └── test-reports/          # 测试报告
+└── .github/workflows/         # CI 配置
 ```
 
 ### 模块加载顺序
@@ -178,7 +180,7 @@ linux-one-key/
 脚本按以下顺序加载模块，确保依赖关系正确：
 
 ```
-utils.sh → detect.sh → init.sh → lang.sh → security modules → report.sh
+utils.sh -> detect.sh -> init.sh -> lang.sh -> security modules -> report.sh
 ```
 
 ---
@@ -213,7 +215,7 @@ Step 9: 生成安全报告
 
 - **自动备份**：所有配置修改前自动备份原文件到 `/var/log/linux-one-key/backups/`
 - **幂等设计**：重复运行不会产生副作用，已配置的项目会自动跳过
-- **状态检测**：主菜单实时显示各模块的配置状态
+- **状态检测**：主菜单实时显示各模块的配置状态（评分 + 颜色 + 建议）
 - **回滚支持**：内核参数修改支持一键回滚到备份状态
 
 ---
@@ -244,7 +246,9 @@ bats tests/unit/*.bats
 # 运行单个模块测试
 bats tests/unit/ssh.bats
 bats tests/unit/firewall.bats
-bats tests/unit/fail2ban.bats
+
+# 运行 Docker Phase 1 测试
+tests/docker/test-all.sh --phase 1
 ```
 
 ### ShellCheck 静态检查
@@ -279,9 +283,23 @@ shellcheck -x install.sh
 
 ---
 
+## 文档 / Documentation
+
+| 文档 | 说明 |
+|------|------|
+| [项目 PRD](docs/design/linux-security-hardening-prd.md) | 项目需求与范围定义 |
+| [Docker 测试方案](docs/design/docker-test-design.md) | Phase 1 + Phase 2 自动化测试设计 |
+| [主菜单重构 v2](docs/design/main-menu-redesign-v2.md) | 主菜单 UI/UX 重设计（已实施） |
+| [文档索引](docs/README.md) | 全部文档的统一入口 |
+| [Code Review 报告](docs/code-reviews/) | 4 轮代码审查报告归档 |
+| [测试报告](docs/test-reports/) | 测试结果归档 |
+| [交接文档](HANDOVER.md) | 项目进度与变更日志 |
+
+---
+
 ## 安全注意事项 / Security Notes
 
-> ⚠️ **请在测试环境先验证，再在生产环境使用。**
+> **请在测试环境先验证，再在生产环境使用。**
 
 | 操作 | 注意事项 |
 |------|----------|
@@ -319,6 +337,7 @@ shellcheck -x install.sh
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.0-alpha | 2026-07-12 | Docker Phase 1 测试通过（72/72），主菜单重构 v2，4 轮 Code Review |
 | v0.4 | 2026-06-24 | 审计日志模块（auditd）、服务管理模块 |
 | v0.3 | 2026-06-24 | 用户管理、内核安全加固、文件系统安全 |
 | v0.2 | 2026-06-20 | 防火墙配置、Fail2Ban 入侵防护 |
@@ -326,15 +345,11 @@ shellcheck -x install.sh
 
 > 详细变更记录见 [HANDOVER.md](HANDOVER.md)
 
-### 待完成
-
-- v1.0：完整测试、文档、正式发布
-
 ---
 
 ## License
 
-[MIT](LICENSE) © [soeasy13142](https://github.com/soeasy13142)
+[MIT](LICENSE) (c) [soeasy13142](https://github.com/soeasy13142)
 
 ---
 
