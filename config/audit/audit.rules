@@ -41,13 +41,20 @@
 
 ## ===== 权限/所有权变更 =====
 -a always,exit -F arch=b64 -S chmod -S fchmod -S fchmodat -k perm_change
+-a always,exit -F arch=b32 -S chmod -S fchmod -S fchmodat -k perm_change
 -a always,exit -F arch=b64 -S chown -S fchown -S fchownat -S lchown -k owner_change
+-a always,exit -F arch=b32 -S chown -S fchown -S fchownat -S lchown -k owner_change
+
+## ===== 命令执行记录 =====
+-a always,exit -F arch=b64 -S execve -k exec
+-a always,exit -F arch=b32 -S execve -k exec
 
 ## ===== 内核模块操作 =====
 -w /sbin/insmod -p x -k modules
 -w /sbin/rmmod -p x -k modules
 -w /sbin/modprobe -p x -k modules
 -a always,exit -F arch=b64 -S init_module -S delete_module -k modules
+-a always,exit -F arch=b32 -S init_module -S delete_module -k modules
 
 ## ===== 时间修改 =====
 -a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time_change
@@ -56,9 +63,11 @@
 
 ## ===== 挂载操作 =====
 -a always,exit -F arch=b64 -S mount -S umount2 -k mount
+-a always,exit -F arch=b32 -S mount -S umount2 -k mount
 
 ## ===== 文件删除 =====
 -a always,exit -F arch=b64 -S unlink -S unlinkat -S rename -S renameat -k file_delete
+-a always,exit -F arch=b32 -S unlink -S unlinkat -S rename -S renameat -k file_delete
 
 ## ===== 使规则不可变 =====
 -e 2

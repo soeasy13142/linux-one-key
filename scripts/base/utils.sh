@@ -237,8 +237,9 @@ init_logging() {
     _ensure_log_dir
     mkdir -p "${LOG_DIR}" "${BACKUP_DIR}" "${REPORT_DIR}" 2>/dev/null || true
 
-    # 初始化日志文件
-    cat > "${LOG_FILE}" << EOF
+    # 初始化日志文件（仅在不存在时新建，避免覆盖已有日志条目）
+    if [[ ! -f "${LOG_FILE}" ]]; then
+        cat > "${LOG_FILE}" << EOF
 # Linux One-Key Security Hardening Log
 # Started: $(date '+%Y-%m-%d %H:%M:%S')
 # Version: ${SCRIPT_VERSION}
@@ -246,6 +247,7 @@ init_logging() {
 # User: $(whoami)
 #
 EOF
+    fi
 
     log_debug "Logging system initialized"
     log_debug "Log file: ${LOG_FILE}"
@@ -319,12 +321,13 @@ set_ssh_config() {
 
     # 使用 POSIX 字符类 [[:space:]] 确保跨平台兼容（BSD/macOS + GNU/Linux）
     # grep 和 sed 使用一致的模式：要求 key 后必须有空白字符
-    if grep -qE "^#*${key}[[:space:]]" "${config_file}" 2>/dev/null; then
+    if grep -qE "^#*[[:space:]]*${key}[[:space:]]" "${config_file}" 2>/dev/null; then
         # 参数存在，修改它 (兼容 macOS 和 Linux)
+        # 使用 ^#*[[:space:]]* 同时匹配 #Port 和 # Port 两种格式
         if [[ "$(uname)" == "Darwin" ]]; then
-            sed -i '' "s|^#*${key}[[:space:]].*|${key} ${value}|" "${config_file}"
+            sed -i '' "s|^#*[[:space:]]*${key}[[:space:]].*|${key} ${value}|" "${config_file}"
         else
-            sed -i "s|^#*${key}[[:space:]].*|${key} ${value}|" "${config_file}"
+            sed -i "s|^#*[[:space:]]*${key}[[:space:]].*|${key} ${value}|" "${config_file}"
         fi
     else
         # 参数不存在，添加它
@@ -489,7 +492,12 @@ command_exists() {
 }
 
 # 获取操作系统类型
+# 优先使用 detect.sh 的检测结果（避免 DRY 违规），回退到直接检测
 get_os_type() {
+    if [[ -n "${_DETECT_LOADED:-}" ]] && [[ -n "${DETECTED_OS:-}" ]]; then
+        echo "${DETECTED_OS}"
+        return 0
+    fi
     if [[ -f /etc/os-release ]]; then
         (. /etc/os-release && echo "${ID}")
     elif [[ -f /etc/redhat-release ]]; then

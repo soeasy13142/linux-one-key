@@ -102,18 +102,18 @@ _parse_args() {
                 export TARGET_MODULE="status"
                 ;;
             --help|-h)
-                echo "Usage: bash install.sh [options]"
+                echo "${MSG_HELP_USAGE}"
                 echo ""
-                echo "Options:"
-                echo "  --status       Show system security status (read-only)"
-                echo "  --help, -h     Show this help"
+                echo "${MSG_HELP_OPTIONS}"
+                echo "${MSG_HELP_STATUS}"
+                echo "${MSG_HELP_HELP}"
                 echo ""
-                echo "No arguments: interactive menu."
+                echo "${MSG_HELP_NO_ARGS}"
                 echo ""
-                echo "Examples:"
-                echo "  bash install.sh                      # Interactive menu"
-                echo "  bash install.sh --status             # Status check only"
-                echo "  curl -fsSL .../install.sh | sudo bash"
+                echo "${MSG_HELP_EXAMPLES}"
+                echo "${MSG_HELP_EXAMPLE_INTERACTIVE}"
+                echo "${MSG_HELP_EXAMPLE_STATUS}"
+                echo "${MSG_HELP_EXAMPLE_CURL}"
                 exit 0
                 ;;
             --yes|-y|--quick|--ssh|--firewall|--fail2ban)
@@ -126,8 +126,8 @@ _parse_args() {
                 exit 1
                 ;;
             *)
-                echo -e "${RED}Unknown argument: ${arg}${NC}"
-                echo "Use --help for available options"
+                echo -e "${RED}$(printf "${MSG_ERROR_UNKNOWN_ARG}" "${arg}")${NC}"
+                echo "${MSG_ERROR_USE_HELP}"
                 exit 1
                 ;;
         esac
@@ -292,6 +292,14 @@ load_dependencies() {
     fi
     # shellcheck source=/dev/null
     source "${SCRIPT_DIR}/scripts/base/report.sh"
+
+    # 加载 k3s.sh (服务器软件模块)
+    if [[ ! -f "${SCRIPT_DIR}/scripts/server/k3s.sh" ]]; then
+        echo "Error: Cannot find k3s.sh at ${SCRIPT_DIR}/scripts/server/k3s.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/scripts/server/k3s.sh"
 }
 
 # ═══════════════════════════════════════════
@@ -462,9 +470,13 @@ show_system_status() {
         fs_status=$(check_filesystem_status 2>/dev/null)
         suid_count=$(echo "${fs_status}" | grep '^fs_suid_count=' | cut -d= -f2)
         if [[ "${suid_count}" =~ ^[0-9]+$ ]] && [[ "${suid_count}" -gt 0 ]]; then
-            # 已扫描（无论数量多少都算已检查）
+            # 已扫描，发现 SUID 问题
             fs_color="${YELLOW}"; fs_icon="⚠️"
             fs_detail="${MSG_STATUS_FS_SUID}: ${suid_count}"
+        elif [[ "${suid_count}" =~ ^[0-9]+$ ]] && [[ "${suid_count}" -eq 0 ]]; then
+            # 已扫描，无 SUID 问题
+            fs_color="${GREEN}"; fs_icon="✅"
+            fs_detail="${MSG_STATUS_FS_SUID}: 0"
         fi
     fi
     if [[ "${fs_color}" == "${GREEN}" ]]; then
@@ -602,6 +614,14 @@ show_main_menu() {
     echo -e "  ${GREEN}${MSG_MAIN_MENU_QUICK}${NC}"
     echo -e "      ${MSG_MAIN_MENU_QUICK_DESC}"
     echo ""
+
+    # 分组 4：服务器软件
+    echo -e "${BOLD}${MSG_SECTION_SERVER}${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_K3S}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_K3S_DESC}"
+    echo ""
+
     echo -e "  ${RED}${MSG_MAIN_MENU_EXIT}${NC}"
     echo ""
 }
@@ -610,15 +630,15 @@ show_main_menu() {
 get_main_menu_choice() {
     local choice
     while true; do
-        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-11]" "")
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-12]" "")
         # EOF / non-interactive stdin: exit gracefully
         if [[ -z "${choice}" ]]; then
             echo ""
-            log_error "未检测到输入，非交互环境请使用 --status 模式"
+            log_error "${MSG_ERROR_NO_INPUT}"
             exit 1
         fi
         case "${choice}" in
-            [0-9]|10|11)
+            [0-9]|10|11|12)
                 echo "${choice}"
                 return 0
                 ;;
@@ -777,7 +797,7 @@ run_fail2ban_submenu_loop() {
                 if type check_fail2ban_status &>/dev/null; then
                     check_fail2ban_status
                 else
-                    log_info "Fail2Ban 状态：见主菜单 [1] 系统状态检测"
+                    log_info "${MSG_HINT_STATUS_FAIL2BAN}"
                 fi
                 press_enter
                 ;;
@@ -815,7 +835,7 @@ run_audit_submenu_loop() {
                 if type check_audit_status &>/dev/null; then
                     check_audit_status
                 else
-                    log_info "Audit 状态：见主菜单 [1] 系统状态检测"
+                    log_info "${MSG_HINT_STATUS_AUDIT}"
                 fi
                 press_enter
                 ;;
@@ -853,7 +873,7 @@ run_users_submenu_loop() {
                 if type check_users_status &>/dev/null; then
                     check_users_status
                 else
-                    log_info "用户状态：见主菜单 [1] 系统状态检测"
+                    log_info "${MSG_HINT_STATUS_USERS}"
                 fi
                 press_enter
                 ;;
@@ -891,7 +911,7 @@ run_kernel_submenu_loop() {
                 if type check_kernel_status &>/dev/null; then
                     check_kernel_status
                 else
-                    log_info "内核状态：见主菜单 [1] 系统状态检测"
+                    log_info "${MSG_HINT_STATUS_KERNEL}"
                 fi
                 press_enter
                 ;;
@@ -929,7 +949,7 @@ run_filesystem_submenu_loop() {
                 if type check_filesystem_status &>/dev/null; then
                     check_filesystem_status
                 else
-                    log_info "文件系统状态：见主菜单 [1] 系统状态检测"
+                    log_info "${MSG_HINT_STATUS_FILESYSTEM}"
                 fi
                 press_enter
                 ;;
@@ -967,7 +987,7 @@ run_services_submenu_loop() {
                 if type check_services_status &>/dev/null; then
                     check_services_status
                 else
-                    log_info "服务状态：见主菜单 [1] 系统状态检测"
+                    log_info "${MSG_HINT_STATUS_SERVICES}"
                 fi
                 press_enter
                 ;;
@@ -1084,9 +1104,9 @@ run_full_wizard() {
             _WIZARD_INIT_DONE=1
         else
             log_warn "${MSG_WIZARD_ERR_INIT}"
-            log_warn "System initialization failed. Subsequent steps (SSH, firewall, etc.) may not work correctly."
-            if ! confirm "Continue anyway? (NOT recommended)" "n"; then
-                log_error "Aborting wizard due to initialization failure"
+            log_warn "${MSG_WIZARD_ERR_INIT_DETAIL}"
+            if ! confirm "${MSG_WIZARD_ERR_INIT_PROMPT}" "n"; then
+                log_error "${MSG_WIZARD_ERR_INIT_ABORT}"
                 return 1
             fi
             wizard_rc=1
@@ -1269,7 +1289,12 @@ run_main_menu_loop() {
                 press_enter
                 ;;
             11) view_report ;;
+            12) run_k3s_submenu_loop ;;
             0) cleanup_and_exit ;;
+            *)
+                log_error "${MSG_MENU_INVALID}"
+                press_enter
+                ;;
         esac
     done
 }

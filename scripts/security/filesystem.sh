@@ -199,6 +199,11 @@ fix_critical_permissions() {
 
 # SUID/SGID 审计（仅报告，不修改）
 audit_suid_sgid() {
+    if [[ ! -d /proc ]]; then
+        log_debug "Skipping /proc checks on non-Linux system"
+        return 0
+    fi
+
     log_title "${MSG_FS_SUID_TITLE}"
 
     log_step "${MSG_FS_SUID_SCANNING}..."
@@ -265,6 +270,11 @@ audit_suid_sgid() {
 
 # 查找没有属主的文件
 check_orphan_files() {
+    if [[ ! -d /proc ]]; then
+        log_debug "Skipping /proc checks on non-Linux system"
+        return 0
+    fi
+
     log_title "${MSG_FS_ORPHAN_TITLE}"
 
     log_step "${MSG_FS_ORPHAN_SCANNING}..."
@@ -370,6 +380,11 @@ run_filesystem_wizard() {
 # 检查文件系统安全状态（用于系统状态检测）
 # 使用 5 分钟缓存避免重复全盘扫描
 check_filesystem_status() {
+    if [[ ! -d /proc ]]; then
+        echo "fs_suid_count=0"
+        return 0
+    fi
+
     local cache_file="/tmp/.linux-one-key-suid-cache"
     local cache_ttl=300  # 5 分钟
 
@@ -393,8 +408,13 @@ check_filesystem_status() {
     local result="fs_suid_count=${suid_count}"
     echo "${result}"
 
-    # 写入缓存文件
-    echo "${result}" > "${cache_file}" 2>/dev/null || true
+    # 写入缓存文件（先写临时文件再原子移动，避免部分写入和符号链接攻击）
+    local tmp_file
+    tmp_file=$(mktemp /tmp/.linux-one-key-suid-cache.XXXXXX 2>/dev/null) || true
+    if [[ -n "${tmp_file}" ]]; then
+        echo "${result}" > "${tmp_file}" 2>/dev/null || true
+        mv "${tmp_file}" "${cache_file}" 2>/dev/null || true
+    fi
 }
 
 # 标记 filesystem.sh 已加载

@@ -8,6 +8,11 @@ setup() {
     load_lang "${SCRIPT_DIR}"
 }
 
+teardown() {
+    # No resources to clean up -- all tests are read-only i18n key checks
+    true
+}
+
 @test "zh.sh has all new module submenu keys (fail2ban)" {
     [[ -n "${MSG_FAIL2BAN_MENU_TITLE:-}" ]]
     [[ -n "${MSG_FAIL2BAN_MENU_WIZARD:-}" ]]

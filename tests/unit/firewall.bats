@@ -53,37 +53,6 @@ teardown() {
     [[ "${result}" == "unknown" ]]
 }
 
-# 测试 _get_current_ssh_port 函数
-@test "_get_current_ssh_port returns custom port" {
-    local config_file="${TEST_DIR}/sshd_config"
-    echo "Port 2222" > "${config_file}"
-
-    # Mock the function to use test config
-    _get_current_ssh_port() {
-        local port
-        port=$(grep -E "^Port\s+" "${config_file}" 2>/dev/null | awk '{print $2}' | head -1)
-        echo "${port:-22}"
-    }
-
-    result=$(_get_current_ssh_port)
-    [[ "${result}" == "2222" ]]
-}
-
-@test "_get_current_ssh_port returns default port 22" {
-    local config_file="${TEST_DIR}/sshd_config"
-    touch "${config_file}"
-
-    # Mock the function to use test config
-    _get_current_ssh_port() {
-        local port
-        port=$(grep -E "^Port\s+" "${config_file}" 2>/dev/null | awk '{print $2}' | head -1)
-        echo "${port:-22}"
-    }
-
-    result=$(_get_current_ssh_port)
-    [[ "${result}" == "22" ]]
-}
-
 # 测试 deny_icmp 函数
 @test "deny_icmp warns for ubuntu" {
     export DETECTED_OS="ubuntu"
@@ -93,35 +62,3 @@ teardown() {
     [[ "${output}" == *"UFW"* ]]
 }
 
-# 测试 _get_firewall_type 函数组合
-@test "_get_firewall_type returns correct type for each OS" {
-    export DETECTED_OS="ubuntu"
-    [[ "$(_get_firewall_type)" == "ufw" ]]
-
-    export DETECTED_OS="debian"
-    [[ "$(_get_firewall_type)" == "ufw" ]]
-
-    export DETECTED_OS="centos"
-    [[ "$(_get_firewall_type)" == "firewalld" ]]
-
-    export DETECTED_OS="unsupported"
-    [[ "$(_get_firewall_type)" == "unknown" ]]
-}
-
-# 测试 _get_current_ssh_port 函数组合
-@test "_get_current_ssh_port handles various port configurations" {
-    local config_file="${TEST_DIR}/sshd_config"
-
-    # Test custom port
-    echo "Port 2222" > "${config_file}"
-    _get_current_ssh_port() {
-        local port
-        port=$(grep -E "^Port\s+" "${config_file}" 2>/dev/null | awk '{print $2}' | head -1)
-        echo "${port:-22}"
-    }
-    [[ "$(_get_current_ssh_port)" == "2222" ]]
-
-    # Test default port (empty config)
-    : > "${config_file}"
-    [[ "$(_get_current_ssh_port)" == "22" ]]
-}

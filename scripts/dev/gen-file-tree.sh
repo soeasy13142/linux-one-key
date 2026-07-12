@@ -35,14 +35,10 @@ EXCLUDES=(
     ".DS_Store"
 )
 
-# 构建 find prune 表达式
-PRUNE_EXPR=""
+# 构建 find prune 参数数组（避免 eval）
+PRUNE_ARGS=()
 for dir in "${EXCLUDES[@]}"; do
-    if [[ -z "${PRUNE_EXPR}" ]]; then
-        PRUNE_EXPR="\\( -path \"./${dir}\" -o -path \"./${dir}/*\" \\) -prune -o"
-    else
-        PRUNE_EXPR="${PRUNE_EXPR} \\( -path \"./${dir}\" -o -path \"./${dir}/*\" \\) -prune -o"
-    fi
+    PRUNE_ARGS+=("(" -path "./${dir}" -o -path "./${dir}/*" ")" -prune -o)
 done
 
 # 生成时间戳
@@ -53,7 +49,7 @@ ENTRIES=()
 while IFS= read -r entry; do
     ENTRIES+=("${entry}")
 done < <(
-    eval "find . ${PRUNE_EXPR} -type d -print -o -type f -print" 2>/dev/null \
+    find . "${PRUNE_ARGS[@]}" -type d -print -o -type f -print 2>/dev/null \
         | sed 's|^\./||' \
         | grep -v '^\.$' \
         | grep -v '\.DS_Store$' \
@@ -63,12 +59,16 @@ done < <(
 # 生成树状图
 TREE_OUTPUT=""
 TREE_OUTPUT+="linux-one-key/"$'\n'
-for entry in "${ENTRIES[@]}"; do
-    # 计算深度（按 / 分隔）
+for ((idx = 0; idx < ${#ENTRIES[@]}; idx++)); do
+    entry="${ENTRIES[$idx]}"
+
+    # 计算深度和父目录
     if [[ "${entry}" == */* ]]; then
         depth=$(echo "${entry}" | tr -cd '/' | wc -c | tr -d ' ')
+        cur_parent="${entry%/*}"
     else
         depth=0
+        cur_parent=""
     fi
 
     # 缩进
@@ -82,15 +82,30 @@ for entry in "${ENTRIES[@]}"; do
     # 文件名
     name="${entry##*/}"
 
-    TREE_OUTPUT+="${indent}├── ${name}"$'\n'
+    # 判断是否为当前父目录下的最后一个条目（用 └── 还是 ├──）
+    connector="└──"
+    for ((j = idx + 1; j < ${#ENTRIES[@]}; j++)); do
+        next_entry="${ENTRIES[$j]}"
+        if [[ "${next_entry}" == */* ]]; then
+            next_parent="${next_entry%/*}"
+        else
+            next_parent=""
+        fi
+        if [[ "${cur_parent}" == "${next_parent}" ]]; then
+            connector="├──"
+            break
+        fi
+    done
+
+    TREE_OUTPUT+="${indent}${connector} ${name}"$'\n'
 done
 
 # 统计
-SH_COUNT=$(eval "find . ${PRUNE_EXPR} -name '*.sh' -type f -print" 2>/dev/null | wc -l | tr -d ' ')
-BATS_COUNT=$(eval "find . ${PRUNE_EXPR} -name '*.bats' -type f -print" 2>/dev/null | wc -l | tr -d ' ')
-MD_COUNT=$(eval "find . ${PRUNE_EXPR} -name '*.md' -type f -print" 2>/dev/null | wc -l | tr -d ' ')
+SH_COUNT=$(find . "${PRUNE_ARGS[@]}" -name '*.sh' -type f -print 2>/dev/null | wc -l | tr -d ' ')
+BATS_COUNT=$(find . "${PRUNE_ARGS[@]}" -name '*.bats' -type f -print 2>/dev/null | wc -l | tr -d ' ')
+MD_COUNT=$(find . "${PRUNE_ARGS[@]}" -name '*.md' -type f -print 2>/dev/null | wc -l | tr -d ' ')
 CONFIG_COUNT=$(find ./config -type f 2>/dev/null | wc -l | tr -d ' ')
-TOTAL_COUNT=$(eval "find . ${PRUNE_EXPR} -type f -print" 2>/dev/null | wc -l | tr -d ' ')
+TOTAL_COUNT=$(find . "${PRUNE_ARGS[@]}" -type f -print 2>/dev/null | wc -l | tr -d ' ')
 
 # 输出 markdown 文件
 cat > "${OUTPUT_FILE}" <<EOF

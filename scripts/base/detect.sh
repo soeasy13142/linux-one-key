@@ -78,7 +78,7 @@ detect_os() {
     return 0
 }
 
-# 检测系统架构
+# 检测系统架构，未知架构返回 1
 detect_arch() {
     log_step "${MSG_DETECT_ARCH}..."
 
@@ -92,7 +92,9 @@ detect_arch() {
             DETECTED_ARCH="arm64"
             ;;
         *)
-            log_warn "Unknown architecture: ${DETECTED_ARCH}"
+            DETECTED_ARCH="unknown"
+            log_warn "Unknown architecture: $(uname -m)"
+            return 1
             ;;
     esac
 

@@ -37,8 +37,16 @@ _install_fail2ban() {
             ;;
         centos|rhel|rocky|almalinux)
             # CentOS/RHEL 需要 EPEL 源
-            yum install -y epel-release >> "${LOG_FILE}" 2>&1
-            yum install -y fail2ban >> "${LOG_FILE}" 2>&1
+            # CentOS 8+/RHEL 8+ 使用 dnf，旧版本使用 yum
+            local pkg_mgr
+            if command_exists dnf; then
+                pkg_mgr="dnf"
+            else
+                pkg_mgr="yum"
+            fi
+            # 安装 EPEL 源（可能已安装或不可用，失败则警告但继续）
+            "${pkg_mgr}" install -y epel-release >> "${LOG_FILE}" 2>&1 || log_warn "${MSG_FAIL2BAN_EPEL_FAILED}"
+            "${pkg_mgr}" install -y fail2ban >> "${LOG_FILE}" 2>&1
             ;;
         fedora)
             dnf install -y fail2ban >> "${LOG_FILE}" 2>&1
@@ -75,7 +83,7 @@ _get_auth_log_path() {
 
     # 检查日志文件是否存在（部分系统仅使用 journald）
     if [[ ! -f "${auth_log}" ]]; then
-        log_warn "认证日志文件未找到: ${auth_log}，fail2ban 可能需要 journald backend"
+        log_warn "${MSG_FAIL2BAN_AUTH_LOG_NOT_FOUND}${auth_log}${MSG_FAIL2BAN_AUTH_LOG_NOT_FOUND_TAIL}"
     fi
 
     echo "${auth_log}"
@@ -234,9 +242,9 @@ get_fail2ban_info() {
     local auth_log
     auth_log=$(_get_auth_log_path)
 
-    echo "SSH 端口: $ssh_port"
-    echo "认证日志: $auth_log"
-    echo "配置文件: ${FAIL2BAN_JAIL_LOCAL}"
+    echo "${MSG_FAIL2BAN_INFO_SSH_PORT}${ssh_port}"
+    echo "${MSG_FAIL2BAN_INFO_AUTH_LOG}${auth_log}"
+    echo "${MSG_FAIL2BAN_INFO_CONFIG_FILE}${FAIL2BAN_JAIL_LOCAL}"
 }
 
 # 手动封禁 IP
@@ -293,8 +301,8 @@ run_fail2ban_wizard() {
     # Show current info
     echo ""
     log_info "${MSG_FAIL2BAN_CONFIG_INFO}"
-    echo "  SSH 端口: ${ssh_port}"
-    echo "  认证日志: ${auth_log}"
+    echo "  ${MSG_FAIL2BAN_INFO_SSH_PORT}${ssh_port}"
+    echo "  ${MSG_FAIL2BAN_INFO_AUTH_LOG}${auth_log}"
     echo ""
 
     # Prompt for customizable parameters
