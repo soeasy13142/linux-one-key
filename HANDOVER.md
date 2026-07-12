@@ -2,7 +2,7 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-07-10（CLAUDE.md 规范化：迁移 my_obsidian 4 项核心原则）
+**最后更新**: 2026-07-12（文档体系整理完成）
 **当前阶段**: v0.4 全部模块已完成（2026-06-24）→ 项目规范化阶段
 
 ---
@@ -25,7 +25,7 @@
 
 | 阶段 | 状态 | 说明 |
 |------|------|------|
-| 需求分析 | ✅ 完成 | PRD 已编写，见 `.claude/prds/linux-security-hardening.prd.md` |
+| 需求分析 | ✅ 完成 | PRD 已编写，见 `docs/design/linux-security-hardening-prd.md` |
 | 架构设计 | ✅ 完成 | 交互模式、i18n、日志、备份等技术决策已确定 |
 | v0.1 基础框架 + SSH 安全 | ✅ 完成 | utils.sh, detect.sh, init.sh, ssh.sh, install.sh, 语言文件, 测试 |
 | v0.2 防火墙 + Fail2Ban | ✅ 完成 | firewall.sh, fail2ban.sh, 语言文件更新, 菜单集成, 单元测试 |
@@ -36,6 +36,7 @@
 | v0.4 审计日志模块 | ✅ 完成 | audit.sh, audit.bats, config/audit/, i18n 更新, 菜单集成, 44 个测试用例 |
 | v0.4 服务管理 | ✅ 完成 | services.sh, services.bats, i18n 更新, 菜单集成, 35 个测试用例 |
 | v1.0 主菜单重构 v2 | ✅ 完成 | 子菜单壳 + 分组 + 状态检测升级 + view_report 历史 + i18n 完善 + 错误精简 |
+| v1.0 Code Review Round 4 (全项目) | ✅ 完成 | 6 组并行审查，发现 4 CRITICAL + 22 HIGH + 41 MEDIUM + 21 LOW，共 88 个问题 |
 | v1.0 测试 + 文档 + 发布 | ⬜ 待定 | |
 
 ---
@@ -101,32 +102,29 @@
    - **第五批（LOW）**: L1-L9
 
 2. ✅ **交互式重构完成**：删除一键模式（--yes/--quick），改为逐步交互式向导配置
-   - `generate_random_port()` 随机端口生成
-   - SSH 端口 3 选 1（自定义/随机/保持），每参数逐步提示
-   - Fail2Ban 参数可自定义（封禁时间/重试次数/检测窗口）
-   - 统一函数命名：`run_ssh_wizard` / `run_firewall_wizard` / `run_fail2ban_wizard`
 
-3. ✅ **VM 综合测试（curl 方式）**：15 个测试用例，发现 8 个新问题（详见 `docs/vm-test-report-20260620.md`）
-   - Issue #2 (HIGH): `generate_report()` 报告硬编码，与实际执行结果不一致 → ✅ 已修复
-   - Issue #4 (MEDIUM): 非 TTY curl pipe 模式无限循环 → ✅ 已修复
-   - Issue #6 (MEDIUM): 非 root 用户执行日志 Permission denied
-   - Issue #8 (HIGH): Bats 测试 27/46 失败，模块依赖加载顺序问题 → ✅ 已修复
+3. ✅ **VM 综合测试**：15 个测试用例，发现并修复 8 个问题
 
-4. ✅ **Code Review Round 3 部分修复**（2026-06-23，详见 `docs/code-review-handover-20260623.md`）
-   - ✅ H1: `_parse_args` 移入 `main()` 解决颜色变量未初始化
-   - ✅ H3: `report.sh` 3 处硬编码中文替换为 i18n 变量
-   - ✅ M1: `_ENSURING_LOG_DIR` 移除 `export`
-   - ✅ M2: 创建 `tests/unit/ssh.bats`（16 个测试用例）
-   - ✅ M3: `fail2ban.sh` sleep 2 改为轮询等待（最多 10 秒）
-   - ✅ M4: `schedule_rollback` 添加安全约束注释
-   - ✅ L1: `firewall.sh` 统一引号风格
-   - ✅ L2: `_get_ssh_service_name` 替换为 `SSH_SERVICE_NAME` 常量
-   - ✅ L3: 移除 `install.sh` 残留 `:` 占位符
+4. ✅ **Code Review Round 3 部分修复**（2026-06-23）
+
+5. ✅ **Code Review Round 4 (全项目)** — 2026-07-11，6 组并行审查
+   - **发现**: 4 🔴 CRITICAL + 22 🟠 HIGH + 41 🟡 MEDIUM + 21 🔵 LOW = 88 个问题
+   - **关键 CRITICAL**:
+     - C1: SSH 回滚 `at` 路径硬编码 5 分钟 vs ROLLBACK_DELAY=600（10 分钟）
+     - C2: `ufw status` grep 依赖英文语言环境，非英文系统防火墙向导阻塞
+     - C3/C4: 测试文件 mock 了模块中不存在的函数（firewall.bats / fail2ban.bats）
+   - **关键 HIGH**:
+     - H1/H2: init.sh/report.sh 缺少 source guard → double-source 崩溃
+     - H3: `apt-get update` 未在 `if` 内保护 → 网络故障脚本退出
+     - H4: filesystem status GREEN 分支死代码（永远不可达）
+     - H5: fail2ban.sh 多处硬编码中文完全绕过 i18n
+     - H13: `ausearch` 正常无结果导致 `set -e` 脚本退出
+   - **详细报告**: `docs/code-reviews/round-4-comprehensive.md`
 
 ### 接下来要做
 
-1. **✅ 主菜单重构 v2** — 全部 6 个 Task 已完成（GAP-1~9）
-2. **📋 验证其他发行版**：在 CentOS/Debian VM 中运行完整向导流程
+1. **📋 修复 Round 4 发现的问题**：按优先级修复 CRITICAL → HIGH → MEDIUM
+2. **验证其他发行版**：在 CentOS/Debian VM 中运行完整向导流程
 3. **E2E 测试**：在 Docker 容器中各发行版验证
 4. **v1.0 收尾**：完整测试、文档、正式发布
 
@@ -192,7 +190,7 @@ v0.4 ✅ 已完成
 
 | 资源 | 路径/链接 |
 |------|-----------|
-| PRD 需求文档 | `.claude/prds/linux-security-hardening.prd.md` |
+| PRD 需求文档 | `docs/design/linux-security-hardening-prd.md` |
 | 项目指令 | `.claude/CLAUDE.md` |
 | ECC 配置参考 | `everything-claude-code/` 目录 |
 | CIS Benchmarks | https://www.cisecurity.org/cis-benchmarks |
@@ -254,8 +252,8 @@ v0.4 ✅ 已完成
 | 2026-07-10 | UPDATE | `HANDOVER.md` | 文件清单改为脚本引用 + 顶层目录概览表（-151 行） |
 | 2026-07-10 | FIX | `.claude/settings.local.json` | 修复 JSON 语法错误：补 `permissions` 与 `env` 之间的缺逗号（Claude Code 启动校验） |
 | 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | 项目结构章节同步新增 docs/handover-archive.md、docs/file-tree.generated.md、scripts/dev/ |
-| 2026-07-10 | CREATE | `docs/superpowers/specs/2026-07-10-design-doc-archive-design.md` | Brainstorming 设计规范（docs/design/ 归档重构） |
-| 2026-07-10 | CREATE | `docs/superpowers/plans/2026-07-10-design-doc-archive.md` | writing-plans 实施计划（4 任务） |
+| 2026-07-10 | CREATE | `docs/design/archive/2026-07-10-design-doc-archive-design.md` | 设计文档归档规范设计（原 docs/superpowers/specs/） |
+| 2026-07-10 | CREATE | `docs/design/archive/2026-07-10-design-doc-archive.md` | 设计文档归档实施计划（原 docs/superpowers/plans/） |
 | 2026-07-10 | CREATE | `docs/design/archive/` | 新建 archive 子目录 |
 | 2026-07-10 | UPDATE | `docs/design/README.md` | 重写为分层状态索引（active/proposed/archived） |
 | 2026-07-10 | UPDATE | `docs/design/linux-security-hardening-prd.md` | + frontmatter status=active |
@@ -279,3 +277,14 @@ v0.4 ✅ 已完成
 | 2026-07-10 | UPDATE | `install.sh`, `lang/*`, `tests/unit/menu.bats` | T5: 移除全部 `:-` i18n 兜底 |
 | 2026-07-10 | UPDATE | `install.sh`, `tests/unit/parse-args.bats` | T6: 移除参数错误精简为 i18n 2 行 |
 | 2026-07-10 | UPDATE | `docs/design/main-menu-redesign-v2.md` | T7: status proposed → active, 进度记录补全 |
+| 2026-07-11 | CREATE | `docs/plans/2026-07-11_13-00_full-code-review-n4_nogit.md` | Code Review Round 4 计划文件（6 组并行审查方案） |
+| 2026-07-11 | CREATE | `docs/code-reviews/round-4-comprehensive.md` | Round 4 综合报告：4 CRITICAL + 22 HIGH + 41 MEDIUM + 21 LOW |
+| 2026-07-11 | UPDATE | `HANDOVER.md` | 更新最后更新日期、进度表、已完成工作、下一步工作 |
+| 2026-07-12 | DELETE | `.claude/prds/` | 删除重复 PRD（已存在 docs/design/） |
+| 2026-07-12 | MIGRATE | `.claude/plans/` → `docs/plans/` | 4 个旧计划文件按规范重命名并迁移到 docs/plans/ |
+| 2026-07-12 | DELETE | `.claude/plans/main-menu-redesign.plan.md` | 已存在于 docs/design/main-menu-redesign-plan.md |
+| 2026-07-12 | MIGRATE | `docs/superpowers/` → `docs/design/archive/` | 设计文档归档相关的 spec+plan 移入 design archive |
+| 2026-07-12 | UPDATE | `docs/README.md` | 重写为统一文档索引（含 plans/ 目录） |
+| 2026-07-12 | UPDATE | `docs/design/README.md` | 归档区新增 2 条 superpowers 迁移条目 |
+| 2026-07-12 | UPDATE | `docs/code-reviews/README.md` | 新增 round-4-comprehensive.md 条目 |
+| 2026-07-12 | UPDATE | `HANDOVER.md` | 旧路径引用更新（.claude/prds/ → docs/design/）|

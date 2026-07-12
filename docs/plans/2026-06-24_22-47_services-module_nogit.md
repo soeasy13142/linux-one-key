@@ -1,3 +1,12 @@
+---
+title: "v0.4 Services Management Module (services.sh)"
+created: 2026-06-24
+updated: 2026-06-24
+status: done
+source: "PRD §2.9 + HANDOVER.md v0.4 pending task"
+topic: "feature"
+---
+
 # Plan: v0.4 Services Management Module (services.sh)
 
 **Source**: PRD §2.9 + HANDOVER.md v0.4 pending task

@@ -1,3 +1,12 @@
+---
+title: "Round 4 Code Review Fixes"
+created: 2026-06-24
+updated: 2026-06-24
+status: done
+source: "docs/code-reviews/round-4-audit-module-review.md"
+topic: "code-review"
+---
+
 # Plan: Round 4 Code Review Fixes
 
 **Source**: `docs/code-reviews/round-4-audit-module-review.md`
