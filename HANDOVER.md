@@ -2,8 +2,8 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-07-12（Phase 2 全面通过 21/21 + K3s + 文档 + CI 全部就绪）
-**当前阶段**: v1.0 最终冲刺全部完成 🎉 → 待 commit 整理 + 发布
+**最后更新**: 2026-07-13（CI 全面通过 ✅ + 新增 3 个 Workflow）
+**当前阶段**: v1.0 最终冲刺全部完成 🎉 → CI 全部绿色 ✅
 
 > **新增**: K3s (Lightweight Kubernetes) 安装模块已实现（`scripts/server/k3s.sh`）
 
@@ -352,3 +352,14 @@ v0.4 ✅ 已完成
 | 2026-07-12 | FIX | `tests/docker/lib/common.bash` | Phase 2: strip ANSI escape codes in report generation |
 | 2026-07-12 | FIX | `tests/docker/test-all.sh` | Phase 2: strip ANSI codes in detail extraction for .result files |
 | 2026-07-12 | PASS | `test-all.sh --phase 2` | Phase 2 完整矩阵：3 distros x 7 modules = **21/21 全部通过** |
+|------|------|------|
+| 2026-07-13 | FIX | `scripts/base/detect.sh` | SC2317: 移除 `return 0` 后冗余的 `\|\| true` |
+| 2026-07-13 | FIX | `scripts/base/init.sh` | SC2120/SC2119: `setup_timezone` 显式传参 |
+| 2026-07-13 | FIX | `scripts/base/utils.sh` | SC2002: `cat \| tr` 改为 `tr < file` 重定向 |
+| 2026-07-13 | FIX | `scripts/security/fail2ban.sh` | SC2034: 恢复 `SSH_SERVICE_NAME` 并加 disable 注释 |
+| 2026-07-13 | FIX | `scripts/security/kernel.sh` | SC2012: `ls -t` 替换为 `find -printf` |
+| 2026-07-13 | FIX | `install.sh` | SC2059 + SC2012: printf 格式修复 + `ls` 替换为 `find` |
+| 2026-07-13 | UPDATE | `.github/workflows/test.yml` | 新增 Docker Phase 2 job（3 distros × 7 modules）|
+| 2026-07-13 | CREATE | `.github/workflows/markdown-lint.yml` | Markdown 格式检查 workflow |
+| 2026-07-13 | CREATE | `.github/workflows/codeql.yml` | CodeQL 安全扫描 workflow（每周日自动）|
+| 2026-07-13 | PASS | CI Test workflow | **全部 4 job 首次通过 ✅**（ShellCheck + Bats + Phase 1 + Phase 2）|
