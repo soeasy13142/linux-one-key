@@ -42,3 +42,13 @@ jobs:
         run: |
           cd tests/docker
           bash test-all.sh --phase 1
+
+  docker-phase2:
+    name: Docker Phase 2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Phase 2 Docker tests
+        run: |
+          cd tests/docker
+          bash test-all.sh --phase 2

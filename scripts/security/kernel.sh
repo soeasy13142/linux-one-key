@@ -219,7 +219,7 @@ restore_sysctl_backup() {
 
     # 找到最新的备份
     local latest_backup
-    latest_backup=$(ls -t "${BACKUP_DIR}"/99-hardening.conf.bak.* 2>/dev/null | head -1)
+    latest_backup=$(find "${BACKUP_DIR}" -maxdepth 1 -name '99-hardening.conf.bak.*' -printf '%T@\t%p\n' 2>/dev/null | sort -rn | head -1 | cut -f2-)
 
     if [[ -z "${latest_backup}" ]]; then
         log_warn "${MSG_KERNEL_NO_BACKUP_FOUND}"

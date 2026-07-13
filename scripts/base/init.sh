@@ -154,7 +154,7 @@ run_init() {
     init_directories
 
     # 设置时区（默认 Asia/Shanghai）
-    setup_timezone
+    setup_timezone "Asia/Shanghai"
 
     # 更新系统包
     update_system_packages

@@ -4,7 +4,7 @@
 
 # Source guard: 防止重复加载
 if [[ "${_DETECT_LOADED:-}" == "1" ]]; then
-    return 0 2>/dev/null || true
+    return 0 2>/dev/null
 fi
 
 set -eo pipefail

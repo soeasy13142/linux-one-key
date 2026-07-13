@@ -120,12 +120,14 @@ _parse_args() {
                 local removed_arg="${arg#--}"
                 removed_arg="${removed_arg#-}"
                 echo ""
+                # shellcheck disable=SC2059
                 log_error "$(printf "${MSG_ERROR_REMOVED_ARG}" "${removed_arg}")"
                 log_info "${MSG_ERROR_REMOVED_HINT}"
                 echo ""
                 exit 1
                 ;;
             *)
+                # shellcheck disable=SC2059
                 echo -e "${RED}$(printf "${MSG_ERROR_UNKNOWN_ARG}" "${arg}")${NC}"
                 echo "${MSG_ERROR_USE_HELP}"
                 exit 1
@@ -1030,7 +1032,7 @@ view_report() {
         if [[ -d "${report_dir}" ]]; then
             while IFS= read -r f; do
                 [[ -n "${f}" ]] && reports+=("${f}")
-            done < <(ls -t "${report_dir}"/report_*.txt 2>/dev/null | head -n "${max_reports}")
+            done < <(find "${report_dir}" -maxdepth 1 -name 'report_*.txt' -printf '%T@\t%p\n' 2>/dev/null | sort -rn | head -n "${max_reports}" | cut -f2-)
         fi
 
         if [[ "${#reports[@]}" -eq 0 ]]; then

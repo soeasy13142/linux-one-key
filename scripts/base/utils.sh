@@ -571,7 +571,7 @@ cancel_scheduled_task() {
     if kill -0 "${pid}" 2>/dev/null; then
         # 验证进程确实是我们启动的 sleep 任务（防止 PID 复用误杀）
         local cmdline
-        cmdline=$(cat "/proc/${pid}/cmdline" 2>/dev/null | tr '\0' ' ' || echo "")
+        cmdline=$(tr '\0' ' ' < "/proc/${pid}/cmdline" 2>/dev/null || echo "")
         if [[ "${cmdline}" == *"sleep"* ]] || [[ -z "${cmdline}" ]]; then
             kill "${pid}" 2>/dev/null
             log_debug "Cancelled scheduled task PID: ${pid}"
