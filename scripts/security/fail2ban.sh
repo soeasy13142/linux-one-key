@@ -89,6 +89,10 @@ _get_auth_log_path() {
     echo "${auth_log}"
 }
 
+# SSH 服务名称（Ubuntu/Debian 使用 "ssh"，CentOS/RHEL 使用 "sshd"，此处统一用 "sshd"）
+# shellcheck disable=SC2034 # 参考常量，供 _configure_fail2ban_jail 文档参考
+readonly SSH_SERVICE_NAME="sshd"
+
 # 备份现有 Fail2Ban 配置
 _backup_fail2ban_config() {
     if [[ -f "${FAIL2BAN_JAIL_LOCAL}" ]]; then
