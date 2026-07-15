@@ -2,8 +2,8 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-07-13（CI 全面通过 ✅ + 新增 3 个 Workflow）
-**当前阶段**: v1.0 最终冲刺全部完成 🎉 → CI 全部绿色 ✅
+**最后更新**: 2026-07-15（Round 5 分模块 Code Review 完成）
+**当前阶段**: v1.0 最终冲刺全部完成 🎉 → CI 全部绿色 ✅ → Round 5 Review 完成（115 个发现）
 
 > **新增**: K3s (Lightweight Kubernetes) 安装模块已实现（`scripts/server/k3s.sh`）
 
@@ -100,7 +100,13 @@
 
 ### 已完成
 
-1. ✅ **修复 Code Review 发现的全部 32 个 bug**（详见 `docs/bug-review-report.md`）
+1. ✅ **Round 5 分模块 Code Review 已完成**（详见 `docs/code-reviews/round-5-comprehensive.md`）
+   - 6 组并行审查，共 115 个发现（0 CRITICAL + 20 HIGH + 46 MEDIUM + 49 LOW）
+   - CRITICAL 全部清零 ✅
+   - 主要发现区域：i18n 完整性(7 HIGH)、可维护性DRY(4 HIGH/MEDIUM)、安全配置(4 HIGH)
+   - 详细修复建议见 round-5 报告
+
+2. ✅ **修复 Code Review 发现的全部 32 个 bug**（详见 `docs/bug-review-report.md`）
    - **第一批（阻断性）**: C1 变量名不匹配、C2 正则无边界、H2 banaction 硬编码
    - **第二批（逻辑错误）**: H1 回滚定时器、H4 临时目录清理、H6 报告生成
    - **第三批（安全加固）**: M1 eval 注入、H5 完整性校验、H3 set -u 一致性、H7 os-release 污染
@@ -362,4 +368,8 @@ v0.4 ✅ 已完成
 | 2026-07-13 | UPDATE | `.github/workflows/test.yml` | 新增 Docker Phase 2 job（3 distros × 7 modules）|
 | 2026-07-13 | CREATE | `.github/workflows/markdown-lint.yml` | Markdown 格式检查 workflow |
 | 2026-07-13 | CREATE | `.github/workflows/codeql.yml` | CodeQL 安全扫描 workflow（每周日自动）|
-| 2026-07-13 | PASS | CI Test workflow | **全部 4 job 首次通过 ✅**（ShellCheck + Bats + Phase 1 + Phase 2）|
+| 2026-07-13 | PASS | CI Test workflow | **全部 4 job 首次通过 ✅**（ShellCheck + Bats + Phase 1 + Phase 2）
+| 2026-07-15 | CREATE | `docs/plans/2026-07-15_10-30_full-code-review-n5_nogit.md` | Round 5 分模块 Code Review 计划（6 组并行审查方案）|
+| 2026-07-15 | CREATE | `docs/code-reviews/round-5-comprehensive.md` | Round 5 综合报告：**115 个发现（0 CRITICAL + 20 HIGH + 46 MEDIUM + 49 LOW）** |
+| 2026-07-15 | REVIEW | 全部脚本 | 6 组并行审查完成：A-基础框架(20) / B-SSH+防火墙(19) / C-系统加固(16) / D-审计+服务+K3s(13) / E-主入口+语言(21) / F-测试+配置+CI(26) |
+| 2026-07-15 | FIX | `docs/code-reviews/round-5-comprehensive.md` | 修正 11 处行号/描述/表格问题（SubAgent 验证后修复）||
