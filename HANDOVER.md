@@ -2,8 +2,8 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-07-21（全项目安全审计修复完成）
-**当前阶段**: v1.0 最终冲刺全部完成 🎉 → CI 全部绿色 ✅ → Round 5 Review 完成 → 全项目安全审计修复完成 ✅
+**最后更新**: 2026-07-21（v1.0.1 发布）
+**当前阶段**: v1.0.1 已发布 → 全项目安全审计修复完成 → 文档规范化完成 ✅
 
 > **新增**: K3s (Lightweight Kubernetes) 安装模块已实现（`scripts/server/k3s.sh`）
 
@@ -399,3 +399,4 @@ v0.4 ✅ 已完成
 | 2026-07-21 | FIX | `config/sysctl/hardening.conf` | M8: 添加 5 个遗漏 CIS 参数（arp_ignore/announce, bpf_disabled, kexec, perf_paranoid）|
 | 2026-07-21 | FIX | `config/audit/auditd.conf` | M12: flush 改为 DATA（CIS Level 2 / STIG 推荐）|
 | 2026-07-21 | PASS | `bats tests/unit/*.bats` | **259/259 全部通过** ✅ |
+| 2026-07-21 | RELEASE | `v1.0.1` | 补丁发布：全项目安全审计修复（10 项）+ 文档规范化 + Round 5 Review 修正 |
