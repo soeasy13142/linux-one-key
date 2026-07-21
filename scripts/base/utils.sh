@@ -456,11 +456,8 @@ _cleanup_on_exit() {
     if [[ -n "${_CLEANUP_DIR:-}" ]] && [[ -d "${_CLEANUP_DIR}" ]]; then
         rm -rf "${_CLEANUP_DIR}" 2>/dev/null || true
     fi
-    # 清理后台定时任务（防止脚本退出后孤儿进程继续运行）
-    if [[ -n "${_SCHEDULED_PID:-}" ]] && kill -0 "${_SCHEDULED_PID}" 2>/dev/null; then
-        kill "${_SCHEDULED_PID}" 2>/dev/null || true
-        log_debug "Cleaned up scheduled task PID: ${_SCHEDULED_PID}"
-    fi
+    # 注意：不回滚定时任务（_SCHEDULED_PID），因为回滚定时器需要超越脚本生命周期，
+    # 在脚本退出后继续运行以保障 SSH 配置的自动恢复。disown 已在 schedule_rollback 中处理。
 }
 
 # ═══════════════════════════════════════════
@@ -561,6 +558,8 @@ schedule_rollback() {
     ) &
 
     _SCHEDULED_PID=$!
+    # disown 从 Shell 任务表中移除，防止父 Shell 退出时发送 SIGHUP
+    disown "${_SCHEDULED_PID}" 2>/dev/null || true
     log_debug "Scheduled rollback task PID: ${_SCHEDULED_PID}"
 }
 

@@ -17,15 +17,31 @@ fi
 # ============================================================================
 
 # 关键文件权限定义：路径:期望权限（八进制）
-readonly CRITICAL_FILES=(
-    "/etc/passwd:644"
-    "/etc/shadow:640"
-    "/etc/group:644"
-    "/etc/gshadow:640"
-    "/etc/ssh/sshd_config:600"
-    "/root:700"
-    "/tmp:1777"
-)
+# RHEL 系（CentOS/RHEL/Rocky/Alma/Fedora）使用 shadow-utils 工具访问 shadow，
+# /etc/shadow 应为 000（而非 640），以避免其他进程意外读取。
+# Debian/Ubuntu 使用 640。
+if [[ "${DETECTED_OS:-}" =~ ^(centos|rhel|rocky|almalinux|fedora)$ ]]; then
+    CRITICAL_FILES=(
+        "/etc/passwd:644"
+        "/etc/shadow:000"
+        "/etc/group:644"
+        "/etc/gshadow:000"
+        "/etc/ssh/sshd_config:600"
+        "/root:700"
+        "/tmp:1777"
+    )
+else
+    CRITICAL_FILES=(
+        "/etc/passwd:644"
+        "/etc/shadow:640"
+        "/etc/group:644"
+        "/etc/gshadow:640"
+        "/etc/ssh/sshd_config:600"
+        "/root:700"
+        "/tmp:1777"
+    )
+fi
+readonly -a CRITICAL_FILES
 
 # 标准 SUID 文件列表（这些是已知安全的）
 readonly KNOWN_SUID_FILES=(

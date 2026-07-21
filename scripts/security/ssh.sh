@@ -228,8 +228,20 @@ generate_ssh_key() {
             rm -f "${_askpass_script}"
         else
             rm -f "${_askpass_script}"
-            # 回退到直接 -N 方式（仅在 SSH_ASKPASS_REQUIRE 不支持时）
-            ssh-keygen -t ed25519 -f "${key_path}" -N "${passphrase}" -C "$(whoami)@$(hostname)"
+            # 回退：不使用 SSH_ASKPASS_REQUIRE（兼容旧版 OpenSSH < 8.4）
+            # 避免使用 -N 参数（passphrase 会暴露在 /proc/pid/cmdline 中）
+            _askpass_script=$(mktemp /tmp/.ssh-askpass-XXXXXX)
+            printf '#!/bin/sh\necho %q\n' "${passphrase}" > "${_askpass_script}"
+            chmod 700 "${_askpass_script}"
+            if SSH_ASKPASS="${_askpass_script}" \
+                ssh-keygen -t ed25519 -f "${key_path}" -N "" -C "$(whoami)@$(hostname)" < /dev/null; then
+                rm -f "${_askpass_script}"
+            else
+                rm -f "${_askpass_script}"
+                # 最终回退：交互式提示（避免 -N 参数泄露到 /proc/pid/cmdline）
+                log_warn "SSH_ASKPASS 不可用，请手动输入密码短语..."
+                ssh-keygen -t ed25519 -f "${key_path}" -C "$(whoami)@$(hostname)"
+            fi
         fi
     fi
 

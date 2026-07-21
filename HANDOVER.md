@@ -2,8 +2,8 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-07-21（文档规范化 consolidate 完成）
-**当前阶段**: v1.0 最终冲刺全部完成 🎉 → CI 全部绿色 ✅ → Round 5 Review 完成（115 个发现）
+**最后更新**: 2026-07-21（全项目安全审计修复完成）
+**当前阶段**: v1.0 最终冲刺全部完成 🎉 → CI 全部绿色 ✅ → Round 5 Review 完成 → 全项目安全审计修复完成 ✅
 
 > **新增**: K3s (Lightweight Kubernetes) 安装模块已实现（`scripts/server/k3s.sh`）
 
@@ -386,3 +386,16 @@ v0.4 ✅ 已完成
 | 2026-07-15 | CREATE | `docs/code-reviews/round-5-comprehensive.md` | Round 5 综合报告：**115 个发现（0 CRITICAL + 20 HIGH + 46 MEDIUM + 49 LOW）** |
 | 2026-07-15 | REVIEW | 全部脚本 | 6 组并行审查完成：A-基础框架(20) / B-SSH+防火墙(19) / C-系统加固(16) / D-审计+服务+K3s(13) / E-主入口+语言(21) / F-测试+配置+CI(26) |
 | 2026-07-15 | FIX | `docs/code-reviews/round-5-comprehensive.md` | 修正 11 处行号/描述/表格问题（SubAgent 验证后修复）||
+|------|------|------|
+| 2026-07-21 | CREATE | `docs/code-reviews/2026-07-21_full-project-security-audit.md` | 全项目代码审查 + 安全审计（4 agent 并行）：0 CRITICAL + 7 HIGH + 19 MEDIUM + 13 LOW |
+| 2026-07-21 | FIX | `docs/code-reviews/2026-07-21_full-project-security-audit.md` | 修复 install.sh HIGH 计数（7→5） |
+| 2026-07-21 | FIX | `scripts/base/utils.sh` | H1: schedule_rollback() 添加 disown，_cleanup_on_exit 不杀回滚 PID |
+| 2026-07-21 | FIX | `install.sh` | H3: curl 管道检测后添加 set -u；M10: curl 添加 --connect-timeout/--max-time；M11: mktemp 后添加 INT/TERM trap |
+| 2026-07-21 | FIX | `scripts/security/ssh.sh` | M1: passphrase 泄露修复（-N 参数改为 SSH_ASKPASS 回退链）|
+| 2026-07-21 | FIX | `scripts/security/filesystem.sh` | M2: RHEL 系 /etc/shadow 权限改为 000 |
+| 2026-07-21 | FIX | `tests/unit/filesystem.bats` | 适配条件化 CRITICAL_FILES 数组 |
+| 2026-07-21 | FIX | `scripts/lang/zh.sh`, `scripts/lang/en.sh` | M4: ufw 硬编码消息改为双后端提示 |
+| 2026-07-21 | FIX | `scripts/security/fail2ban.sh` | M6: ignoreip 添加 ::1 |
+| 2026-07-21 | FIX | `config/sysctl/hardening.conf` | M8: 添加 5 个遗漏 CIS 参数（arp_ignore/announce, bpf_disabled, kexec, perf_paranoid）|
+| 2026-07-21 | FIX | `config/audit/auditd.conf` | M12: flush 改为 DATA（CIS Level 2 / STIG 推荐）|
+| 2026-07-21 | PASS | `bats tests/unit/*.bats` | **259/259 全部通过** ✅ |

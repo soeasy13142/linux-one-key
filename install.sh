@@ -25,13 +25,15 @@ GITHUB_TARBALL_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/${GITHU
 _bootstrap_and_reexec() {
     local tmp_dir
     tmp_dir=$(mktemp -d)
+    # 信号处理：INT/TERM 时清理临时目录，防止 /tmp 残留
+    trap 'rm -rf "${tmp_dir}"; exit 1' INT TERM
 
     echo "正在从 GitHub 下载 linux-one-key..."
     echo "  仓库: https://github.com/${GITHUB_REPO}"
     echo ""
 
     # 下载 tarball 并解压
-    if ! curl -fsSL "${GITHUB_TARBALL_URL}" | tar xz -C "${tmp_dir}"; then
+    if ! curl -fsSL --connect-timeout 15 --max-time 120 "${GITHUB_TARBALL_URL}" | tar xz -C "${tmp_dir}"; then
         echo "错误: 下载或解压失败"
         echo "请检查网络连接，或手动克隆仓库:"
         echo "  git clone https://github.com/${GITHUB_REPO}"
@@ -173,6 +175,11 @@ _get_script_dir() {
 # 设置 SCRIPT_DIR
 SCRIPT_DIR="$(_get_script_dir)"
 export SCRIPT_DIR
+
+# 在 curl 管道检测和脚本目录检查完成后启用 nounset，
+# 此后脚本定义的所有变量必须有初始值，变量名拼写错误将立即报错而非静默展开为空。
+# 对有意可选的变量请使用 ${VAR:-} 模式。
+set -u
 
 # 检查 scripts 目录是否存在
 if [[ ! -d "${SCRIPT_DIR}/scripts" ]]; then

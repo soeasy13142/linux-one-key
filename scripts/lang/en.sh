@@ -353,7 +353,7 @@ MSG_FIREWALL_STATUS="Firewall Status"
 MSG_FIREWALL_DONE="Firewall configuration complete"
 MSG_FIREWALL_SSH_PORT22="Safety: Port 22 kept open (prevents SSH lockout after port change)"
 MSG_FIREWALL_SSH_PORT22_WARN="⚠ After confirming the new SSH port works, manually close port 22:"
-MSG_FIREWALL_SSH_PORT22_CLOSE="   sudo ufw deny 22/tcp"
+MSG_FIREWALL_SSH_PORT22_CLOSE="   Close old SSH port 22/tcp: sudo ufw deny 22/tcp (Ubuntu/Debian) or firewall-cmd --remove-service=ssh (CentOS/RHEL)"
 
 MSG_FIREWALL_TIPS_TITLE="Firewall management commands:"
 MSG_FIREWALL_TIPS_UFW_1="Check status: sudo ufw status verbose"

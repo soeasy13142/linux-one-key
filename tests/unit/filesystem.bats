@@ -45,7 +45,10 @@ teardown() {
 
 @test "CRITICAL_FILES contains 7 entries" {
     local count
-    count=$(sed -n '/readonly CRITICAL_FILES/,/)/p' "${SCRIPT_DIR}/scripts/security/filesystem.sh" | grep -c '"/')
+    # CRITICAL_FILES 使用条件赋值（if/else 分支，各含 7 条）
+    # 匹配两个 CRITICAL_FILES=(...) 块，总条目 / 2 = 每分支条数
+    count=$(sed -n '/^    CRITICAL_FILES=(/,/^    )/p' "${SCRIPT_DIR}/scripts/security/filesystem.sh" | grep -c '"/')
+    count=$((count / 2))
     [[ ${count} -eq 7 ]]
 }
 

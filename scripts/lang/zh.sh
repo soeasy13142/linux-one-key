@@ -353,7 +353,7 @@ MSG_FIREWALL_STATUS="防火墙状态"
 MSG_FIREWALL_DONE="防火墙配置完成"
 MSG_FIREWALL_SSH_PORT22="安全保护：已保留放通 22 端口（防止 SSH 端口变更后锁死）"
 MSG_FIREWALL_SSH_PORT22_WARN="⚠ 请在确认新 SSH 端口可用后，手动关闭 22 端口："
-MSG_FIREWALL_SSH_PORT22_CLOSE="   sudo ufw deny 22/tcp"
+MSG_FIREWALL_SSH_PORT22_CLOSE="   请关闭旧 SSH 端口 22/tcp: sudo ufw deny 22/tcp (Ubuntu/Debian) 或 firewall-cmd --remove-service=ssh (CentOS/RHEL)"
 
 MSG_FIREWALL_TIPS_TITLE="防火墙管理命令："
 MSG_FIREWALL_TIPS_UFW_1="查看状态: sudo ufw status verbose"
