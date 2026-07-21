@@ -20,7 +20,7 @@
 - [测试覆盖 / Test Coverage](#测试覆盖--test-coverage)
 - [项目结构 / Project Architecture](#项目结构--project-architecture)
 - [交互式向导 / Interactive Wizard](#交互式向导--interactive-wizard)
-- [开发指南 / Development Guide](#开发指南--development-guide)
+- [开发者指南 / Contributing](#开发者指南--contributing)
 - [文档 / Documentation](#文档--documentation)
 - [安全注意事项 / Security Notes](#安全注意事项--security-notes)
 - [参考资料 / References](#参考资料--references)
@@ -98,7 +98,7 @@ sudo bash install.sh
 
 > 所有标记 "Docker Phase 1 通过" 的发行版均已在 Docker 容器中完成配置文件验证。
 > Phase 2（特权容器 + systemd 服务验证）已在 Ubuntu 22.04, CentOS 7, Debian 12 上 21/21 通过。
-> 调试文档：[20 个已修复问题](docs/docker-test-debug-log.md) | Debug log: [20 resolved issues](docs/docker-test-debug-log.md)
+> 调试文档：[20 个已修复问题](tests/docker-test-debug-log.md) | Debug log: [20 resolved issues](tests/docker-test-debug-log.md)
 
 ---
 
@@ -119,8 +119,8 @@ sudo bash install.sh
 | Filesystem | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Services | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-> 📄 [Phase 1 详细测试报告](tests/docker/phase2-report.md) · [调试日志（20 个已修复问题）](docs/docker-test-debug-log.md)
-> 📄 [Phase 1 test report](tests/docker/phase2-report.md) · [Debug log (20 resolved issues)](docs/docker-test-debug-log.md)
+> 📄 [Phase 1 详细测试报告](tests/docker/phase2-report.md) · [调试日志（20 个已修复问题）](tests/docker-test-debug-log.md)
+> 📄 [Phase 1 test report](tests/docker/phase2-report.md) · [Debug log (20 resolved issues)](tests/docker-test-debug-log.md)
 
 ### Phase 2：服务验证（Service Verification）✅
 
@@ -137,7 +137,7 @@ sudo bash install.sh
 | 回滚验证 | ✅ | ✅ | ✅ |
 
 > Phase 2 使用 `--privileged` Docker 容器，验证服务实际启动及安全效果。
-> 详细测试日志见 [调试文档 §3.13-3.20](docs/docker-test-debug-log.md)（8 个 Phase 2 运行时问题）。
+> 详细测试日志见 [调试文档 §3.13-3.20](tests/docker-test-debug-log.md)（8 个 Phase 2 运行时问题）。
 
 ### 单元测试 / Unit Tests
 
@@ -147,11 +147,11 @@ sudo bash install.sh
 
 ### 调试日志 / Debug Log
 
-完整的调试记录（20 个已修复问题）保存在 [`docs/docker-test-debug-log.md`](docs/docker-test-debug-log.md)，涵盖：
+完整的调试记录（20 个已修复问题）保存在 [`tests/docker-test-debug-log.md`](tests/docker-test-debug-log.md)，涵盖：
 - Phase 1（12 个）：子 Shell 变量丢失、容器状态丢失、RHEL 包冲突、CentOS 7 EOL 等
 - Phase 2（8 个）：build_image stdout 泄露、容器内 SSH/D-Bus/firewalld 兼容性问题等
 
-> Full debug log at [`docs/docker-test-debug-log.md`](docs/docker-test-debug-log.md) — 20 issues documented with root causes and fixes.
+> Full debug log at [`tests/docker-test-debug-log.md`](tests/docker-test-debug-log.md) — 20 issues documented with root causes and fixes.
 
 ---
 
@@ -243,66 +243,21 @@ Step 9: 生成安全报告
 
 ---
 
-## 开发指南 / Development Guide
+## 开发者指南 / Contributing
 
-### 环境准备
+完整的开发者指南（TDD 流程、Git 工作流、代码规范、测试说明、ECC 命令）请参阅：
 
-```bash
-# macOS
-brew install shellcheck bats-core
+👉 **[`CONTRIBUTING.md`](CONTRIBUTING.md)**
 
-# Ubuntu / Debian
-sudo apt install shellcheck
-sudo apt install bats        # 或从源码安装: https://github.com/bats-core/bats-core
+主要链接速查：
 
-# CentOS / RHEL
-sudo yum install shellcheck
-# bats 需要从源码安装
-```
-
-### 运行测试
-
-```bash
-# 运行全部单元测试
-bats tests/unit/*.bats
-
-# 运行单个模块测试
-bats tests/unit/ssh.bats
-bats tests/unit/firewall.bats
-
-# 运行 Docker Phase 1 测试
-tests/docker/test-all.sh --phase 1
-```
-
-### ShellCheck 静态检查
-
-```bash
-# 检查所有脚本
-shellcheck -x scripts/**/*.sh
-shellcheck -x install.sh
-
-# -x 参数允许 source 外部文件
-```
-
-### 代码规范
-
-| 规范 | 说明 |
+| 内容 | 位置 |
 |------|------|
-| Shebang | 首行 `#!/usr/bin/env bash`，紧跟 `set -eo pipefail` |
-| 函数命名 | `snake_case`，如 `run_ssh_wizard`、`detect_os` |
-| 常量命名 | `UPPER_SNAKE_CASE`，如 `SUPPORTED_OS`、`SSH_SERVICE_NAME` |
-| 函数注释 | 每个函数必须有注释说明用途 |
-| 输出颜色 | 绿色=成功，红色=错误，黄色=警告，蓝色=信息 |
-| i18n | 所有用户可见的文本必须使用翻译变量（`MSG_*`），不硬编码 |
-| 备份 | 修改配置文件前必须备份原文件 |
-
-### 添加新模块
-
-1. 在 `scripts/security/` 下创建新脚本（如 `newmodule.sh`）
-2. 在 `scripts/lang/zh.sh` 和 `scripts/lang/en.sh` 中添加翻译
-3. 在 `install.sh` 中集成（load_dependencies、菜单项、状态检测）
-4. 在 `tests/unit/` 下创建对应的 `.bats` 测试文件
-5. 运行 `shellcheck` 和 `bats` 确认无报错
+| ShellCheck 静态检查 | `shellcheck -x scripts/**/*.sh` |
+| Bats 单元测试 | `bats tests/unit/*.bats` |
+| Docker Phase 1 测试 | `tests/docker/test-all.sh --phase 1` |
+| Docker Phase 2 测试 | `tests/docker/test-all.sh --phase 2` |
+| 计划文件规范 | `docs/plans/README.md` |
 
 ---
 
@@ -313,9 +268,11 @@ shellcheck -x install.sh
 | [项目 PRD](docs/design/linux-security-hardening-prd.md) | 项目需求与范围定义 |
 | [Docker 测试方案](docs/design/docker-test-design.md) | Phase 1 + Phase 2 自动化测试设计 |
 | [主菜单重构 v2](docs/design/main-menu-redesign-v2.md) | 主菜单 UI/UX 重设计（已实施） |
+| [贡献指南](CONTRIBUTING.md) | 开发者指南、Git 工作流、ECC 命令 |
 | [文档索引](docs/README.md) | 全部文档的统一入口 |
-| [Code Review 报告](docs/code-reviews/) | 4 轮代码审查报告归档 |
+| [Code Review 报告](docs/code-reviews/) | 5 轮代码审查报告归档 |
 | [测试报告](docs/test-reports/) | 测试结果归档 |
+| [发布检查清单](docs/release-checklist.md) | v1.0 发布准备检查 |
 | [交接文档](HANDOVER.md) | 项目进度与变更日志 |
 
 ---

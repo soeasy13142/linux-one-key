@@ -42,7 +42,7 @@
 - [ ] 所有设计文档 frontmatter status 已更新
 - [ ] 测试报告已归档（`docs/test-reports/`）
 - [ ] Code Review 报告已归档（`docs/code-reviews/`）
-- [ ] Docker 测试调试日志完整（`docs/docker-test-debug-log.md`）
+- [ ] Docker 测试调试日志完整（`tests/docker-test-debug-log.md`）
 - [ ] CHANGELOG / 版本历史已更新
 
 ## 自动化

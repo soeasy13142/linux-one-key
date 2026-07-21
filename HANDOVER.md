@@ -2,7 +2,7 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-07-15（Round 5 分模块 Code Review 完成）
+**最后更新**: 2026-07-21（文档规范化 consolidate 完成）
 **当前阶段**: v1.0 最终冲刺全部完成 🎉 → CI 全部绿色 ✅ → Round 5 Review 完成（115 个发现）
 
 > **新增**: K3s (Lightweight Kubernetes) 安装模块已实现（`scripts/server/k3s.sh`）
@@ -56,7 +56,9 @@
 | 目录/文件 | 用途 |
 |---|---|
 | `install.sh` | 主入口脚本（菜单、交互流程、curl 管道支持） |
-| `README.md` | 项目说明 |
+| `README.md` | 项目说明（人类入口） |
+| `CONTRIBUTING.md` | 贡献指南（TDD、Git 工作流、ECC 命令） |
+| `LICENSE` | MIT 开源许可证 |
 | `HANDOVER.md` | 本文件（强制交接文档） |
 | `CLAUDE.md` | Claude Code 项目指令（在 `.claude/CLAUDE.md`） |
 | `scripts/base/` | 基础环境（utils.sh, detect.sh, init.sh, report.sh） |
@@ -66,6 +68,7 @@
 | `scripts/dev/` | 开发工具脚本（如 gen-file-tree.sh） |
 | `tests/docker/` | Docker 自动化测试框架（Phase 1: 配置验证，Phase 2: 服务验证） |
 | `tests/unit/` | Bats 单元测试（utils/firewall/fail2ban/ssh/audit/users/kernel/filesystem/services） |
+| `docs/release-checklist.md` | v1.0 发布检查清单 |
 | `config/` | 配置文件模板（fail2ban/, audit/, sysctl/） |
 | `docs/code-reviews/` | Code Review 报告归档 |
 | `docs/test-reports/` | 测试报告归档 |
@@ -170,13 +173,11 @@ v0.4 ✅ 已完成
 
 ## 6. 注意事项
 
-### 开发规范（来自 CLAUDE.md）
+### 开发规范
 
-- 首行 `#!/usr/bin/env bash`，紧跟 `set -euo pipefail`
-- 函数命名 `snake_case`，常量 `UPPER_SNAKE_CASE`
-- 每个函数必须有注释说明用途
-- 输出用颜色区分：绿=成功，红=错误，黄=警告，蓝=信息
-- 每个修改操作前备份原文件
+详见 [`CONTRIBUTING.md`](CONTRIBUTING.md) 的代码规范章节。
+
+快速摘要：首行 `#!/usr/bin/env bash` + `set -euo pipefail`；函数 `snake_case`，常量 `UPPER_SNAKE_CASE`；使用 `utils.sh` 的 `log_*` 函数；修改前备份原文件。
 
 ### SSH 安全的特殊考虑
 
@@ -187,9 +188,9 @@ v0.4 ✅ 已完成
 
 ### 测试
 
-- 使用 ShellCheck 静态检查：`shellcheck -x scripts/**/*.sh`
-- 使用 Bats 单元测试
-- 目标覆盖率 80%+
+详见 [`CONTRIBUTING.md`](CONTRIBUTING.md) 的测试章节。
+
+快速摘要：ShellCheck 静态检查 + Bats 单元测试 + Docker Phase 1/2。
 
 ---
 
@@ -369,6 +370,18 @@ v0.4 ✅ 已完成
 | 2026-07-13 | CREATE | `.github/workflows/markdown-lint.yml` | Markdown 格式检查 workflow |
 | 2026-07-13 | CREATE | `.github/workflows/codeql.yml` | CodeQL 安全扫描 workflow（每周日自动）|
 | 2026-07-13 | PASS | CI Test workflow | **全部 4 job 首次通过 ✅**（ShellCheck + Bats + Phase 1 + Phase 2）
+| 2026-07-21 | REWRITE | `.claude/CLAUDE.md` | 文档规范化：364→90 行，移除重复内容，精简为 agent 入职指南 |
+| 2026-07-21 | CREATE | `CONTRIBUTING.md` | 新建贡献指南（TDD/Git 工作流/ECC/代码规范） |
+| 2026-07-21 | CREATE | `LICENSE` | 新建 MIT 开源许可证 |
+| 2026-07-21 | MOVE | `review/` → `docs/code-reviews/` | `review/bug-review-comprehensive.md` 移入 code-reviews 归档 |
+| 2026-07-21 | DELETE | `review/` | 空目录删除 |
+| 2026-07-21 | MOVE | `RELEASE_CHECKLIST.md` → `docs/release-checklist.md` | 发布检查清单归入 docs/ |
+| 2026-07-21 | MOVE | `docs/docker-test-debug-log.md` → `tests/docker-test-debug-log.md` | 测试调试日志归入 tests/ |
+| 2026-07-21 | UPDATE | `README.md` | 移除开发指南→引用 CONTRIBUTING.md；更新文件引用路径 |
+| 2026-07-21 | UPDATE | `HANDOVER.md` | 更新文件清单、引用路径、变更日志 |
+| 2026-07-21 | UPDATE | `docs/README.md` | 更新引用路径 |
+| 2026-07-21 | CREATE | `docs/plans/2026-07-21_14-00_docs-consolidation_nogit.md` | 文档规范化计划文件 |
+|------|------|------|
 | 2026-07-15 | CREATE | `docs/plans/2026-07-15_10-30_full-code-review-n5_nogit.md` | Round 5 分模块 Code Review 计划（6 组并行审查方案）|
 | 2026-07-15 | CREATE | `docs/code-reviews/round-5-comprehensive.md` | Round 5 综合报告：**115 个发现（0 CRITICAL + 20 HIGH + 46 MEDIUM + 49 LOW）** |
 | 2026-07-15 | REVIEW | 全部脚本 | 6 组并行审查完成：A-基础框架(20) / B-SSH+防火墙(19) / C-系统加固(16) / D-审计+服务+K3s(13) / E-主入口+语言(21) / F-测试+配置+CI(26) |

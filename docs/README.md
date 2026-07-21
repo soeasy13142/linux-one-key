@@ -8,7 +8,7 @@
 |-----------|-------------|
 | [design/](design/) | 设计文档 — PRD 需求文档、架构设计、实施计划（含 archive/ 归档） |
 | [plans/](plans/) | 执行计划文件 — 功能开发、Code Review 修复、阶段化改进计划 |
-| [code-reviews/](code-reviews/) | 代码审查报告 — 4 轮审查，覆盖安全、质量、静默失败等维度 |
+| [code-reviews/](code-reviews/) | 代码审查报告 — 5 轮审查，覆盖安全、质量、静默失败等维度 |
 | [test-reports/](test-reports/) | 测试报告 — Ubuntu ARM64 真机测试、VM 综合测试 |
 
 ## 文档分类
