@@ -131,7 +131,7 @@ install_base_tools() {
 _validate_timezone() {
     local tz="$1"
     if command -v timedatectl &>/dev/null; then
-        timedatectl list-timezones 2>/dev/null | grep -qx "${tz}" && return 0
+        timedatectl list-timezones 2>/dev/null | grep -Fxq "${tz}" && return 0
     elif [[ -d /usr/share/zoneinfo ]]; then
         [[ -f "/usr/share/zoneinfo/${tz}" ]] && return 0
     fi
@@ -160,11 +160,13 @@ setup_timezone() {
     fi
 }
 
-# 配置 chrony NTP 服务器
-_configure_chrony() {
-    local conf="$1"
-    if ! grep -q "^pool.*pool\\.ntp\\.org" "${conf}" 2>/dev/null; then
-        cat >> "${conf}" << EOF
+# 配置 NTP 服务器（通用函数，供 _configure_chrony 和 _configure_ntpd 调用）
+_configure_ntp_servers() {
+    local config_file="$1"
+    # shellcheck disable=SC2034 # reserved for future use
+    local service_name="$2"
+    if ! grep -q "^pool.*pool\\.ntp\\.org" "${config_file}" 2>/dev/null; then
+        cat >> "${config_file}" << EOF
 
 # Added by linux-one-key
 pool 0.pool.ntp.org iburst
@@ -175,19 +177,14 @@ EOF
     fi
 }
 
+# 配置 chrony NTP 服务器
+_configure_chrony() {
+    _configure_ntp_servers "/etc/chrony/chrony.conf" "chrony"
+}
+
 # 配置 ntpd NTP 服务器
 _configure_ntpd() {
-    local conf="$1"
-    if ! grep -q "^pool.*pool\\.ntp\\.org" "${conf}" 2>/dev/null; then
-        cat >> "${conf}" << EOF
-
-# Added by linux-one-key
-pool 0.pool.ntp.org iburst
-pool 1.pool.ntp.org iburst
-pool 2.pool.ntp.org iburst
-pool 3.pool.ntp.org iburst
-EOF
-    fi
+    _configure_ntp_servers "/etc/ntp.conf" "ntp"
 }
 
 # 配置 NTP 时间同步（Full 模式）

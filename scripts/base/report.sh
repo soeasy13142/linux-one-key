@@ -67,7 +67,7 @@ generate_report() {
             fi
         elif command -v chronyc &>/dev/null; then
             local ntp_ok
-            ntp_ok=$(chronyc tracking 2>/dev/null | grep -c "Leap.*Normal" || echo "0")
+            ntp_ok=$(LC_ALL=C chronyc tracking 2>/dev/null | grep -c "Leap.*Normal" || echo "0")
             if [[ "${ntp_ok}" -gt 0 ]]; then
                 echo "  - ${MSG_NTP_STATUS}: ${MSG_NTP_STATUS_SYNCED}"
             else

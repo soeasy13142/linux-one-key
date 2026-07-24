@@ -439,78 +439,78 @@ show_system_status() {
     if is_mode_lite; then
         _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
     else
-    local f2b_status="${MSG_STATUS_NOT_INSTALLED}" f2b_color="${RED}" f2b_icon="❌"
-    if command -v fail2ban-client &>/dev/null; then
-        f2b_status="${MSG_STATUS_INSTALLED}"
-        if systemctl is-active fail2ban &>/dev/null; then
-            f2b_color="${GREEN}"; f2b_icon="✅"
-        else
-            f2b_color="${YELLOW}"; f2b_icon="⚠️"
+        local f2b_status="${MSG_STATUS_NOT_INSTALLED}" f2b_color="${RED}" f2b_icon="❌"
+        if command -v fail2ban-client &>/dev/null; then
+            f2b_status="${MSG_STATUS_INSTALLED}"
+            if systemctl is-active fail2ban &>/dev/null; then
+                f2b_color="${GREEN}"; f2b_icon="✅"
+            else
+                f2b_color="${YELLOW}"; f2b_icon="⚠️"
+            fi
         fi
-    fi
-    if [[ "${f2b_color}" == "${GREEN}" ]]; then
-        _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_HARDENED}" "${f2b_color}" "${f2b_status}" "${f2b_icon}"
-        passed=$((passed + 1))
-    elif [[ "${f2b_color}" == "${YELLOW}" ]]; then
-        _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_PARTIAL}" "${f2b_color}" "${f2b_status}" "${f2b_icon}"
-        partial=$((partial + 1))
-        recommend_items+=("4|${MSG_STATUS_FAIL2BAN}")
-    else
-        _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_NOT_HARDENED}" "${f2b_color}" "${f2b_status}" "${f2b_icon}"
-        failed=$((failed + 1))
-        recommend_items+=("4|${MSG_STATUS_FAIL2BAN}")
-    fi
+        if [[ "${f2b_color}" == "${GREEN}" ]]; then
+            _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_HARDENED}" "${f2b_color}" "${f2b_status}" "${f2b_icon}"
+            passed=$((passed + 1))
+        elif [[ "${f2b_color}" == "${YELLOW}" ]]; then
+            _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_PARTIAL}" "${f2b_color}" "${f2b_status}" "${f2b_icon}"
+            partial=$((partial + 1))
+            recommend_items+=("4|${MSG_STATUS_FAIL2BAN}")
+        else
+            _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_NOT_HARDENED}" "${f2b_color}" "${f2b_status}" "${f2b_icon}"
+            failed=$((failed + 1))
+            recommend_items+=("4|${MSG_STATUS_FAIL2BAN}")
+        fi
     fi
 
     # ─── 审计日志 ───────────────────────────────────────────────────────
     if is_mode_lite; then
         _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
     else
-    local audit_status="${MSG_STATUS_NOT_INSTALLED}" audit_color="${RED}" audit_icon="❌"
-    if command -v auditctl &>/dev/null; then
-        audit_status="${MSG_STATUS_INSTALLED}"
-        if systemctl is-active auditd &>/dev/null; then
-            audit_color="${GREEN}"; audit_icon="✅"
-        else
-            audit_color="${YELLOW}"; audit_icon="⚠️"
+        local audit_status="${MSG_STATUS_NOT_INSTALLED}" audit_color="${RED}" audit_icon="❌"
+        if command -v auditctl &>/dev/null; then
+            audit_status="${MSG_STATUS_INSTALLED}"
+            if systemctl is-active auditd &>/dev/null; then
+                audit_color="${GREEN}"; audit_icon="✅"
+            else
+                audit_color="${YELLOW}"; audit_icon="⚠️"
+            fi
         fi
-    fi
-    if [[ "${audit_color}" == "${GREEN}" ]]; then
-        _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_HARDENED}" "${audit_color}" "${audit_status}" "${audit_icon}"
-        passed=$((passed + 1))
-    elif [[ "${audit_color}" == "${YELLOW}" ]]; then
-        _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_PARTIAL}" "${audit_color}" "${audit_status}" "${audit_icon}"
-        partial=$((partial + 1))
-        recommend_items+=("5|${MSG_STATUS_AUDIT}")
-    else
-        _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_NOT_HARDENED}" "${audit_color}" "${audit_status}" "${audit_icon}"
-        failed=$((failed + 1))
-        recommend_items+=("5|${MSG_STATUS_AUDIT}")
-    fi
+        if [[ "${audit_color}" == "${GREEN}" ]]; then
+            _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_HARDENED}" "${audit_color}" "${audit_status}" "${audit_icon}"
+            passed=$((passed + 1))
+        elif [[ "${audit_color}" == "${YELLOW}" ]]; then
+            _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_PARTIAL}" "${audit_color}" "${audit_status}" "${audit_icon}"
+            partial=$((partial + 1))
+            recommend_items+=("5|${MSG_STATUS_AUDIT}")
+        else
+            _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_NOT_HARDENED}" "${audit_color}" "${audit_status}" "${audit_icon}"
+            failed=$((failed + 1))
+            recommend_items+=("5|${MSG_STATUS_AUDIT}")
+        fi
     fi
 
     # ─── 用户管理 ───────────────────────────────────────────────────────
     if is_mode_lite; then
         _print_status_row "${MSG_STATUS_USERS}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
     else
-    local users_color="${RED}" users_icon="❌" users_detail="${MSG_STATUS_NOT_CONFIGURED}"
-    if type check_users_status &>/dev/null; then
-        local users_status custom_users
-        users_status=$(check_users_status 2>/dev/null)
-        custom_users=$(echo "${users_status}" | grep '^users_custom=' | cut -d= -f2)
-        if [[ "${custom_users}" =~ ^[1-9][0-9]*$ ]]; then
-            users_color="${GREEN}"; users_icon="✅"
-            users_detail="${MSG_STATUS_USERS_COUNT}: ${custom_users}"
+        local users_color="${RED}" users_icon="❌" users_detail="${MSG_STATUS_NOT_CONFIGURED}"
+        if type check_users_status &>/dev/null; then
+            local users_status custom_users
+            users_status=$(check_users_status 2>/dev/null)
+            custom_users=$(echo "${users_status}" | grep '^users_custom=' | cut -d= -f2)
+            if [[ "${custom_users}" =~ ^[1-9][0-9]*$ ]]; then
+                users_color="${GREEN}"; users_icon="✅"
+                users_detail="${MSG_STATUS_USERS_COUNT}: ${custom_users}"
+            fi
         fi
-    fi
-    if [[ "${users_color}" == "${GREEN}" ]]; then
-        _print_status_row "${MSG_STATUS_USERS}" "${MSG_STATUS_HARDENED}" "${users_color}" "${users_detail}" "${users_icon}"
-        passed=$((passed + 1))
-    else
-        _print_status_row "${MSG_STATUS_USERS}" "${MSG_STATUS_NOT_HARDENED}" "${users_color}" "${users_detail}" "${users_icon}"
-        failed=$((failed + 1))
-        recommend_items+=("6|${MSG_STATUS_USERS}")
-    fi
+        if [[ "${users_color}" == "${GREEN}" ]]; then
+            _print_status_row "${MSG_STATUS_USERS}" "${MSG_STATUS_HARDENED}" "${users_color}" "${users_detail}" "${users_icon}"
+            passed=$((passed + 1))
+        else
+            _print_status_row "${MSG_STATUS_USERS}" "${MSG_STATUS_NOT_HARDENED}" "${users_color}" "${users_detail}" "${users_icon}"
+            failed=$((failed + 1))
+            recommend_items+=("6|${MSG_STATUS_USERS}")
+        fi
     fi
 
     # ─── 内核加固 ───────────────────────────────────────────────────────
@@ -537,168 +537,168 @@ show_system_status() {
     if is_mode_lite; then
         _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
     else
-    local fs_color="${RED}" fs_icon="❌" fs_detail="${MSG_STATUS_NOT_HARDENED}"
-    if type check_filesystem_status &>/dev/null; then
-        local fs_status suid_count
-        fs_status=$(check_filesystem_status 2>/dev/null)
-        suid_count=$(echo "${fs_status}" | grep '^fs_suid_count=' | cut -d= -f2)
-        if [[ "${suid_count}" =~ ^[0-9]+$ ]] && [[ "${suid_count}" -gt 0 ]]; then
-            # 已扫描，发现 SUID 问题
-            fs_color="${YELLOW}"; fs_icon="⚠️"
-            fs_detail="${MSG_STATUS_FS_SUID}: ${suid_count}"
-        elif [[ "${suid_count}" =~ ^[0-9]+$ ]] && [[ "${suid_count}" -eq 0 ]]; then
-            # 已扫描，无 SUID 问题
-            fs_color="${GREEN}"; fs_icon="✅"
-            fs_detail="${MSG_STATUS_FS_SUID}: 0"
+        local fs_color="${RED}" fs_icon="❌" fs_detail="${MSG_STATUS_NOT_HARDENED}"
+        if type check_filesystem_status &>/dev/null; then
+            local fs_status suid_count
+            fs_status=$(check_filesystem_status 2>/dev/null)
+            suid_count=$(echo "${fs_status}" | grep '^fs_suid_count=' | cut -d= -f2)
+            if [[ "${suid_count}" =~ ^[0-9]+$ ]] && [[ "${suid_count}" -gt 0 ]]; then
+                # 已扫描，发现 SUID 问题
+                fs_color="${YELLOW}"; fs_icon="⚠️"
+                fs_detail="${MSG_STATUS_FS_SUID}: ${suid_count}"
+            elif [[ "${suid_count}" =~ ^[0-9]+$ ]] && [[ "${suid_count}" -eq 0 ]]; then
+                # 已扫描，无 SUID 问题
+                fs_color="${GREEN}"; fs_icon="✅"
+                fs_detail="${MSG_STATUS_FS_SUID}: 0"
+            fi
         fi
-    fi
-    if [[ "${fs_color}" == "${GREEN}" ]]; then
-        _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_HARDENED}" "${fs_color}" "${fs_detail}" "${fs_icon}"
-        passed=$((passed + 1))
-    elif [[ "${fs_color}" == "${YELLOW}" ]]; then
-        _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_PARTIAL}" "${fs_color}" "${fs_detail}" "${fs_icon}"
-        partial=$((partial + 1))
-    else
-        _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_NOT_HARDENED}" "${fs_color}" "${fs_detail}" "${fs_icon}"
-        failed=$((failed + 1))
-        recommend_items+=("8|${MSG_STATUS_FILESYSTEM}")
-    fi
+        if [[ "${fs_color}" == "${GREEN}" ]]; then
+            _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_HARDENED}" "${fs_color}" "${fs_detail}" "${fs_icon}"
+            passed=$((passed + 1))
+        elif [[ "${fs_color}" == "${YELLOW}" ]]; then
+            _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_PARTIAL}" "${fs_color}" "${fs_detail}" "${fs_icon}"
+            partial=$((partial + 1))
+        else
+            _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_NOT_HARDENED}" "${fs_color}" "${fs_detail}" "${fs_icon}"
+            failed=$((failed + 1))
+            recommend_items+=("8|${MSG_STATUS_FILESYSTEM}")
+        fi
     fi
 
     # ─── 服务管理 ───────────────────────────────────────────────────────
     if is_mode_lite; then
         _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
     else
-    local svc_color="${RED}" svc_icon="❌" svc_detail="${MSG_STATUS_NOT_HARDENED}"
-    if type check_services_status &>/dev/null; then
-        local svc_status svc_running svc_unnecessary
-        svc_status=$(check_services_status 2>/dev/null)
-        svc_running=$(echo "${svc_status}" | grep '^services_running=' | cut -d= -f2)
-        svc_unnecessary=$(echo "${svc_status}" | grep '^services_unnecessary=' | cut -d= -f2)
-        if [[ "${svc_running}" =~ ^[0-9]+$ ]] && [[ "${svc_unnecessary}" =~ ^[0-9]+$ ]]; then
-            if [[ "${svc_unnecessary}" -eq 0 ]]; then
-                svc_color="${GREEN}"; svc_icon="✅"
-            else
-                svc_color="${YELLOW}"; svc_icon="⚠️"
+        local svc_color="${RED}" svc_icon="❌" svc_detail="${MSG_STATUS_NOT_HARDENED}"
+        if type check_services_status &>/dev/null; then
+            local svc_status svc_running svc_unnecessary
+            svc_status=$(check_services_status 2>/dev/null)
+            svc_running=$(echo "${svc_status}" | grep '^services_running=' | cut -d= -f2)
+            svc_unnecessary=$(echo "${svc_status}" | grep '^services_unnecessary=' | cut -d= -f2)
+            if [[ "${svc_running}" =~ ^[0-9]+$ ]] && [[ "${svc_unnecessary}" =~ ^[0-9]+$ ]]; then
+                if [[ "${svc_unnecessary}" -eq 0 ]]; then
+                    svc_color="${GREEN}"; svc_icon="✅"
+                else
+                    svc_color="${YELLOW}"; svc_icon="⚠️"
+                fi
+                svc_detail="${MSG_STATUS_SERVICES_RUNNING}: ${svc_running}, ${MSG_STATUS_SERVICES_UNNECESSARY}: ${svc_unnecessary}"
             fi
-            svc_detail="${MSG_STATUS_SERVICES_RUNNING}: ${svc_running}, ${MSG_STATUS_SERVICES_UNNECESSARY}: ${svc_unnecessary}"
         fi
-    fi
-    if [[ "${svc_color}" == "${GREEN}" ]]; then
-        _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_HARDENED}" "${svc_color}" "${svc_detail}" "${svc_icon}"
-        passed=$((passed + 1))
-    elif [[ "${svc_color}" == "${YELLOW}" ]]; then
-        _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_PARTIAL}" "${svc_color}" "${svc_detail}" "${svc_icon}"
-        partial=$((partial + 1))
-        recommend_items+=("9|${MSG_STATUS_SERVICES}")
-    else
-        _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_NOT_HARDENED}" "${svc_color}" "${svc_detail}" "${svc_icon}"
-        failed=$((failed + 1))
-        recommend_items+=("9|${MSG_STATUS_SERVICES}")
-    fi
+        if [[ "${svc_color}" == "${GREEN}" ]]; then
+            _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_HARDENED}" "${svc_color}" "${svc_detail}" "${svc_icon}"
+            passed=$((passed + 1))
+        elif [[ "${svc_color}" == "${YELLOW}" ]]; then
+            _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_PARTIAL}" "${svc_color}" "${svc_detail}" "${svc_icon}"
+            partial=$((partial + 1))
+            recommend_items+=("9|${MSG_STATUS_SERVICES}")
+        else
+            _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_NOT_HARDENED}" "${svc_color}" "${svc_detail}" "${svc_icon}"
+            failed=$((failed + 1))
+            recommend_items+=("9|${MSG_STATUS_SERVICES}")
+        fi
     fi
 
     # ─── 自动安全更新 ────────────────────────────────────────────────────
     if is_mode_lite; then
         _print_status_row "${MSG_AUTOUPDATE_TITLE}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
     else
-    local au_color="${YELLOW}" au_icon="⚠️" au_detail="${MSG_STATUS_NOT_HARDENED}"
-    if type check_autoupdate_status &>/dev/null; then
-        local au_status
-        au_status=$(check_autoupdate_status 2>/dev/null)
-        local au_installed au_enabled
-        au_installed=$(echo "${au_status}" | grep '^autoupdate_installed=' | cut -d= -f2)
-        au_enabled=$(echo "${au_status}" | grep '^autoupdate_enabled=' | cut -d= -f2)
-        if [[ "${au_enabled}" == "yes" ]]; then
-            au_color="${GREEN}"; au_icon="✅"
-            au_detail="${MSG_STATUS_HARDENED}"
-        elif [[ "${au_installed}" == "yes" ]]; then
-            au_color="${YELLOW}"; au_icon="⚠️"
-            au_detail="${MSG_STATUS_PARTIAL}"
+        local au_color="${YELLOW}" au_icon="⚠️" au_detail="${MSG_STATUS_NOT_HARDENED}"
+        if type check_autoupdate_status &>/dev/null; then
+            local au_status
+            au_status=$(check_autoupdate_status 2>/dev/null)
+            local au_installed au_enabled
+            au_installed=$(echo "${au_status}" | grep '^autoupdate_installed=' | cut -d= -f2)
+            au_enabled=$(echo "${au_status}" | grep '^autoupdate_enabled=' | cut -d= -f2)
+            if [[ "${au_enabled}" == "yes" ]]; then
+                au_color="${GREEN}"; au_icon="✅"
+                au_detail="${MSG_STATUS_HARDENED}"
+            elif [[ "${au_installed}" == "yes" ]]; then
+                au_color="${YELLOW}"; au_icon="⚠️"
+                au_detail="${MSG_STATUS_PARTIAL}"
+            fi
         fi
-    fi
-    _print_status_row "${MSG_AUTOUPDATE_TITLE}" "${au_detail}" "${au_color}" "" "${au_icon}"
-    if [[ "${au_color}" == "${GREEN}" ]]; then
-        passed=$((passed + 1))
-    elif [[ "${au_color}" == "${YELLOW}" ]]; then
-        partial=$((partial + 1))
-    fi
+        _print_status_row "${MSG_AUTOUPDATE_TITLE}" "${au_detail}" "${au_color}" "" "${au_icon}"
+        if [[ "${au_color}" == "${GREEN}" ]]; then
+            passed=$((passed + 1))
+        elif [[ "${au_color}" == "${YELLOW}" ]]; then
+            partial=$((partial + 1))
+        fi
     fi
 
     # ─── AIDE ───────────────────────────────────────────────────────────
     if is_mode_lite; then
         _print_status_row "${MSG_STATUS_AIDE}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
     else
-    local aide_color="${RED}" aide_icon="❌" aide_detail="${MSG_STATUS_NOT_CONFIGURED}"
-    if type check_aide_status &>/dev/null; then
-        local aide_status aide_db_exists aide_cron
-        aide_status=$(check_aide_status 2>/dev/null)
-        aide_db_exists=$(echo "${aide_status}" | grep '^aide_db_exists=' | cut -d= -f2)
-        aide_cron=$(echo "${aide_status}" | grep '^aide_cron=' | cut -d= -f2)
-        if [[ "${aide_db_exists}" == "yes" ]]; then
-            aide_color="${GREEN}"; aide_icon="✅"
-            aide_detail="DB: OK, Cron: ${aide_cron}"
+        local aide_color="${RED}" aide_icon="❌" aide_detail="${MSG_STATUS_NOT_CONFIGURED}"
+        if type check_aide_status &>/dev/null; then
+            local aide_status aide_db_exists aide_cron
+            aide_status=$(check_aide_status 2>/dev/null)
+            aide_db_exists=$(echo "${aide_status}" | grep '^aide_db_exists=' | cut -d= -f2)
+            aide_cron=$(echo "${aide_status}" | grep '^aide_cron=' | cut -d= -f2)
+            if [[ "${aide_db_exists}" == "yes" ]]; then
+                aide_color="${GREEN}"; aide_icon="✅"
+                aide_detail="DB: OK, Cron: ${aide_cron}"
+            fi
         fi
-    fi
-    if [[ "${aide_color}" == "${GREEN}" ]]; then
-        _print_status_row "${MSG_STATUS_AIDE}" "${MSG_STATUS_HARDENED}" "${aide_color}" "${aide_detail}" "${aide_icon}"
-        passed=$((passed + 1))
-    else
-        _print_status_row "${MSG_STATUS_AIDE}" "${MSG_STATUS_NOT_HARDENED}" "${aide_color}" "${aide_detail}" "${aide_icon}"
-        failed=$((failed + 1))
-        recommend_items+=("14|${MSG_STATUS_AIDE}")
-    fi
+        if [[ "${aide_color}" == "${GREEN}" ]]; then
+            _print_status_row "${MSG_STATUS_AIDE}" "${MSG_STATUS_HARDENED}" "${aide_color}" "${aide_detail}" "${aide_icon}"
+            passed=$((passed + 1))
+        else
+            _print_status_row "${MSG_STATUS_AIDE}" "${MSG_STATUS_NOT_HARDENED}" "${aide_color}" "${aide_detail}" "${aide_icon}"
+            failed=$((failed + 1))
+            recommend_items+=("14|${MSG_STATUS_AIDE}")
+        fi
     fi
 
     # ─── ClamAV ─────────────────────────────────────────────────────────
     if is_mode_lite; then
         _print_status_row "${MSG_STATUS_CLAMAV}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
     else
-    local clamav_color="${RED}" clamav_icon="❌" clamav_detail="${MSG_STATUS_NOT_CONFIGURED}"
-    if type check_clamav_status &>/dev/null; then
-        local clamav_status clamav_db_uptodate clamav_cron
-        clamav_status=$(check_clamav_status 2>/dev/null)
-        clamav_db_uptodate=$(echo "${clamav_status}" | grep '^clamav_db_uptodate=' | cut -d= -f2)
-        clamav_cron=$(echo "${clamav_status}" | grep '^clamav_cron_enabled=' | cut -d= -f2)
-        if [[ "${clamav_db_uptodate}" == "yes" ]]; then
-            clamav_color="${GREEN}"; clamav_icon="✅"
-            clamav_detail="DB: OK, Cron: ${clamav_cron}"
+        local clamav_color="${RED}" clamav_icon="❌" clamav_detail="${MSG_STATUS_NOT_CONFIGURED}"
+        if type check_clamav_status &>/dev/null; then
+            local clamav_status clamav_db_uptodate clamav_cron
+            clamav_status=$(check_clamav_status 2>/dev/null)
+            clamav_db_uptodate=$(echo "${clamav_status}" | grep '^clamav_db_uptodate=' | cut -d= -f2)
+            clamav_cron=$(echo "${clamav_status}" | grep '^clamav_cron_enabled=' | cut -d= -f2)
+            if [[ "${clamav_db_uptodate}" == "yes" ]]; then
+                clamav_color="${GREEN}"; clamav_icon="✅"
+                clamav_detail="DB: OK, Cron: ${clamav_cron}"
+            fi
         fi
-    fi
-    if [[ "${clamav_color}" == "${GREEN}" ]]; then
-        _print_status_row "${MSG_STATUS_CLAMAV}" "${MSG_STATUS_HARDENED}" "${clamav_color}" "${clamav_detail}" "${clamav_icon}"
-        passed=$((passed + 1))
-    else
-        _print_status_row "${MSG_STATUS_CLAMAV}" "${MSG_STATUS_NOT_HARDENED}" "${clamav_color}" "${clamav_detail}" "${clamav_icon}"
-        failed=$((failed + 1))
-        recommend_items+=("15|${MSG_STATUS_CLAMAV}")
-    fi
+        if [[ "${clamav_color}" == "${GREEN}" ]]; then
+            _print_status_row "${MSG_STATUS_CLAMAV}" "${MSG_STATUS_HARDENED}" "${clamav_color}" "${clamav_detail}" "${clamav_icon}"
+            passed=$((passed + 1))
+        else
+            _print_status_row "${MSG_STATUS_CLAMAV}" "${MSG_STATUS_NOT_HARDENED}" "${clamav_color}" "${clamav_detail}" "${clamav_icon}"
+            failed=$((failed + 1))
+            recommend_items+=("15|${MSG_STATUS_CLAMAV}")
+        fi
     fi
 
     # ─── Rootkit Detection ─────────────────────────────────────────────
     if is_mode_lite; then
         _print_status_row "${MSG_STATUS_ROOTKIT}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
     else
-    local rootkit_color="${RED}" rootkit_icon="❌" rootkit_detail="${MSG_STATUS_NOT_CONFIGURED}"
-    if type check_rootkit_status &>/dev/null; then
-        local rootkit_status rkhunter_installed chkrootkit_installed rootkit_cron
-        rootkit_status=$(check_rootkit_status 2>/dev/null)
-        rkhunter_installed=$(echo "${rootkit_status}" | grep '^rkhunter_installed=' | cut -d= -f2)
-        chkrootkit_installed=$(echo "${rootkit_status}" | grep '^chkrootkit_installed=' | cut -d= -f2)
-        rootkit_cron=$(echo "${rootkit_status}" | grep '^cron_enabled=' | cut -d= -f2)
-        if [[ "${rkhunter_installed}" == "yes" ]]; then
-            rootkit_color="${GREEN}"; rootkit_icon="✅"
-            rootkit_detail="rkhunter: OK, chkrootkit: ${chkrootkit_installed}, Cron: ${rootkit_cron}"
+        local rootkit_color="${RED}" rootkit_icon="❌" rootkit_detail="${MSG_STATUS_NOT_CONFIGURED}"
+        if type check_rootkit_status &>/dev/null; then
+            local rootkit_status rkhunter_installed chkrootkit_installed rootkit_cron
+            rootkit_status=$(check_rootkit_status 2>/dev/null)
+            rkhunter_installed=$(echo "${rootkit_status}" | grep '^rkhunter_installed=' | cut -d= -f2)
+            chkrootkit_installed=$(echo "${rootkit_status}" | grep '^chkrootkit_installed=' | cut -d= -f2)
+            rootkit_cron=$(echo "${rootkit_status}" | grep '^cron_enabled=' | cut -d= -f2)
+            if [[ "${rkhunter_installed}" == "yes" ]]; then
+                rootkit_color="${GREEN}"; rootkit_icon="✅"
+                rootkit_detail="rkhunter: OK, chkrootkit: ${chkrootkit_installed}, Cron: ${rootkit_cron}"
+            fi
         fi
-    fi
-    if [[ "${rootkit_color}" == "${GREEN}" ]]; then
-        _print_status_row "${MSG_STATUS_ROOTKIT}" "${MSG_STATUS_HARDENED}" "${rootkit_color}" "${rootkit_detail}" "${rootkit_icon}"
-        passed=$((passed + 1))
-    else
-        _print_status_row "${MSG_STATUS_ROOTKIT}" "${MSG_STATUS_NOT_HARDENED}" "${rootkit_color}" "${rootkit_detail}" "${rootkit_icon}"
-        failed=$((failed + 1))
-        recommend_items+=("16|${MSG_STATUS_ROOTKIT}")
-    fi
+        if [[ "${rootkit_color}" == "${GREEN}" ]]; then
+            _print_status_row "${MSG_STATUS_ROOTKIT}" "${MSG_STATUS_HARDENED}" "${rootkit_color}" "${rootkit_detail}" "${rootkit_icon}"
+            passed=$((passed + 1))
+        else
+            _print_status_row "${MSG_STATUS_ROOTKIT}" "${MSG_STATUS_NOT_HARDENED}" "${rootkit_color}" "${rootkit_detail}" "${rootkit_icon}"
+            failed=$((failed + 1))
+            recommend_items+=("16|${MSG_STATUS_ROOTKIT}")
+        fi
     fi
 
     # ─── 顶部评分 + 建议下一步 ──────────────────────────────────────────
@@ -884,7 +884,7 @@ show_main_menu() {
 get_main_menu_choice() {
     local choice
     while true; do
-        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-13]" "")
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-16]" "")
         # EOF / non-interactive stdin: exit gracefully
         if [[ -z "${choice}" ]]; then
             echo ""
@@ -1542,6 +1542,11 @@ show_hardening_mode_screen() {
     while true; do
         choice=$(prompt_input "${MSG_MODE_SELECT_PROMPT}" "4")
 
+        if [[ -z "${choice}" ]]; then
+            log_error "${MSG_ERROR_NO_INPUT}"
+            return 1
+        fi
+
         case "${choice}" in
             1)
                 run_mode_wizard "${MODE_BASIC_MODULES[*]}" "${MSG_MODE_WIZARD_BASIC}"
@@ -1581,8 +1586,10 @@ show_hardening_mode_screen() {
 # 参数: $1 空格分隔的模块名列表, $2 向导标题
 # 用法: run_mode_wizard "init ssh firewall kernel" "Basic Hardening Wizard"
 run_mode_wizard() {
+    set -f
     # shellcheck disable=SC2206
     local -a modules=($1)
+    set +f
     local wizard_title="$2"
 
     log_title "${wizard_title}"
@@ -1604,6 +1611,10 @@ run_mode_wizard() {
     export _WIZARD_KERNEL_DONE=0
     export _WIZARD_FS_DONE=0
     export _WIZARD_SERVICES_DONE=0
+    export _WIZARD_AUTOUPDATE_DONE=0
+    export _WIZARD_AIDE_DONE=0
+    export _WIZARD_CLAMAV_DONE=0
+    export _WIZARD_ROOTKIT_DONE=0
 
     local module
     for module in "${modules[@]}"; do
