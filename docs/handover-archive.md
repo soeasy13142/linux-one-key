@@ -8,6 +8,22 @@
 
 ## 归档信息
 
+---
+
+## Batch 2: Security & Infrastructure Enhancement (2026-07-24)
+
+**功能变更**:
+- **backup.sh / rollback.sh 提取** (WS1): 从 `utils.sh` 提取 `backup_file()`/`restore_file()` → `scripts/base/backup.sh`；提取 `schedule_rollback()`/`cancel_scheduled_task()` → `scripts/base/rollback.sh`。utils.sh 通过 source 向后兼容加载
+- **SSH 锁定防护增强** (WS2): 新增 `_restart_and_test_ssh()` 重启后连接测试，`_start_connection_watch()` 监控 auth.log 自动取消回滚，`check_active_ssh_sessions()`/`has_console_access()` 辅助函数。Full 模式增强，Lite 模式保持原有流程
+- **自动安全更新** (WS3): 新建 `scripts/security/autoupdate.sh` 模块，支持 unattended-upgrades (Debian/Ubuntu) 和 yum-cron (CentOS/RHEL) 配置
+- **菜单编号变更**: 新增自动安全更新 [10] → 完整向导 [11] → 查看报告 [12] → K3s [13]
+
+**文件变更**:
+- 新增: `backup.sh`, `rollback.sh`, `autoupdate.sh`, `backup.bats` (15 cases), `rollback.bats` (9 cases), `autoupdate.bats` (18 cases)
+- 修改: `utils.sh`, `ssh.sh`, `install.sh`, `mode.sh`, `report.sh`, `zh.sh`, `en.sh`, `utils.bats`, `ssh.bats`, `mode.bats`, `HANDOVER.md`
+
+**测试**: 365/365 全部通过 | **ShellCheck**: 全部通过
+
 | 项 | 值 |
 |---|---|
 | 归档日期 | 2026-07-10（首次）/ 2026-07-24（二次：HANDOVER.md 精简重构，追加 ~170 条） |

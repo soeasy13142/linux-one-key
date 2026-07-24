@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-07-24 · **版本**: v1.0.1 · **状态**: 🟢 双模式完成，准备 v1.1 功能扩充
+> **最后更新**: 2026-07-24 · **版本**: v1.1.0 · **状态**: 🟢 Batch 3 完成（AIDE/ClamAV/Rootkit）
 
 ## 会话恢复
 
@@ -12,13 +12,13 @@ ls docs/plans/                 # 待执行计划
 
 ## 项目概要
 
-Linux 云服务器安全加固一键脚本。v0.1 → v1.0.1 已完成：
+Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 
-- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / K3s
+- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection
 - **Lite/Full 双模式**: `--lite` 低内存模式（SSH + Firewall + Kernel) vs Full 全模块
-- **测试**: 271 Bats 单元测试 + Docker Phase 1 (72/72) + Phase 2 (21/21) 全部通过
+- **测试**: 442 Bats 单元测试全部通过
 - **审查**: 5 轮全项目 Code Review，发现并修复 280+ 问题
-- **最新发布**: v1.0.1（2026-07-21），全项目安全审计修复 + 文档规范化
+- **最新发布**: v1.1.0（2026-07-24），Batch 2 安全与基础设施增强 + Batch 3 Security Plus
 
 ## 关键决策
 
@@ -43,16 +43,16 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.0.1 已完成：
 - **备份**: 所有配置修改前自动备份到 `/var/log/linux-one-key/backups/`
 - **幂等**: 每个模块先检查当前状态，已加固项跳过，重复运行不出错
 - **i18n**: 用户可见文本一律用 `MSG_*` 变量（`scripts/lang/`），不硬编码中英文
+- **backup.sh / rollback.sh 加载**: 由 utils.sh 在加载过程中 source，此时 `_UTILS_LOADED` 尚未设置（在 utils.sh 末尾设置）。子模块的 guard 不检查 `_UTILS_LOADED`
+- **SSH Full 模式增强**: `_restart_and_test_ssh()` 需 SSH 密钥已配置才能通过连接测试（失败是预期的，会自动设置回滚定时器）
+- **菜单编号变更**: Batch 2 新增自动安全更新菜单项 [10]，后续编号相应改变：[11] 完整向导、[12] 查看报告、[13] K3s。Batch 3 新增 [14] AIDE、[15] ClamAV、[16] Rootkit
 
 ## 下一步
 
-1. **基础工具** (低): htop, net-tools, lsof, tree, git 安装
-2. **backup.sh / rollback.sh** (中): 从各模块提取统一备份回滚
-3. **自动安全更新** (中): unattended-upgrades / yum-cron
-4. **NTP 时间同步** (低)
-5. **Swap 文件配置** (低)
-6. **AIDE / ClamAV / Rootkit 检测** (高)
-7. **发行版扩展**: RHEL 7+, Fedora Docker 测试
+1. **发行版扩展**: RHEL 7+, Fedora Docker 测试
+2. **NTP 时间同步** (低)
+3. **基础工具** (低): htop, net-tools, lsof, tree, git 安装
+4. **clamd 可选安装**: 大内存服务器可选择启用 clamd 守护进程
 
 ## 参考
 

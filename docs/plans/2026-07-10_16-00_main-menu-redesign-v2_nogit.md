@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 实现 `install.sh` 主菜单 v1.0 理想态（带分组的 12 项菜单 + 6 个模块子菜单壳 + 状态可视化 + 历史报告），覆盖 [spec §3-§4](../../design/main-menu-redesign-v2.md) 的 9 个 GAP。
+**Goal:** 实现 `install.sh` 主菜单 v1.0 理想态（带分组的 12 项菜单 + 6 个模块子菜单壳 + 状态可视化 + 历史报告），覆盖 [spec §3-§4](../design/main-menu-redesign-v2.md) 的 9 个 GAP。
 
 **Architecture:** 仅改 `install.sh` 入口层 + i18n，新增 bats 测试。底层模块（ssh.sh / firewall.sh / fail2ban.sh 等）内部完全不动。
 

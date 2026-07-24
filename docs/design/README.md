@@ -7,7 +7,7 @@
 - 新设计文档须含 frontmatter `status` 字段（取值见下表）
 - 状态变更须同步更新 frontmatter 与本 README
 - 已实施文档须迁入 `archive/`，不得堆在顶层
-- frontmatter schema 参考 [`docs/plans/README.md`](../../plans/README.md)
+- frontmatter schema 参考 [`docs/plans/README.md`](../plans/README.md)
 
 ## 状态语义
 
@@ -46,4 +46,4 @@
 
 ## 重新生成文件树
 
-运行 `bash scripts/dev/gen-file-tree.sh` 重新生成 [`docs/file-tree.generated.md`](../../file-tree.generated.md)（gitignored）。
+运行 `bash scripts/dev/gen-file-tree.sh` 重新生成 [`docs/file-tree.generated.md`](../file-tree.generated.md)（gitignored）。
