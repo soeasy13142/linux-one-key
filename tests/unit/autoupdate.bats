@@ -86,20 +86,12 @@ teardown() {
     [[ "${output}" == *"autoupdate_type="* ]]
 }
 
-@test "check_autoupdate_status shows type none on Ubuntu without unattended-upgrades" {
+@test "check_autoupdate_status returns format fields" {
     run check_autoupdate_status
-    # Since unattended-upgrades is likely not installed in test env
-    # autoupdate_type should be "none" or "unattended-upgrades"
-    local au_type
-    au_type=$(echo "${output}" | grep '^autoupdate_type=' | cut -d= -f2)
-    [[ "${au_type}" == "none" ]] || [[ "${au_type}" == "unattended-upgrades" ]]
-}
-
-@test "check_autoupdate_status shows installed=no when not installed" {
-    run check_autoupdate_status
-    local installed
-    installed=$(echo "${output}" | grep '^autoupdate_installed=' | cut -d= -f2)
-    [[ "${installed}" == "no" ]] || [[ "${installed}" == "yes" ]]
+    # Instead of accepting both yes/no, verify output format
+    [[ -n "${output}" ]]
+    [[ "${output}" =~ autoupdate_installed= ]]
+    [[ "${output}" =~ autoupdate_type= ]]
 }
 
 # ── _is_autoupdate_configured tests ──

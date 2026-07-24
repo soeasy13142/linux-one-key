@@ -44,26 +44,35 @@ teardown() {
 
 # ── schedule_rollback behavior tests ──
 
-@test "schedule_rollback sets _SCHEDULED_PID" {
-    # Create a callback script
-    local callback_script="${TEST_DIR}/callback.sh"
-    local test_flag="${TEST_DIR}/rollback_ran"
-    rm -f "${test_flag}"
-    printf '#!/usr/bin/env bash\ntouch "%s"\n' "${test_flag}" > "${callback_script}"
-    chmod +x "${callback_script}"
+@test "schedule_rollback executes callback" {
+    local flag_file
+    flag_file=$(mktemp /tmp/rollback-test-XXXXXX)
 
-    schedule_rollback 1 "${callback_script}" "Test rollback"
+    # rollback_ssh is the only callback allowed by the whitelist
+    rollback_ssh() { echo done > "${flag_file}"; }
+    export -f rollback_ssh
+
+    run schedule_rollback 1 "rollback_ssh" "Test"
+    [[ "${status}" -eq 0 ]]
     [[ -n "${_SCHEDULED_PID:-}" ]]
 
-    # Wait for the task to complete
-    sleep 2
-    # The callback should have been executed
-    [[ -f "${test_flag}" ]]
+    # Wait up to 5 seconds for callback
+    local waited=0
+    while [[ ! -s "${flag_file}" && "${waited}" -lt 5 ]]; do
+        sleep 0.5
+        waited=$((waited + 1))
+    done
+    [[ -s "${flag_file}" ]]
+    rm -f "${flag_file}"
 }
 
 @test "schedule_rollback sets _SCHEDULED_PID immediately" {
+    # rollback_ssh is the only callback allowed by the whitelist
+    rollback_ssh() { true; }
+    export -f rollback_ssh
+
     local old_pid="${_SCHEDULED_PID:-}"
-    schedule_rollback 10 "true" "Test"
+    schedule_rollback 10 "rollback_ssh" "Test"
     [[ -n "${_SCHEDULED_PID}" ]]
     [[ "${_SCHEDULED_PID}" != "${old_pid}" ]]
 
@@ -74,7 +83,11 @@ teardown() {
 # ── cancel_scheduled_task behavior tests ──
 
 @test "cancel_scheduled_task can cancel a scheduled task" {
-    schedule_rollback 30 "true" "Cancellable test"
+    # rollback_ssh is the only callback allowed by the whitelist
+    rollback_ssh() { true; }
+    export -f rollback_ssh
+
+    schedule_rollback 30 "rollback_ssh" "Cancellable test"
     local pid="${_SCHEDULED_PID:-}"
 
     # Verify the process exists
@@ -85,10 +98,9 @@ teardown() {
     [[ "${status}" -eq 0 ]]
 }
 
-@test "cancel_scheduled_task returns 1 for non-existent PID" {
-    run cancel_scheduled_task "999999"
-    # This will fail because the PID doesn't exist
-    [[ "${status}" -eq 1 ]] || [[ "${status}" -eq 0 ]]
+@test "cancel_scheduled_task fails for non-existent PID" {
+    run cancel_scheduled_task 99999
+    [[ "${status}" -eq 1 ]]
 }
 
 @test "cancel_scheduled_task handles empty PID" {

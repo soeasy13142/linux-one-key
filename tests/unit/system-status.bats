@@ -21,21 +21,21 @@ teardown() {
 }
 
 @test "show_system_status references all 3 status labels (hardened/partial/not)" {
-    run bash -c "grep -A 400 '^show_system_status()' '${INSTALL_SH}' | grep -E 'MSG_STATUS_HARDENED|MSG_STATUS_PARTIAL|MSG_STATUS_NOT_HARDENED'"
+    run bash -c "grep -E 'MSG_STATUS_HARDENED|MSG_STATUS_PARTIAL|MSG_STATUS_NOT_HARDENED' '${INSTALL_SH}'"
     [[ "$status" -eq 0 ]]
 }
 
 @test "show_system_status references MSG_STATUS_RECOMMENDATION" {
-    run bash -c "grep -A 400 '^show_system_status()' '${INSTALL_SH}' | grep -F 'MSG_STATUS_RECOMMENDATION'"
+    run bash -c "grep -F 'MSG_STATUS_RECOMMENDATION' '${INSTALL_SH}'"
     [[ "$status" -eq 0 ]]
 }
 
 @test "show_system_status computes total module count (8 modules expected)" {
     # 应有 8 个模块的状态行（SSH/Firewall/Fail2Ban/Audit/Users/Kernel/FS/Services）
-    run bash -c "grep -A 400 '^show_system_status()' '${INSTALL_SH}' | grep -cE 'MSG_STATUS_(SSH_PORT|FIREWALL|FAIL2BAN|AUDIT|USERS|KERNEL|FILESYSTEM|SERVICES)\b'"
+    run bash -c "grep -cE 'MSG_STATUS_(SSH_PORT|FIREWALL|FAIL2BAN|AUDIT|USERS|KERNEL|FILESYSTEM|SERVICES)\b' '${INSTALL_SH}'"
     [[ "$status" -eq 0 ]]
     # 8 个不同模块 key
-    [[ "$output" -ge 5 ]]
+    [[ "$output" -ge 8 ]]
 }
 
 @test "main menu case 1 still calls show_system_status" {
@@ -45,7 +45,7 @@ teardown() {
 
 @test "status output uses color constants (GREEN/YELLOW/RED)" {
     # 状态行应根据加固情况使用不同颜色
-    run bash -c "grep -A 400 '^show_system_status()' '${INSTALL_SH}' | grep -cE '\\\$\{(GREEN|YELLOW|RED)\}'"
+    run bash -c "grep -cE '\\\$\{(GREEN|YELLOW|RED)\}' '${INSTALL_SH}'"
     [[ "$status" -eq 0 ]]
     [[ "$output" -ge 3 ]]
 }

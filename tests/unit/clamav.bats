@@ -169,8 +169,15 @@ teardown() {
 
 @test "_install_clamav succeeds on ubuntu" {
     DETECTED_OS="ubuntu"
+    function apt-get() {
+        case "$*" in
+            *install*) return 0 ;;
+            *) command apt-get "$@" ;;
+        esac
+    }
+    export -f apt-get
     run _install_clamav
-    [[ "${status}" -eq 1 ]]  # fails because apt-get mock not available
+    [[ "${status}" -eq 0 ]]
 }
 
 # ═══════════════════════════════════════════

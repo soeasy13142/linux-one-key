@@ -80,40 +80,48 @@ teardown() {
 
 @test "mode-selection: is_mode_compatible with full + basic returns 0" {
     INSTALL_MODE="full"
-    is_mode_compatible "basic"
+    run is_mode_compatible "basic"
+    [[ "${status}" -eq 0 ]]
 }
 
 @test "mode-selection: is_mode_compatible with full + standard returns 0" {
     INSTALL_MODE="full"
-    is_mode_compatible "standard"
+    run is_mode_compatible "standard"
+    [[ "${status}" -eq 0 ]]
 }
 
 @test "mode-selection: is_mode_compatible with full + advanced returns 0" {
     INSTALL_MODE="full"
-    is_mode_compatible "advanced"
+    run is_mode_compatible "advanced"
+    [[ "${status}" -eq 0 ]]
 }
 
 @test "mode-selection: is_mode_compatible with full + custom returns 0" {
     INSTALL_MODE="full"
-    is_mode_compatible "custom"
+    run is_mode_compatible "custom"
+    [[ "${status}" -eq 0 ]]
 }
 
 @test "mode-selection: is_mode_compatible with lite + basic returns 0" {
     INSTALL_MODE="lite"
-    is_mode_compatible "basic"
+    run is_mode_compatible "basic"
+    [[ "${status}" -eq 0 ]]
 }
 
 @test "mode-selection: is_mode_compatible with lite + custom returns 0" {
     INSTALL_MODE="lite"
-    is_mode_compatible "custom"
+    run is_mode_compatible "custom"
+    [[ "${status}" -eq 0 ]]
 }
 
 @test "mode-selection: is_mode_compatible with lite + standard returns 1" {
     INSTALL_MODE="lite"
-    ! is_mode_compatible "standard"
+    run is_mode_compatible "standard"
+    [[ "${status}" -eq 1 ]]
 }
 
 @test "mode-selection: is_mode_compatible with lite + advanced returns 1" {
     INSTALL_MODE="lite"
-    ! is_mode_compatible "advanced"
+    run is_mode_compatible "advanced"
+    [[ "${status}" -eq 1 ]]
 }

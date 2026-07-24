@@ -164,15 +164,18 @@ teardown() {
         return 0
     }
     backup_file() { return 0; }
-    grep() { return 1; }  # No existing NTP config match
+    function grep() {
+        # Only mock for NTP config check
+        if [[ "$*" == *"pool"* ]]; then return 1; fi
+        command grep "$@"
+    }
     cat() { return 0; }   # Append to config
     systemctl_enable() { return 0; }
     restart_service() { return 0; }
     export -f systemctl timedatectl chronyc ntpd apt-get command backup_file grep cat systemctl_enable restart_service
 
     run setup_ntp
-    # Should succeed or warn but not crash
-    [[ "${status}" -eq 0 ]] || [[ "${status}" -eq 1 ]]
+    [[ "${status}" -eq 0 ]]
 }
 
 @test "setup_ntp skips when chronyc tracking succeeds" {

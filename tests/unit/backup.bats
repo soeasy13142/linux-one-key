@@ -86,7 +86,7 @@ teardown() {
 
     # Backup path should contain the TIMESTAMP
     local backup_path="${output}"
-    [[ "${backup_path}" == *"${TIMESTAMP}"* ]] || [[ "${backup_path}" == *".bak."* ]]
+    [[ "${backup_path}" == *"${TIMESTAMP}"* ]]
 }
 
 @test "backup_file preserves original file" {
