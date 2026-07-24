@@ -10,11 +10,11 @@
 
 | 项 | 值 |
 |---|---|
-| 归档日期 | 2026-07-10 |
-| 归档原因 | HANDOVER.md 从 638 行精简到 ~250 行（详见 `docs/plans/2026-07-10_14-30_slim-handover_nogit.md`） |
-| 归档范围 | 2026-06-20 ~ 2026-06-24（项目搭建期与早期实现期） |
-| 归档条数 | 176 条 |
-| 主文件保留范围 | 2026-06-25 起（41 条，详见 `HANDOVER.md` "## 8. 变更日志"） |
+| 归档日期 | 2026-07-10（首次）/ 2026-07-24（二次：HANDOVER.md 精简重构，追加 ~170 条） |
+| 归档原因 | HANDOVER.md 按 Claude Code 规范精简为 ~70 行状态快照，所有 changelog 归入本文件 |
+| 归档范围 | 2026-06-20 ~ 2026-07-24（项目搭建期 → v1.0.1 完整历程） |
+| 归档条数 | ~346 条 |
+| 主文件 | 不再保留 changelog（git log 替代），仅保留状态/决策/下一步 |
 
 ---
 
@@ -198,3 +198,102 @@
 | 2026-06-24 | CREATE | `tests/unit/services.bats` | 服务管理单元测试（35 个用例：常量、函数存在性、端口安全检查、状态输出格式） |
 | 2026-06-24 | UPDATE | `scripts/security/README.md` | 更新 services.sh 状态为 ✅ 完成，添加模块说明 |
 | 2026-06-24 | UPDATE | `HANDOVER.md` | 更新进度状态、文件清单、下一步工作、变更日志 |
+
+---
+
+## 第二批归档（2026-07-24 HANDOVER.md 精简重构时迁入）
+
+> 以下条目原在 HANDOVER.md §8 变更日志（2026-06-25 ~ 2026-07-24），现统一归档。
+
+| 2026-06-25 | CREATE | `.claude/reviews/false-success-bug-audit-20260625.md` | 静默失败专项审计 |
+| 2026-06-25 | UPDATE | `scripts/base/utils.sh` | 修复 get_os_type()/get_os_version() 环境变量污染 |
+| 2026-06-25 | UPDATE | `scripts/security/ssh.sh` | 安全加固修复 |
+| 2026-06-25 | UPDATE | `scripts/security/fail2ban.sh` | 安全加固修复 |
+| 2026-06-25 | UPDATE | `scripts/security/audit.sh` | 安全加固修复 |
+| 2026-06-25 | UPDATE | `scripts/base/init.sh` | 修复 |
+| 2026-06-25 | UPDATE | `scripts/security/kernel.sh` | 修复 |
+| 2026-06-25 | UPDATE | `scripts/security/users.sh` | 修复 |
+| 2026-06-25 | UPDATE | `scripts/security/firewall.sh` | 修复 |
+| 2026-06-25 | UPDATE | `scripts/security/filesystem.sh` | 修复 |
+| 2026-06-26 | UPDATE | `scripts/security/firewall.sh`, `init.sh`, `utils.sh`, `detect.sh`, `install.sh`, `ssh.sh`, `users.sh`, `fail2ban.sh`, `audit.sh` | 第二轮 Code Review 修复 |
+| 2026-06-26 | UPDATE | `review/bug-review-comprehensive.md` | Code Review 报告更新 |
+| 2026-06-26 | UPDATE | `HANDOVER.md` | 变更日志同步 |
+| 2026-07-10 | CREATE | `docs/plans/` | 计划文件目录初始化 |
+| 2026-07-10 | UPDATE | `.claude/CLAUDE.md` | 项目结构章节更新 |
+| 2026-07-10 | CREATE | `docs/handover-archive.md` | 历史变更日志归档（176 条，2026-06-20~24） |
+| 2026-07-10 | UPDATE | `HANDOVER.md` | 变更日志精简 + 删除重复"已完成的工作"节 |
+| 2026-07-10 | CREATE | `scripts/dev/gen-file-tree.sh` | 自动生成文件树脚本 |
+| 2026-07-10 | UPDATE | `.gitignore` | 忽略 docs/file-tree.generated.md |
+| 2026-07-10 | UPDATE | `HANDOVER.md` | 文件清单改为概览表 |
+| 2026-07-10 | FIX | `.claude/settings.local.json` | JSON 语法修复 |
+| 2026-07-10 | CREATE | `docs/design/archive/` | 设计文档归档目录 |
+| 2026-07-10 | UPDATE | `docs/design/README.md` | 重写为分层索引 |
+| 2026-07-10 | CREATE | `docs/design/main-menu-redesign-v2.md` | 主菜单重构 v2 设计 |
+| 2026-07-10 | CREATE | `docs/plans/2026-07-10_16-00_main-menu-redesign-v2_nogit.md` | writing-plans 实施计划 |
+| 2026-07-10 | CREATE | `tests/unit/menu.bats` | i18n 键 smoke 测试（10 cases） |
+| 2026-07-10 | UPDATE | `scripts/lang/zh.sh`, `scripts/lang/en.sh` | +81 行 i18n 键 |
+| 2026-07-10 | UPDATE | `install.sh` | +6 submenu 函数（~240 行），状态检测升级，view_report 升级 |
+| 2026-07-10 | UPDATE | `install.sh` | 移除 `:-` i18n 兜底，精简参数错误 |
+| 2026-07-11 | CREATE | `docs/plans/2026-07-11_13-00_full-code-review-n4_nogit.md` | Round 4 Code Review 计划 |
+| 2026-07-11 | CREATE | `docs/code-reviews/round-4-comprehensive.md` | Round 4 综合报告：4C + 22H + 41M + 21L |
+| 2026-07-12 | CREATE | `scripts/server/k3s.sh` | K3s 安装/卸载/状态检查模块 |
+| 2026-07-12 | UPDATE | `scripts/lang/zh.sh`, `scripts/lang/en.sh` | +28 K3s i18n 键 |
+| 2026-07-12 | UPDATE | `install.sh` | K3s 菜单集成 |
+| 2026-07-12 | CREATE | `tests/unit/k3s.bats` | K3s 单元测试（17 cases） |
+| 2026-07-12 | FIX | `scripts/security/ssh.sh` | C1 SSH at timer + M5 i18n + M9 order |
+| 2026-07-12 | FIX | `scripts/security/firewall.sh` | C2 UFW locale + H6 return check |
+| 2026-07-12 | FIX | `tests/unit/firewall.bats`, `tests/unit/fail2ban.bats` | C3-C4 移除假 mock |
+| 2026-07-12 | FIX | `scripts/base/init.sh` | H1 source guard + H3 apt-get protection |
+| 2026-07-12 | FIX | `scripts/base/report.sh` | H2 source guard + M4 i18n |
+| 2026-07-12 | FIX | `install.sh` | H4 GREEN dead code + M13-M17 i18n |
+| 2026-07-12 | FIX | `scripts/security/fail2ban.sh` | H5 i18n + H7 dnf fallback |
+| 2026-07-12 | FIX | `scripts/security/audit.sh` | H13 ausearch + M33 i18n |
+| 2026-07-12 | FIX | `config/audit/audit.rules` | H14+H15 execve + b32 variants |
+| 2026-07-12 | FIX | `scripts/base/utils.sh`, `scripts/security/*`, `scripts/lang/*`, `tests/unit/*` | Round 4 M1-M31 批量修复 |
+| 2026-07-12 | DELETE | `.claude/prds/` | 清理重复 PRD |
+| 2026-07-12 | MIGRATE | `.claude/plans/` → `docs/plans/` | 旧计划文件迁移 |
+| 2026-07-12 | MIGRATE | `docs/superpowers/` → `docs/design/archive/` | 设计文档归档 |
+| 2026-07-12 | UPDATE | `docs/README.md` | 重写为统一文档索引 |
+| 2026-07-12 | CREATE | `tests/docker/` | Docker Phase 1 测试框架（9 Dockerfiles + 8 模块测试） |
+| 2026-07-12 | PASS | `test-all.sh --phase 1` | Phase 1：9 distros × 8 modules = **72/72 全部通过** |
+| 2026-07-12 | CREATE | `tests/docker/images/ubuntu/22.04.phase2.Dockerfile` | Phase 2 特权容器镜像（Ubuntu 22.04） |
+| 2026-07-12 | CREATE | `tests/docker/images/centos/7.phase2.Dockerfile` | Phase 2 特权容器镜像（CentOS 7） |
+| 2026-07-12 | CREATE | `tests/docker/images/debian/12.phase2.Dockerfile` | Phase 2 特权容器镜像（Debian 12） |
+| 2026-07-12 | UPDATE | `tests/docker/lib/common.bash` | Phase 2 特权容器函数 |
+| 2026-07-12 | CREATE | `tests/docker/tests/phase2/` | Phase 2 7 个模块验证脚本 |
+| 2026-07-12 | PASS | `test-all.sh --phase 2` | Phase 2：3 distros × 7 modules = **21/21 全部通过** |
+| 2026-07-13 | FIX | `scripts/base/detect.sh` | SC2317: 移除冗余 `|| true` |
+| 2026-07-13 | FIX | `scripts/base/init.sh` | SC2120/SC2119: setup_timezone 显式传参 |
+| 2026-07-13 | FIX | `scripts/base/utils.sh` | SC2002: cat→重定向 |
+| 2026-07-13 | FIX | `scripts/security/fail2ban.sh`, `kernel.sh` | ShellCheck 修复 |
+| 2026-07-13 | FIX | `install.sh` | SC2059 + SC2012: printf + find 修复 |
+| 2026-07-13 | CREATE | `.github/workflows/test.yml` | GitHub Actions CI（ShellCheck + Bats + Phase 1 + Phase 2） |
+| 2026-07-13 | CREATE | `.github/workflows/markdown-lint.yml` | Markdown 格式检查 |
+| 2026-07-13 | CREATE | `.github/workflows/codeql.yml` | CodeQL 安全扫描 |
+| 2026-07-13 | PASS | CI | **全部 4 job 首次通过** |
+| 2026-07-15 | CREATE | `docs/plans/2026-07-15_10-30_full-code-review-n5_nogit.md` | Round 5 Code Review 计划 |
+| 2026-07-15 | CREATE | `docs/code-reviews/round-5-comprehensive.md` | Round 5：0C + 20H + 46M + 49L（6 组并行审查） |
+| 2026-07-21 | CREATE | `docs/code-reviews/2026-07-21_full-project-security-audit.md` | 全项目安全审计：0C + 7H + 19M + 13L |
+| 2026-07-21 | FIX | `scripts/base/utils.sh` | H1: schedule_rollback() 添加 disown |
+| 2026-07-21 | FIX | `install.sh` | H3: curl 管道检测后 set -u；M10/M11: timeout + trap |
+| 2026-07-21 | FIX | `scripts/security/ssh.sh` | M1: passphrase 泄露修复 |
+| 2026-07-21 | FIX | `scripts/security/filesystem.sh` | M2: RHEL /etc/shadow 权限 000 |
+| 2026-07-21 | FIX | `scripts/lang/zh.sh`, `en.sh` | M4: ufw 双后端提示 |
+| 2026-07-21 | FIX | `scripts/security/fail2ban.sh` | M6: ignoreip ::1 |
+| 2026-07-21 | FIX | `config/sysctl/hardening.conf` | M8: +5 CIS 参数 |
+| 2026-07-21 | FIX | `config/audit/auditd.conf` | M12: flush DATA |
+| 2026-07-21 | PASS | `bats tests/unit/*.bats` | **259/259 全部通过** |
+| 2026-07-21 | RELEASE | `v1.0.1` | 全项目安全审计修复（10 项）+ 文档规范化 |
+| 2026-07-21 | REWRITE | `.claude/CLAUDE.md` | 文档规范化：364→90 行 |
+| 2026-07-21 | CREATE | `CONTRIBUTING.md` | 贡献指南 |
+| 2026-07-21 | CREATE | `LICENSE` | MIT 开源许可证 |
+| 2026-07-21 | MOVE | `review/` → `docs/code-reviews/`, `RELEASE_CHECKLIST.md` → `docs/`, `docs/docker-test-debug-log.md` → `tests/` | 文档归类 |
+| 2026-07-21 | UPDATE | `README.md` | 开发指南引用 CONTRIBUTING.md |
+| 2026-07-24 | CREATE | `docs/design/lite-vs-full-mode.md` | Lite/Full 双模式设计文档 |
+| 2026-07-24 | CREATE | `scripts/base/mode.sh` | 模块注册表 |
+| 2026-07-24 | UPDATE | `scripts/lang/zh.sh`, `scripts/lang/en.sh` | +11 模式相关 i18n 键 |
+| 2026-07-24 | UPDATE | `install.sh` | --lite 参数解析 + 模式过滤 |
+| 2026-07-24 | CREATE | `tests/unit/mode.bats` | 13 个模式模块单元测试 |
+| 2026-07-24 | REWRITE | `.claude/CLAUDE.md` | consolidating-docs skill 重构 |
+| 2026-07-24 | FIX | `docs/README.md`, `docs/design/README.md`, docs/plans/ | cross-reference 修复 |
+| 2026-07-24 | REWRITE | `HANDOVER.md` | 精简为 ~70 行状态快照，全量 changelog 归入本文件 |
