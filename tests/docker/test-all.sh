@@ -20,9 +20,10 @@ set -euo pipefail
 # Phase 1 distros:
 #   ubuntu:20.04, ubuntu:22.04, ubuntu:24.04
 #   debian:11, debian:12
-#   centos:7
+#   centos:7, centos:stream9
 #   rockylinux:8, rockylinux:9
 #   almalinux:9
+#   fedora:latest
 #
 # Phase 1 modules:
 #   ssh, firewall, fail2ban, audit, users, kernel, filesystem, services
@@ -43,9 +44,11 @@ PHASE1_DISTROS=(
     "debian:11"
     "debian:12"
     "centos:7"
+    "centos:stream9"
     "rockylinux:8"
     "rockylinux:9"
     "almalinux:9"
+    "fedora:latest"
 )
 
 PHASE2_DISTROS=(

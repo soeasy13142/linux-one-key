@@ -1,0 +1,35 @@
+# =============================================================================
+# Fedora latest — Phase 1: Config Validation
+# =============================================================================
+# Purpose: Lightweight container for validating bash-based security scripts
+# and configuration files. No systemd / privileged mode required.
+#
+# Base:  fedora:latest
+# Shell: bash
+# =============================================================================
+
+FROM fedora:latest
+
+# Install minimal runtime dependencies for config validation
+# NOTE: Fedora ships curl-minimal / coreutils-single by default;
+# installing the full packages conflicts, so skip them.
+# Fedora has full packages in main repo — no EPEL needed.
+RUN dnf install -y \
+    bash \
+    sed \
+    grep \
+    findutils \
+    gawk \
+    util-linux \
+    openssh-server \
+    iptables \
+    ca-certificates \
+    && dnf clean all
+
+# Create project directory
+RUN mkdir -p /opt/linux-one-key
+WORKDIR /opt/linux-one-key
+
+# NOTE: Project code is COPY'd at runtime by the test harness.
+
+CMD ["bash"]
