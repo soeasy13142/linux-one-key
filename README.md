@@ -31,6 +31,7 @@
 
 ## 功能特性 / Features
 
+- [x] ⚡ **Lite/Full 双模式**（`--lite` 精简版 vs 完整版，低内存服务器优化）
 - [x] SSH 安全加固（端口、密钥、算法、登录策略）
 - [x] 防火墙配置（UFW / firewalld 自动适配）
 - [x] Fail2Ban 入侵防护（SSH 暴力破解防护）
@@ -51,9 +52,27 @@
 
 ## 快速开始 / Quick Start
 
-### 方式一：curl 管道执行（推荐）
+> **💡 新功能：低配服务器可用 `--lite` 精简模式**（见下方「方式四」）
 
-适合全新服务器，一行命令即可启动：
+### 方式一：精简模式执行 — 低内存服务器推荐 ⭐
+
+> 适合 **1GB 以下内存** 的轻量云服务器。只执行最核心的安全加固（SSH + 防火墙 + 内核参数），
+> **不启动** Fail2Ban（-50~100MB）、auditd（-20~50MB）等守护进程，将内存留给业务应用。
+
+```bash
+# 一行命令，精简安装
+curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash -s -- --lite
+
+# 或下载后本地运行
+wget https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh
+sudo bash install.sh --lite
+```
+
+---
+
+### 方式二：完整模式执行（默认，标准服务器推荐）
+
+适合标准配置云服务器（2GB+ 内存），运行全部 9 个安全模块：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash
@@ -61,7 +80,7 @@ curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/inst
 
 > 脚本会自动下载完整仓库到临时目录，然后启动交互式向导。
 
-### 方式二：下载后执行
+### 方式三：下载后执行
 
 适合想先查看脚本内容再运行的用户：
 
@@ -71,7 +90,7 @@ chmod +x install.sh
 sudo ./install.sh
 ```
 
-### 方式三：克隆仓库执行
+### 方式四：克隆仓库执行
 
 适合开发者或需要自定义修改的用户：
 
@@ -82,18 +101,6 @@ sudo bash install.sh
 ```
 
 > **注意**：所有方式都需要 root 或 sudo 权限运行。
-
-### 方式四：精简模式执行（低内存服务器适用）
-
-适合低配云服务器（1GB 以下内存），只执行核心安全加固：
-
-```bash
-# 精简版（SSH + 防火墙 + 内核参数）
-curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash -s -- --lite
-
-# 或下载后执行
-sudo bash install.sh --lite
-```
 
 ---
 
@@ -258,34 +265,44 @@ Step 9: 生成安全报告
 
 ---
 
-## 精简版 / 完整版双模式
+## ⚡ 精简版 vs 完整版 — 模式选择指南
 
-脚本支持两种运行模式，通过 `--lite` 参数切换：
+脚本支持两种运行模式，你可以在 curl 时通过 `--lite` 参数选择：
 
-| 模式 | 命令 | 包含模块 | 适用场景 |
-|------|------|----------|----------|
-| **完整版**（默认） | `sudo bash install.sh` | 全部 9 个安全模块 | 标准云服务器（2GB+ 内存） |
-| **精简版** | `sudo bash install.sh --lite` | SSH + 防火墙 + 内核参数 | 低内存服务器（1GB 以下） |
+### 🚀 精简模式 (`--lite`) — 为低内存服务器而生
 
-### 精简版特点
-
-- **内存优化**：不启动 Fail2Ban（Python 守护进程 ~50-100MB）和 auditd（~20-50MB）
-- **零配置开销**：SSH 和内核参数均为纯配置文件修改
-- **快速执行**：仅含 3 个核心安全步骤，耗时减半
-
-### 在 curl 管道中使用
+> **省内存 · 免守护进程 · 零配置开销**
 
 ```bash
-# 完整版（默认）
-curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash
-
-# 精简版
 curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash -s -- --lite
 ```
 
-### 菜单界面差异
+| 特性 | 说明 |
+|------|------|
+| 包含模块 | SSH 加固 + 防火墙 + 内核参数（3 项核心安全） |
+| 内存节省 | **~70~150MB** — 不启动 Fail2Ban (~50-100MB) 和 auditd (~20-50MB) |
+| 守护进程 | 仅防火墙 1 个轻量 daemon，其余为纯配置文件修改 |
+| 适用场景 | **1GB 以下内存**的轻量云服务器（阿里云轻量、AWS t2.nano/nano 等） |
+| 执行耗时 | 约完整版一半 |
 
-精简版主菜单中，完整版专属模块会显示 `[仅在完整版中可用]` 标签。选择后会提示切换到完整版。
+### 🏢 完整模式（默认） — 全功能安全加固
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash
+```
+
+| 特性 | 说明 |
+|------|------|
+| 包含模块 | 全部 9 个安全模块（+Fail2Ban/Audit/用户管理/文件系统/服务管理/K3s） |
+| 适用场景 | **2GB+ 内存**的标准云服务器 |
+
+### 菜单差异
+
+精简版主菜单中，完整版专属模块会标灰显示 `[仅在完整版中可用]` 标签，选择后会提示切换到完整版。
+
+### 后续功能规划
+
+所有新增功能将**只进入完整版**，精简版保持最小安全基线不变。
 
 ---
 
