@@ -12,7 +12,9 @@ readonly _MODE_LOADED=1
 # 模式常量
 # ═══════════════════════════════════════════
 
+# shellcheck disable=SC2034 # Public API — consumed by sourcing scripts and Bats tests
 readonly MODE_LITE="lite"
+# shellcheck disable=SC2034 # Public API — consumed by sourcing scripts and Bats tests
 readonly MODE_FULL="full"
 
 # ═══════════════════════════════════════════
@@ -35,7 +37,9 @@ readonly MODE_FULL="full"
 
 # Module lists
 MODE_LITE_MODULES=("ssh" "firewall" "kernel")
+# shellcheck disable=SC2034 # Public API — consumed by sourcing scripts and Bats tests
 MODE_FULL_MODULES=("fail2ban" "audit" "users" "filesystem" "services" "k3s" "swap" "autoupdate" "aide" "clamav" "rootkit")
+# shellcheck disable=SC2034 # Public API — consumed by sourcing scripts and Bats tests
 MODE_ALL_MODULES=("ssh" "firewall" "kernel" "fail2ban" "audit" "users" "filesystem" "services" "k3s" "swap" "autoupdate" "aide" "clamav" "rootkit")
 
 # ═══════════════════════════════════════════
