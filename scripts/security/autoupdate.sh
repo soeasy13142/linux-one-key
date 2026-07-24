@@ -134,8 +134,8 @@ _install_yum_cron() {
 
 # 配置 20auto-upgrades (Ubuntu/Debian)
 _configure_auto_upgrades() {
-    local enable_auto="${1:-1}"
-    local enable_clean="${2:-1}"
+    local enable_auto="1"
+    local enable_clean="1"
 
     log_step "${MSG_AUTOUPDATE_CONFIGURE} (20auto-upgrades)"
 
