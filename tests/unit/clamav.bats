@@ -233,3 +233,55 @@ teardown() {
     run run_clamav_wizard
     [[ "${status}" -eq 0 ]]
 }
+
+# ═══════════════════════════════════════════
+# Clamd 函数测试
+# ═══════════════════════════════════════════
+
+@test "_install_clamd function exists" {
+    type _install_clamd
+}
+
+@test "_configure_clamd function exists" {
+    type _configure_clamd
+}
+
+@test "_start_clamd function exists" {
+    type _start_clamd
+}
+
+@test "_disable_clamd function exists" {
+    type _disable_clamd
+}
+
+@test "check_clamav_status includes clamd_enabled" {
+    run check_clamav_status
+    [[ "${output}" =~ clamav_clamd_enabled ]]
+}
+
+@test "check_clamav_status reports clamd_enabled=yes when service is enabled" {
+    # Mock systemctl to report clamav-daemon as enabled
+    systemctl() {
+        case "$*" in
+            "is-enabled clamav-daemon") return 0 ;;
+            "is-enabled clamd") return 1 ;;
+            *) return 0 ;;
+        esac
+    }
+    export -f systemctl
+    # Re-source to pick up systemctl override via command -v
+    run check_clamav_status
+    [[ "${output}" =~ clamav_clamd_enabled=yes ]]
+}
+
+@test "_configure_clamd creates config file" {
+    run _configure_clamd
+    [[ -f "${CLAMAVD_CONF}" ]]
+}
+
+@test "_configure_clamd produces valid clamd.conf" {
+    _configure_clamd
+    grep -q "TCPSocket 3310" "${CLAMAVD_CONF}"
+    grep -q "LocalSocket" "${CLAMAVD_CONF}"
+    grep -q "ScanArchive yes" "${CLAMAVD_CONF}"
+}

@@ -1160,6 +1160,21 @@ MSG_STATUS_CLAMAV="ClamAV"
 MSG_REPORT_WARN_CLAMAV="ClamAV 已安装，请保持病毒库更新：freshclam"
 MSG_TASK_CLAMAV="ClamAV 病毒扫描"
 
+# ClamAV clamd 守护进程
+MSG_CLAMAV_CLAMD_PROMPT="是否启用 ClamAV 守护进程（clamd）进行实时保护？（需要额外 ~300MB 内存）"
+MSG_CLAMAV_CLAMD_SKIPPED="已跳过 clamd 安装"
+MSG_CLAMAV_CLAMD_INSTALL="正在安装 clamd 守护进程..."
+MSG_CLAMAV_CLAMD_INSTALL_DONE="clamd 安装完成"
+MSG_CLAMAV_CLAMD_ALREADY="clamd 已安装"
+MSG_CLAMAV_CLAMD_CONFIGURE="正在配置 clamd..."
+MSG_CLAMAV_CLAMD_CONFIGURE_DONE="clamd 配置完成"
+MSG_CLAMAV_CLAMD_ENABLE="正在启动 clamd 服务..."
+MSG_CLAMAV_CLAMD_ENABLE_DONE="clamd 服务已启动"
+MSG_CLAMAV_CLAMD_DISABLE="正在停止 clamd 服务..."
+MSG_CLAMAV_CLAMD_DISABLE_DONE="clamd 服务已停止"
+MSG_CLAMAV_CLAMD_DISABLED="clamd 未启用"
+MSG_STATUS_CLAMD="clamd 状态"
+
 # ═══════════════════════════════════════════
 # Rootkit 检测
 # ═══════════════════════════════════════════

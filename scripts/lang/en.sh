@@ -1160,6 +1160,21 @@ MSG_STATUS_CLAMAV="ClamAV"
 MSG_REPORT_WARN_CLAMAV="ClamAV installed. Keep virus definitions updated with freshclam."
 MSG_TASK_CLAMAV="ClamAV Virus Scanner"
 
+# ClamAV clamd daemon
+MSG_CLAMAV_CLAMD_PROMPT="Enable ClamAV daemon (clamd) for real-time protection? (Requires ~300MB additional RAM)"
+MSG_CLAMAV_CLAMD_SKIPPED="Skipped clamd installation"
+MSG_CLAMAV_CLAMD_INSTALL="Installing clamd daemon..."
+MSG_CLAMAV_CLAMD_INSTALL_DONE="Clamd installation complete"
+MSG_CLAMAV_CLAMD_ALREADY="Clamd already installed"
+MSG_CLAMAV_CLAMD_CONFIGURE="Configuring clamd..."
+MSG_CLAMAV_CLAMD_CONFIGURE_DONE="Clamd configured"
+MSG_CLAMAV_CLAMD_ENABLE="Starting clamd service..."
+MSG_CLAMAV_CLAMD_ENABLE_DONE="Clamd service started"
+MSG_CLAMAV_CLAMD_DISABLE="Stopping clamd service..."
+MSG_CLAMAV_CLAMD_DISABLE_DONE="Clamd service stopped"
+MSG_CLAMAV_CLAMD_DISABLED="Clamd not enabled"
+MSG_STATUS_CLAMD="Clamd Status"
+
 # ═══════════════════════════════════════════
 # Rootkit Detection
 # ═══════════════════════════════════════════

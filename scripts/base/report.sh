@@ -230,6 +230,7 @@ generate_report() {
                 clamav_status=$(check_clamav_status 2>/dev/null)
                 echo "    - DB up-to-date: $(echo "${clamav_status}" | grep '^clamav_db_uptodate=' | cut -d= -f2)"
                 echo "    - Cron: $(echo "${clamav_status}" | grep '^clamav_cron_enabled=' | cut -d= -f2)"
+                echo "    - ${MSG_STATUS_CLAMD}: $(echo "${clamav_status}" | grep '^clamav_clamd_enabled=' | cut -d= -f2)"
             fi
         fi
 
