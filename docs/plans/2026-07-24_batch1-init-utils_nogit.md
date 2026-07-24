@@ -451,4 +451,4 @@ Phase 6: Documentation
 - [x] init.bats passes (~20 test cases)
 - [x] swap.bats passes (~18 test cases)
 - [x] ShellCheck passes on all modified files
-- [ ] All existing tests still pass
+- [x] All existing tests still pass

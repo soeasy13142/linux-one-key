@@ -194,7 +194,7 @@ teardown() {
 
 @test "_configure_aide produces valid content" {
     _configure_aide
-    grep -q "database=file:" "${AIDE_CONF}"
+    grep -q "database_in=file:" "${AIDE_CONF}"
     grep -q "/etc/passwd" "${AIDE_CONF}"
     grep -q "/etc/shadow" "${AIDE_CONF}"
     grep -q "/etc/ssh/sshd_config" "${AIDE_CONF}"
