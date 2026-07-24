@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-07-24 · **版本**: v1.5.0 · **状态**: 🟢 全部待办项已完成
+> **最后更新**: 2026-07-24 · **版本**: v1.5.0 · **状态**: 🟢 全部待办项已完成 · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
 
 ## 会话恢复
 
@@ -31,7 +31,7 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 | i18n 方案 | source 语言文件 | 简单，无需 gettext |
 | 幂等设计 | 检查当前状态再操作 | 重复运行安全 |
 | Lite 模式 | SSH + Firewall + Kernel | 低内存 (<512MB) 服务器 |
-| 分发方式 | curl 管道执行 | 最简用户上手路径 |
+| 分发方式 | curl 管道执行 + npm/GitHub Packages | curl 最简上手；npm 支持 npx/npm i -g |
 | curl 管道检测 | 顶层 BASH_SOURCE 赋值 | 函数内返回 "main" 而非空 |
 | curl 交互输入 | exec 后重定向 /dev/tty | stdin 在管道结束后为 EOF |
 | sed 兼容 | uname 检测双语法 | macOS `sed -i ''` vs Linux `sed -i` |
