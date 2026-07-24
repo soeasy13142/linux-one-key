@@ -2,7 +2,7 @@
 title: "Batch 3: Security Plus Modules (AIDE / ClamAV / Rootkit Detection)"
 created: 2026-07-24
 updated: 2026-07-24
-status: pending
+status: done
 source: "PRD §2.13 + HANDOVER.md Batch 3"
 topic: "feature"
 ---
@@ -651,14 +651,14 @@ bats tests/unit/*.bats  # ensure no regressions
 
 ## Acceptance Criteria
 
-- [ ] `scripts/security/aide.sh` created — install, configure, db init, cron, wizard, status check
-- [ ] `scripts/security/clamav.sh` created — install, freshclam config + cron, optional scan cron, memory warning, wizard, status check
-- [ ] `scripts/security/rootkit.sh` created — install rkhunter + chkrootkit, configure, propupd, run scan, cron, wizard, status check
-- [ ] All i18n keys added for zh and en (~100 total across 3 modules)
-- [ ] `scripts/base/mode.sh` updated — 3 modules registered in MODE_FULL_MODULES and MODE_ALL_MODULES
-- [ ] `install.sh` updated — load 3 modules, menu items [13][14][15] with Lite guard, case dispatch, full wizard steps 9-11, status detection sections
-- [ ] `scripts/base/report.sh` updated — 3 report sections + warnings
-- [ ] Full wizard step counters updated ([0/13] through [12/13])
-- [ ] ShellCheck passes on all modified files
-- [ ] Bats tests pass (3 new test files + no regressions)
-- [ ] `HANDOVER.md` updated
+- [x] `scripts/security/aide.sh` created — install, configure, db init, cron, wizard, status check
+- [x] `scripts/security/clamav.sh` created — install, freshclam config + cron, optional scan cron, memory warning, wizard, status check
+- [x] `scripts/security/rootkit.sh` created — install rkhunter + chkrootkit, configure, propupd, run scan, cron, wizard, status check
+- [x] All i18n keys added for zh and en (~100 total across 3 modules)
+- [x] `scripts/base/mode.sh` updated — 3 modules registered in MODE_FULL_MODULES and MODE_ALL_MODULES
+- [x] `install.sh` updated — load 3 modules, menu items [13][14][15] with Lite guard, case dispatch, full wizard steps 9-11, status detection sections
+- [x] `scripts/base/report.sh` updated — 3 report sections + warnings
+- [x] Full wizard step counters updated ([0/13] through [12/13])
+- [x] ShellCheck passes on all modified files
+- [x] Bats tests pass (3 new test files + no regressions)
+- [x] `HANDOVER.md` updated

@@ -2,7 +2,7 @@
 title: "Batch 1: Init & Utility Enhancements (NTP / Swap / Base Tools)"
 created: 2026-07-24
 updated: 2026-07-24
-status: pending
+status: done
 source: "PRD §2.10-2.12 + HANDOVER.md v1.0.1 pending tasks"
 topic: "feature"
 ---
@@ -440,15 +440,15 @@ Phase 6: Documentation
 
 ### 9. Acceptance Criteria
 
-- [ ] `install_base_tools()` installs htop, net-tools, lsof, tree, git in addition to existing 4 tools
-- [ ] `setup_ntp()` detects existing NTP, installs chrony or ntp, configures servers, starts service
-- [ ] `setup_timezone()` accepts custom timezone parameter and validates it
-- [ ] `scripts/base/swap.sh` created with all internal and public functions
-- [ ] `setup_swap()` detects current swap, creates swap file per size rules, sets swappiness=10
-- [ ] i18n keys added for zh.sh and en.sh (~30 keys each)
-- [ ] Full-wizard Step 0 includes timezone interaction option
-- [ ] Report includes NTP sync status and swap info
-- [ ] init.bats passes (~20 test cases)
-- [ ] swap.bats passes (~18 test cases)
-- [ ] ShellCheck passes on all modified files
+- [x] `install_base_tools()` installs htop, net-tools, lsof, tree, git in addition to existing 4 tools
+- [x] `setup_ntp()` detects existing NTP, installs chrony or ntp, configures servers, starts service
+- [x] `setup_timezone()` accepts custom timezone parameter and validates it
+- [x] `scripts/base/swap.sh` created with all internal and public functions
+- [x] `setup_swap()` detects current swap, creates swap file per size rules, sets swappiness=10
+- [x] i18n keys added for zh.sh and en.sh (~30 keys each)
+- [x] Full-wizard Step 0 includes timezone interaction option
+- [x] Report includes NTP sync status and swap info
+- [x] init.bats passes (~20 test cases)
+- [x] swap.bats passes (~18 test cases)
+- [x] ShellCheck passes on all modified files
 - [ ] All existing tests still pass

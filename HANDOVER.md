@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-07-24 · **版本**: v1.1.0 · **状态**: 🟢 Batch 3 完成（AIDE/ClamAV/Rootkit）
+> **最后更新**: 2026-07-24 · **版本**: v1.1.0 · **状态**: 🟢 Batch 1-4 全部完成（计划文档同步标记）
 
 ## 会话恢复
 
@@ -49,10 +49,13 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 
 ## 下一步
 
-1. **发行版扩展**: RHEL 7+, Fedora Docker 测试
-2. **NTP 时间同步** (低)
-3. **基础工具** (低): htop, net-tools, lsof, tree, git 安装
-4. **clamd 可选安装**: 大内存服务器可选择启用 clamd 守护进程
+1. **🔄 发行版扩展**: RHEL 7+, Fedora Docker 测试
+2. **⏳ ssh-rollback.bats**: 新增 SSH 回滚专用 Bats 测试文件（当前功能已实现但缺专属测试覆盖）
+3. **⏳ clamd 可选安装**: 大内存服务器可选择启用 clamd 守护进程
+4. **✅ NTP 时间同步** — 已在 Batch 1 实现（init.sh: setup_ntp）
+5. **✅ 基础工具扩充** — 已在 Batch 1 实现（install_base_tools 含 htop/net-tools/lsof/tree/git）
+
+> ✅ = 已实现 · 🔄 = 待验证 · ⏳ = 待实现
 
 ## 参考
 

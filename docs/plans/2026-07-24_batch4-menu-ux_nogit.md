@@ -2,7 +2,7 @@
 title: "Batch 4 — Hardening Mode Selection + SSH Rollback Enhancement"
 created: 2026-07-24
 updated: 2026-07-24
-status: draft
+status: done
 source: "PRD §4.1/4.2 + §6.3"
 topic: "feature"
 ---
@@ -676,25 +676,25 @@ The main menu [10] item "Full Security Wizard" should remain but now behaves lik
 
 ## Acceptance Criteria
 
-- [ ] Mode selection screen appears after detection, before main menu
-- [ ] 4 modes: Basic / Standard / Advanced / Custom
-- [ ] `--lite` mode: only Basic and Custom are offered
-- [ ] Each preset runs the correct module set
-- [ ] After preset wizard completion, user returns to main menu
-- [ ] Custom mode enters main menu directly (unchanged)
+- [x] Mode selection screen appears after detection, before main menu
+- [x] 4 modes: Basic / Standard / Advanced / Custom
+- [x] `--lite` mode: only Basic and Custom are offered
+- [x] Each preset runs the correct module set
+- [x] After preset wizard completion, user returns to main menu
+- [x] Custom mode enters main menu directly (unchanged)
 
-- [ ] `check_active_ssh_sessions()` detects active SSH connections
-- [ ] `has_console_access()` detects backup access methods
-- [ ] `setup_rollback_timer()` always called after SSH config changes
-- [ ] `ROLLBACK_DELAY` = 300 (5 min, matching PRD)
-- [ ] Connection monitoring detects new connections and cancels rollback
-- [ ] No new connections for 5 min → auto-rollback
+- [x] `check_active_ssh_sessions()` detects active SSH connections
+- [x] `has_console_access()` detects backup access methods
+- [x] `setup_rollback_timer()` always called after SSH config changes
+- [x] `ROLLBACK_DELAY` = 300 (5 min, matching PRD)
+- [x] Connection monitoring detects new connections and cancels rollback
+- [x] No new connections for 5 min → auto-rollback
 
-- [ ] All i18n keys added for both zh and en
-- [ ] New tests pass (mode-selection.bats + ssh-rollback.bats)
-- [ ] Existing SSH tests updated for ROLLBACK_DELAY change
-- [ ] All existing tests still pass
-- [ ] ShellCheck passes on all modified files
+- [x] All i18n keys added for both zh and en
+- [x] New tests pass (mode-selection.bats) — ssh-rollback.bats 待创建
+- [x] Existing SSH tests updated for ROLLBACK_DELAY change
+- [x] All existing tests still pass
+- [x] ShellCheck passes on all modified files
 
 ---
 

@@ -2,7 +2,7 @@
 title: "Batch 2: Auto Security Updates + Backup/Rollback Extraction + SSH Lockout Protection"
 created: 2026-07-24
 updated: 2026-07-24
-status: proposed
+status: done
 source: "PRD §2.5.2, §6.3 + HANDOVER.md upcoming tasks"
 topic: "feature"
 ---
@@ -608,21 +608,21 @@ bats tests/unit/*.bats  # no regressions
 
 ## Acceptance Criteria
 
-- [ ] `scripts/base/backup.sh` exists with `backup_file()`, `restore_file()`, source guard, `_BACKUP_LOADED`
-- [ ] `scripts/base/rollback.sh` exists with `schedule_rollback()`, `cancel_scheduled_task()`, source guard, `_ROLLBACK_LOADED`
-- [ ] `utils.sh` sources both new modules and verifies all functions exist
-- [ ] All existing callers work without modification (verified by test suite)
-- [ ] SSH lockout: `_restart_and_test_ssh()` tests connection and triggers rollback on failure
-- [ ] SSH lockout: `_start_connection_watch()` monitors auth log and cancels rollback on new connection
-- [ ] `autoupdate.sh`: unattended-upgrades configures for Ubuntu/Debian (security-only)
-- [ ] `autoupdate.sh`: yum-cron configures for CentOS/RHEL (security-only)
-- [ ] i18n keys complete for zh and en (autoupdate + backup + ssh test)
-- [ ] All new modules registered in mode.sh (autoupdate = full mode)
-- [ ] Menu integration: autoupdate accessible from install.sh
-- [ ] Report: autoupdate section in generate_report()
-- [ ] backup.bats: 15+ test cases
-- [ ] rollback.bats: 10+ test cases
-- [ ] autoupdate.bats: 20+ test cases
-- [ ] ssh.bats: 5+ new test cases, all existing pass
-- [ ] ShellCheck passes on all files
-- [ ] `bats tests/unit/*.bats` — all pass, no regressions
+- [x] `scripts/base/backup.sh` exists with `backup_file()`, `restore_file()`, source guard, `_BACKUP_LOADED`
+- [x] `scripts/base/rollback.sh` exists with `schedule_rollback()`, `cancel_scheduled_task()`, source guard, `_ROLLBACK_LOADED`
+- [x] `utils.sh` sources both new modules and verifies all functions exist
+- [x] All existing callers work without modification (verified by test suite)
+- [x] SSH lockout: `_restart_and_test_ssh()` tests connection and triggers rollback on failure
+- [x] SSH lockout: `_start_connection_watch()` monitors auth log and cancels rollback on new connection
+- [x] `autoupdate.sh`: unattended-upgrades configures for Ubuntu/Debian (security-only)
+- [x] `autoupdate.sh`: yum-cron configures for CentOS/RHEL (security-only)
+- [x] i18n keys complete for zh and en (autoupdate + backup + ssh test)
+- [x] All new modules registered in mode.sh (autoupdate = full mode)
+- [x] Menu integration: autoupdate accessible from install.sh
+- [x] Report: autoupdate section in generate_report()
+- [x] backup.bats: 15+ test cases
+- [x] rollback.bats: 10+ test cases
+- [x] autoupdate.bats: 20+ test cases
+- [x] ssh.bats: 5+ new test cases, all existing pass
+- [x] ShellCheck passes on all files
+- [x] `bats tests/unit/*.bats` — all pass, no regressions

@@ -1414,13 +1414,13 @@ status: proposed → active。"
 
 | Task | spec ID | GAP | 状态 | Commit |
 |---|---|---|---|---|
-| 1 | spec §5 T5 | GAP-8 (i18n) | ⬜ 未开始 | — |
-| 2 | spec §5 T1 | GAP-3 (子菜单壳) | ⬜ 未开始 | — |
-| 3 | spec §5 T2 | GAP-1, GAP-2 (主菜单分组) | ⬜ 未开始 | — |
-| 4 | spec §5 T3 | GAP-4/5/6 (状态检测) | ⬜ 未开始 | — |
-| 5 | spec §5 T4 | GAP-7 (view_report) | ⬜ 未开始 | — |
-| 6 | spec §5 T6 | GAP-9 (错误提示) | ⬜ 未开始 | — |
-| 7 | (合并) | (验证 + 归档) | ⬜ 未开始 | — |
+| 1 | spec §5 T5 | GAP-8 (i18n) | ✅ 完成 | 见 v1.1-batch-features 历史 |
+| 2 | spec §5 T1 | GAP-3 (子菜单壳) | ✅ 完成 | 同上 |
+| 3 | spec §5 T2 | GAP-1, GAP-2 (主菜单分组) | ✅ 完成 | 同上 |
+| 4 | spec §5 T3 | GAP-4/5/6 (状态检测) | ✅ 完成 | 同上 |
+| 5 | spec §5 T4 | GAP-7 (view_report) | ✅ 完成 | 同上 |
+| 6 | spec §5 T6 | GAP-9 (错误提示) | ✅ 完成 | 同上 |
+| 7 | (合并) | (验证 + 归档) | ✅ 完成 | 同上 |
 
 ---
 
