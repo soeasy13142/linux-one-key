@@ -41,6 +41,11 @@ _backup_sysctl_config() {
 
 # 生成 sysctl 配置（当模板不存在时的 fallback）
 _generate_sysctl_config() {
+    local sysctl_dir
+    sysctl_dir="$(dirname "${SYSCTL_HARDENING_CONF}")"
+    if [[ ! -d "${sysctl_dir}" ]]; then
+        mkdir -p "${sysctl_dir}"
+    fi
     cat > "${SYSCTL_HARDENING_CONF}" << 'SYSCTL'
 ## 内核安全参数 - linux-one-key 自动生成
 ## 参考: CIS Benchmarks
