@@ -163,9 +163,6 @@ MSG_TASK_KERNEL="Kernel Security Hardening"
 MSG_TASK_FILESYSTEM="Filesystem Security"
 MSG_TASK_AUDIT="Audit Log Configuration"
 MSG_TASK_SERVICES="Service Management"
-MSG_TASK_AIDE="AIDE Intrusion Detection"
-MSG_TASK_CLAMAV="ClamAV Virus Scanner"
-MSG_TASK_ROOTKIT="Rootkit Detection"
 
 
 # ═══════════════════════════════════════════
@@ -184,7 +181,7 @@ MSG_SSH_PORT_PROMPT="Enter new SSH port number"
 MSG_SSH_PORT_INVALID="Invalid port number, please enter a number between 1-65535"
 MSG_SSH_PORT_IN_USE="Port is already in use, please choose another port"
 MSG_SSH_PORT_SUCCESS="SSH port has been changed"
-MSG_SSH_PORT_HINT="Use the following command to connect: ssh -p {port} user@your-server-ip"
+MSG_SSH_PORT_HINT="Use the following command to connect: ssh -p %s user@your-server-ip"
 
 # SSH Port Interactive Options
 MSG_SSH_PORT_OPTION_TITLE="Choose SSH port configuration method"
@@ -224,7 +221,6 @@ MSG_WIZARD_STEP_USERS="[5/14] User Management"
 MSG_WIZARD_STEP_KERNEL="[6/14] Kernel Security Hardening"
 MSG_WIZARD_STEP_FILESYSTEM="[7/14] Filesystem Security"
 MSG_WIZARD_STEP_SERVICES="[8/14] Service Management"
-MSG_WIZARD_STEP_AUTOUPDATE="[9/14] Auto Security Updates"
 MSG_WIZARD_STEP_AIDE="[10/14] AIDE Intrusion Detection"
 MSG_WIZARD_STEP_CLAMAV="[11/14] ClamAV Virus Scanner"
 MSG_WIZARD_STEP_ROOTKIT="[12/14] Rootkit Detection"
@@ -342,8 +338,12 @@ MSG_SSH_PARAMS_INVALID="Invalid {param} value ({range}), using default {default}
 MSG_SSH_PARAMS_FAIL="Failed to set {count} SSH parameter(s)"
 
 # Rollback (continued)
+MSG_SSH_ROLLBACK_NO_BACKUP="No backup found for rollback"
 
 # Wizard
+MSG_SSH_WIZARD_EXTERNAL_MOD="External modification detected: %s"
+MSG_SSH_WIZARD_ROLLBACK_OVERWRITE="Overwrite with backup? (y/n)"
+MSG_SSH_RESTART_FAIL_ROLLBACK="SSH restart failed, rolling back changes"
 
 MSG_SSH_COMPLETE="SSH security hardening complete"
 
@@ -710,9 +710,6 @@ MSG_REPORT_WARN_KERNEL="Kernel parameters modified, may affect network/services"
 MSG_REPORT_WARN_USERS="New user created, test login before closing current session"
 MSG_REPORT_WARN_FS="Filesystem permissions changed, verify critical services still work"
 MSG_REPORT_WARN_SERVICES="Some services disabled, verify required services are still running"
-MSG_REPORT_WARN_AIDE="AIDE database initialized. Run aide --check regularly to verify file integrity."
-MSG_REPORT_WARN_CLAMAV="ClamAV installed. Keep virus definitions updated with freshclam."
-MSG_REPORT_WARN_ROOTKIT="Rootkit detection tools installed. Run rkhunter --check weekly."
 
 # ═══════════════════════════════════════════
 # Log
@@ -720,6 +717,9 @@ MSG_REPORT_WARN_ROOTKIT="Rootkit detection tools installed. Run rkhunter --check
 
 MSG_LOG_BACKUP="Backing up file"
 MSG_LOG_RESTORE="Restoring file"
+MSG_BACKUP_SUCCESS="Backup successful: %s"
+MSG_BACKUP_FAIL="Backup failed: %s"
+MSG_RESTORE_SUCCESS="Restored: %s"
 
 # ═══════════════════════════════════════════
 # Services Management
@@ -785,6 +785,7 @@ MSG_SERVICES_WIZARD_DONE="Service management configuration complete"
 # ═══════════════════════════════════════════
 # NTP Time Sync
 # ═══════════════════════════════════════════
+# TODO: NTP module not yet implemented - keys reserved for future use
 
 MSG_NTP_TITLE="NTP Time Sync"
 MSG_NTP_SETTING="Configuring NTP time sync..."
@@ -810,6 +811,7 @@ MSG_NTP_SYNC_FAIL="Time sync failed"
 # ═══════════════════════════════════════════
 # Swap Configuration
 # ═══════════════════════════════════════════
+# TODO: Swap module not yet implemented - keys reserved for future use
 
 MSG_SWAP_TITLE="Swap Configuration"
 MSG_SWAP_CHECKING="Checking swap status..."
@@ -848,13 +850,11 @@ MSG_WARN_TEST_FIRST="Please test new configuration before closing current sessio
 # ═══════════════════════════════════════════
 
 MSG_SSH_TEST_CONNECTION="Testing SSH connection..."
-MSG_SSH_TEST_PASS="SSH connection test passed (port {port})"
-MSG_SSH_TEST_FAIL="SSH connection test failed (port {port}) — rollback timer set"
+MSG_SSH_TEST_PASS="SSH connection test passed (port %s)"
+MSG_SSH_TEST_FAIL="SSH connection test failed (port %s) — rollback timer set"
 MSG_SSH_TEST_WAITING="Waiting for SSH service to be ready..."
-MSG_SSH_TEST_WATCH_START="Connection watch started (port {port})"
-MSG_SSH_TEST_WATCH_CANCEL="New SSH connection detected (port {port}), rollback cancelled"
 MSG_SSH_TEST_CONFIRM="Please confirm you can connect via SSH on the new port"
-MSG_SSH_TEST_INSTRUCTIONS="In another terminal, run: ssh -p {port} user@host"
+MSG_SSH_TEST_INSTRUCTIONS="In another terminal, run: ssh -p %s user@host"
 
 # ═══════════════════════════════════════════
 # Completion
@@ -928,9 +928,6 @@ MSG_HINT_STATUS_KERNEL="Kernel status: see main menu [1] System Status Check"
 MSG_HINT_STATUS_FILESYSTEM="Filesystem status: see main menu [1] System Status Check"
 MSG_HINT_STATUS_SERVICES="Service status: see main menu [1] System Status Check"
 MSG_HINT_STATUS_AUTOUPDATE="Auto update status: see main menu [1] System Status Check"
-MSG_HINT_STATUS_AIDE="AIDE status: see main menu [1] System Status Check"
-MSG_HINT_STATUS_CLAMAV="ClamAV status: see main menu [1] System Status Check"
-MSG_HINT_STATUS_ROOTKIT="Rootkit status: see main menu [1] System Status Check"
 
 # ═══════════════════════════════════════════
 # Status key completions (remove :- fallbacks in install.sh, spec GAP-8)

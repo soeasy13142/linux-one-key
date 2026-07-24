@@ -163,9 +163,6 @@ MSG_TASK_KERNEL="内核安全加固"
 MSG_TASK_FILESYSTEM="文件系统安全"
 MSG_TASK_AUDIT="审计日志配置"
 MSG_TASK_SERVICES="服务管理"
-MSG_TASK_AIDE="AIDE 入侵检测"
-MSG_TASK_CLAMAV="ClamAV 病毒扫描"
-MSG_TASK_ROOTKIT="Rootkit 检测"
 
 
 # ═══════════════════════════════════════════
@@ -224,7 +221,6 @@ MSG_WIZARD_STEP_USERS="[5/14] 用户管理"
 MSG_WIZARD_STEP_KERNEL="[6/14] 内核安全加固"
 MSG_WIZARD_STEP_FILESYSTEM="[7/14] 文件系统安全"
 MSG_WIZARD_STEP_SERVICES="[8/14] 服务管理"
-MSG_WIZARD_STEP_AUTOUPDATE="[9/14] 自动安全更新"
 MSG_WIZARD_STEP_AIDE="[10/14] AIDE 入侵检测"
 MSG_WIZARD_STEP_CLAMAV="[11/14] ClamAV 病毒扫描"
 MSG_WIZARD_STEP_ROOTKIT="[12/14] Rootkit 检测"
@@ -342,8 +338,12 @@ MSG_SSH_PARAMS_INVALID="{param} 值无效（{range}），使用默认值 {defaul
 MSG_SSH_PARAMS_FAIL="设置 {count} 个 SSH 参数失败"
 
 # 回滚保护（续）
+MSG_SSH_ROLLBACK_NO_BACKUP="未找到回滚所需的备份"
 
 # 向导
+MSG_SSH_WIZARD_EXTERNAL_MOD="检测到外部修改: %s"
+MSG_SSH_WIZARD_ROLLBACK_OVERWRITE="用备份覆盖？(y/n)"
+MSG_SSH_RESTART_FAIL_ROLLBACK="SSH 重启失败，正在回滚更改"
 
 MSG_SSH_COMPLETE="SSH 安全加固完成"
 
@@ -710,9 +710,6 @@ MSG_REPORT_WARN_KERNEL="内核参数已修改，可能影响网络/服务运行"
 MSG_REPORT_WARN_USERS="已创建新用户，关闭当前会话前请测试登录"
 MSG_REPORT_WARN_FS="文件系统权限已更改，请验证关键服务是否正常工作"
 MSG_REPORT_WARN_SERVICES="已禁用部分服务，请验证所需服务是否正常运行"
-MSG_REPORT_WARN_AIDE="AIDE 数据库已初始化，请定期运行 aide --check 验证文件完整性"
-MSG_REPORT_WARN_CLAMAV="ClamAV 已安装，请保持病毒库更新：freshclam"
-MSG_REPORT_WARN_ROOTKIT="Rootkit 检测工具已安装，建议每周运行 rkhunter --check"
 
 # ═══════════════════════════════════════════
 # 日志
@@ -720,6 +717,9 @@ MSG_REPORT_WARN_ROOTKIT="Rootkit 检测工具已安装，建议每周运行 rkhu
 
 MSG_LOG_BACKUP="备份文件"
 MSG_LOG_RESTORE="恢复文件"
+MSG_BACKUP_SUCCESS="备份成功：%s"
+MSG_BACKUP_FAIL="备份失败：%s"
+MSG_RESTORE_SUCCESS="已恢复：%s"
 
 # ═══════════════════════════════════════════
 # 服务管理
@@ -785,6 +785,7 @@ MSG_SERVICES_WIZARD_DONE="服务管理配置完成"
 # ═══════════════════════════════════════════
 # NTP 时间同步
 # ═══════════════════════════════════════════
+# TODO: NTP module not yet implemented - keys reserved for future use
 
 MSG_NTP_TITLE="NTP 时间同步"
 MSG_NTP_SETTING="正在配置 NTP 时间同步..."
@@ -810,6 +811,7 @@ MSG_NTP_SYNC_FAIL="时间同步失败"
 # ═══════════════════════════════════════════
 # Swap 配置
 # ═══════════════════════════════════════════
+# TODO: Swap module not yet implemented - keys reserved for future use
 
 MSG_SWAP_TITLE="Swap 配置"
 MSG_SWAP_CHECKING="正在检测 Swap 状态..."
@@ -851,8 +853,6 @@ MSG_SSH_TEST_CONNECTION="正在测试 SSH 连接..."
 MSG_SSH_TEST_PASS="SSH 连接测试通过（端口 {port}）"
 MSG_SSH_TEST_FAIL="SSH 连接测试失败（端口 {port}）— 将设置回滚定时器"
 MSG_SSH_TEST_WAITING="等待 SSH 服务就绪..."
-MSG_SSH_TEST_WATCH_START="已启动连接监控（端口 {port}）"
-MSG_SSH_TEST_WATCH_CANCEL="检测到新 SSH 连接（端口 {port}），已取消回滚"
 MSG_SSH_TEST_CONFIRM="请确认您能够通过新端口连接到服务器"
 MSG_SSH_TEST_INSTRUCTIONS="在其他终端中运行: ssh -p {port} user@host"
 
@@ -928,9 +928,6 @@ MSG_HINT_STATUS_KERNEL="内核状态：见主菜单 [1] 系统状态检测"
 MSG_HINT_STATUS_FILESYSTEM="文件系统状态：见主菜单 [1] 系统状态检测"
 MSG_HINT_STATUS_SERVICES="服务状态：见主菜单 [1] 系统状态检测"
 MSG_HINT_STATUS_AUTOUPDATE="自动更新状态：见主菜单 [1] 系统状态检测"
-MSG_HINT_STATUS_AIDE="AIDE 状态：见主菜单 [1] 系统状态检测"
-MSG_HINT_STATUS_CLAMAV="ClamAV 状态：见主菜单 [1] 系统状态检测"
-MSG_HINT_STATUS_ROOTKIT="Rootkit 状态：见主菜单 [1] 系统状态检测"
 
 # ═══════════════════════════════════════════
 # 状态键补全（移除 install.sh 中的 :- 兜底，spec GAP-8）
