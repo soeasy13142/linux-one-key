@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![ShellCheck](https://img.shields.io/badge/ShellCheck-Passing-brightgreen.svg)](https://www.shellcheck.net/)
-[![Bats Tests](https://img.shields.io/badge/Tests-259-brightgreen.svg)](tests/unit/)
+[![Bats Tests](https://img.shields.io/badge/Tests-271-brightgreen.svg)](tests/unit/)
 [![Docker Phase1](https://img.shields.io/badge/Docker%20Phase1-72%2F72-brightgreen.svg)](tests/docker/)
 [![Docker Phase2](https://img.shields.io/badge/Docker%20Phase2-21%2F21-brightgreen.svg)](tests/docker/)
 
@@ -154,7 +154,7 @@ sudo bash install.sh --lite
 
 ### 单元测试 / Unit Tests
 
-- **259 个** Bats 测试用例覆盖全部模块（259 test cases across all modules）
+- **271 个** Bats 测试用例覆盖全部模块（271 test cases across all modules）
 - 覆盖正常路径、边界条件、幂等性、回滚验证（normal, edge, idempotency, rollback）
 - 持续集成中自动运行（ShellCheck + Bats）
 
@@ -196,7 +196,7 @@ linux-one-key/
 │   ├── audit/                 # auditd 配置和规则模板
 │   └── sysctl/                # sysctl 安全参数模板
 ├── tests/
-│   ├── unit/                  # 259 Bats 单元测试
+│   ├── unit/                  # 271 Bats 单元测试
 │   └── docker/                # Docker 自动化测试框架
 │       ├── images/            # 9 个发行版 Dockerfile
 │       ├── tests/             # 8 个模块测试脚本 + Phase 2 目录
