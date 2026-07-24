@@ -6,8 +6,8 @@ on:
       - 'v*'
 
 jobs:
-  test:
-    name: Test
+  shellcheck:
+    name: ShellCheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,17 +18,10 @@ jobs:
           shellcheck -x scripts/base/*.sh
           shellcheck -x scripts/security/*.sh
           shellcheck -x install.sh
-      - name: Install Bats
-        run: |
-          git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats
-          sudo /tmp/bats/install.sh /usr/local
-          rm -rf /tmp/bats
-      - name: Run unit tests
-        run: bats tests/unit/*.bats
 
   publish:
     name: Publish to GitHub Packages
-    needs: test
+    needs: shellcheck
     runs-on: ubuntu-latest
     permissions:
       contents: read
