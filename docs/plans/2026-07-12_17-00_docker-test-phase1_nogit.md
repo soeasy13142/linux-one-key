@@ -1,7 +1,7 @@
 ---
 created: 2026-07-12
-updated: 2026-07-12
-status: in-progress
+updated: 2026-07-24
+status: done
 title: linux-one-key v1.0 Docker 测试 Phase 1 实施
 source: design docs/design/docker-test-design.md
 topic: testing
@@ -16,36 +16,36 @@ topic: testing
 ## 实施步骤
 
 ### Step 1: 公共基础设施
-- [ ] `tests/docker/lib/common.bash` — 构建镜像、容器执行、断言、报告
-- [ ] `tests/docker/run-test.sh` — 单测试入口
-- [ ] `tests/docker/test-all.sh` — 全量矩阵执行
-- [ ] `.gitignore` 加入 `tests/docker/results/`
+- [x] `tests/docker/lib/common.bash` — 构建镜像、容器执行、断言、报告
+- [x] `tests/docker/run-test.sh` — 单测试入口
+- [x] `tests/docker/test-all.sh` — 全量矩阵执行
+- [x] `.gitignore` 加入 `tests/docker/results/`
 
 ### Step 2: 发行版 Dockerfiles
-- [ ] Ubuntu 20.04 / 22.04 / 24.04
-- [ ] Debian 11 / 12
-- [ ] CentOS 7
-- [ ] Rocky Linux 8 / 9
-- [ ] AlmaLinux 9
+- [x] Ubuntu 20.04 / 22.04 / 24.04
+- [x] Debian 11 / 12
+- [x] CentOS 7
+- [x] Rocky Linux 8 / 9
+- [x] AlmaLinux 9
 
 ### Step 3: 模块测试脚本
-- [ ] `tests/docker/tests/ssh.bash`
-- [ ] `tests/docker/tests/firewall.bash`
-- [ ] `tests/docker/tests/fail2ban.bash`
-- [ ] `tests/docker/tests/audit.bash`
-- [ ] `tests/docker/tests/users.bash`
-- [ ] `tests/docker/tests/kernel.bash`
-- [ ] `tests/docker/tests/filesystem.bash`
-- [ ] `tests/docker/tests/services.bash`
+- [x] `tests/docker/tests/ssh.bash`
+- [x] `tests/docker/tests/firewall.bash`
+- [x] `tests/docker/tests/fail2ban.bash`
+- [x] `tests/docker/tests/audit.bash`
+- [x] `tests/docker/tests/users.bash`
+- [x] `tests/docker/tests/kernel.bash`
+- [x] `tests/docker/tests/filesystem.bash`
+- [x] `tests/docker/tests/services.bash`
 
 ### Step 4: 验证与修复
-- [ ] 在至少 3 个发行版上运行 Phase 1
-- [ ] 修复发现的跨发行版兼容性问题
-- [ ] 输出测试报告
+- [x] 在至少 3 个发行版上运行 Phase 1
+- [x] 修复发现的跨发行版兼容性问题
+- [x] 输出测试报告
 
 ### Step 5: 文档同步
-- [ ] 更新 `HANDOVER.md` 变更日志
-- [ ] 更新设计文档进度记录
+- [x] 更新 `HANDOVER.md` 变更日志
+- [x] 更新设计文档进度记录
 
 ## 并行策略
 
@@ -87,3 +87,11 @@ tests/docker/
 │   └── services.bash
 └── results/ (gitignored)
 ```
+
+## 完成说明（2026-07-24 更新）
+
+本计划已完成。全部基础设施已就位：
+- 9 个发行版 Dockerfiles（含新增的 centos:stream9 和 fedora:latest）
+- 8 个 Phase 1 模块测试脚本 + 7 个 Phase 2 测试脚本
+- Phase 1 (72/72) + Phase 2 (21/21) 全部通过
+- CI pipeline 配置完成
