@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-07-24 · **版本**: v1.5.0 · **状态**: 🟢 全部待办项已完成 · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
+> **最后更新**: 2026-07-24 · **版本**: v1.5.1 · **状态**: 🟢 全部待办项已完成 · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
 
 ## 会话恢复
 
