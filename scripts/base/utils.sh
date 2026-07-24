@@ -255,59 +255,21 @@ EOF
 }
 
 # ═══════════════════════════════════════════
-# 备份函数
+# 加载 backup / rollback 子模块
 # ═══════════════════════════════════════════
 
-# 备份文件
-backup_file() {
-    local file="$1"
-    local description="${2:-${MSG_LOG_BACKUP}}"
+# Source backup and rollback modules (backward-compatible extraction)
+source "${SCRIPT_DIR}/scripts/base/backup.sh"
+source "${SCRIPT_DIR}/scripts/base/rollback.sh"
 
-    if [[ ! -f "${file}" ]]; then
-        log_warn "${MSG_ERROR_FILE_NOT_FOUND}: ${file}"
-        return 1
+# Verify all expected functions are available after loading submodules
+for _fn in backup_file restore_file schedule_rollback cancel_scheduled_task; do
+    if ! declare -F "${_fn}" &>/dev/null; then
+        echo "Error: Required function ${_fn} not found after loading backup/rollback modules" >&2
+        exit 1
     fi
-
-    local filename
-    filename="$(basename "${file}")"
-    # 使用 TIMESTAMP + PID 确保同一秒内的多次备份不会冲突
-    local backup_path="${BACKUP_DIR}/${filename}.bak.${TIMESTAMP}.$$"
-
-    log_step "${description}: ${file}"
-
-    if cp -a "${file}" "${backup_path}"; then
-        log_success "${MSG_SSH_BACKUP_SUCCESS}: ${backup_path}"
-        log_debug "Backed up ${file} to ${backup_path}"
-        echo "${backup_path}"
-        return 0
-    else
-        log_error "${MSG_SSH_BACKUP_FAIL}: ${file}"
-        return 1
-    fi
-}
-
-# 恢复文件
-restore_file() {
-    local backup_path="$1"
-    local target_path="$2"
-    local description="${3:-${MSG_LOG_RESTORE}}"
-
-    if [[ ! -f "${backup_path}" ]]; then
-        log_error "Backup file not found: ${backup_path}"
-        return 1
-    fi
-
-    log_step "${description}: ${target_path}"
-
-    if cp -a "${backup_path}" "${target_path}"; then
-        log_success "Restored: ${target_path}"
-        log_debug "Restored ${backup_path} to ${target_path}"
-        return 0
-    else
-        log_error "${MSG_ERROR_RESTORE_FAILED}: ${target_path}"
-        return 1
-    fi
-}
+done
+unset _fn
 
 # ═══════════════════════════════════════════
 # SSH 配置辅助函数
@@ -535,52 +497,6 @@ get_package_manager() {
             echo "unknown"
             ;;
     esac
-}
-
-# 延时执行（用于回滚保护）
-# 注意：不使用命令替换捕获 PID（命令替换子 shell 中的后台进程
-# 会继承子 shell 的 stdout pipe，pipe 关闭后可能导致后台进程异常），
-# 而是通过全局变量 _SCHEDULED_PID 传递 PID
-#
-# 安全约束：callback 参数仅接受本项目内部硬编码的函数名（如 "rollback_ssh"），
-# 禁止传入用户输入或外部数据，以防命令注入。
-schedule_rollback() {
-    local delay="$1"
-    local callback="$2"
-    local description="${3:-Scheduled rollback}"
-
-    echo -e "${BLUE}[INFO]${NC} ${description} in ${delay} seconds" >&2
-
-    # 在子 shell 中忽略 INT/TERM 信号，防止 sleep 被中断导致 callback 不执行
-    (
-        trap '' INT TERM
-        sleep "${delay}" && "${callback}"
-    ) &
-
-    _SCHEDULED_PID=$!
-    # disown 从 Shell 任务表中移除，防止父 Shell 退出时发送 SIGHUP
-    disown "${_SCHEDULED_PID}" 2>/dev/null || true
-    log_debug "Scheduled rollback task PID: ${_SCHEDULED_PID}"
-}
-
-# 取消延时任务
-cancel_scheduled_task() {
-    local pid="$1"
-
-    if kill -0 "${pid}" 2>/dev/null; then
-        # 验证进程确实是我们启动的 sleep 任务（防止 PID 复用误杀）
-        local cmdline
-        cmdline=$(tr '\0' ' ' < "/proc/${pid}/cmdline" 2>/dev/null || echo "")
-        if [[ "${cmdline}" == *"sleep"* ]] || [[ -z "${cmdline}" ]]; then
-            kill "${pid}" 2>/dev/null
-            log_debug "Cancelled scheduled task PID: ${pid}"
-            return 0
-        else
-            log_warn "PID ${pid} does not appear to be a scheduled task, skipping kill"
-            return 1
-        fi
-    fi
-    return 1
 }
 
 # ═══════════════════════════════════════════

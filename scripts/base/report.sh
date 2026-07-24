@@ -53,6 +53,37 @@ generate_report() {
         echo "  - ${MSG_DETECT_ARCH}: $(get_detected_arch)"
         echo "  - ${MSG_DETECT_USER}: $(whoami)"
         echo "  - Hostname: $(get_hostname)"
+
+        # NTP status
+        if command -v timedatectl &>/dev/null; then
+            local ntp_sync_status
+            ntp_sync_status=$(timedatectl show 2>/dev/null | grep "NTPSynchronized=" | cut -d= -f2 || echo "")
+            if [[ -n "${ntp_sync_status}" ]]; then
+                if [[ "${ntp_sync_status}" == "yes" ]]; then
+                    echo "  - ${MSG_NTP_STATUS}: ${MSG_NTP_STATUS_SYNCED}"
+                else
+                    echo "  - ${MSG_NTP_STATUS}: ${MSG_NTP_STATUS_UNSYNCED}"
+                fi
+            fi
+        elif command -v chronyc &>/dev/null; then
+            local ntp_ok
+            ntp_ok=$(chronyc tracking 2>/dev/null | grep -c "Leap.*Normal" || echo "0")
+            if [[ "${ntp_ok}" -gt 0 ]]; then
+                echo "  - ${MSG_NTP_STATUS}: ${MSG_NTP_STATUS_SYNCED}"
+            else
+                echo "  - ${MSG_NTP_STATUS}: ${MSG_NTP_STATUS_UNSYNCED}"
+            fi
+        fi
+
+        # Swap status
+        local swap_size
+        swap_size=$(free -m 2>/dev/null | awk '/Swap:/{print $2}' || echo "")
+        if [[ -n "${swap_size}" ]] && [[ "${swap_size}" -gt 0 ]]; then
+            echo "  - ${MSG_SWAP_TITLE}: ${swap_size} MB"
+        else
+            echo "  - ${MSG_SWAP_TITLE}: ${MSG_SWAP_NO_SWAP}"
+        fi
+
         echo ""
 
         # ── Tasks section — dynamic per module ──
@@ -168,6 +199,52 @@ generate_report() {
             fi
         fi
 
+        # Auto Security Updates
+        _report_task_line "${_WIZARD_AUTOUPDATE_DONE:-0}" "${MSG_TASK_AUTOUPDATE}"
+        if [[ "${_WIZARD_AUTOUPDATE_DONE:-0}" == "1" ]]; then
+            if type check_autoupdate_status &>/dev/null; then
+                local au_status
+                au_status=$(check_autoupdate_status 2>/dev/null)
+                local au_type
+                au_type=$(echo "${au_status}" | grep '^autoupdate_type=' | cut -d= -f2)
+                echo "    - ${MSG_AUTOUPDATE_TYPE}: ${au_type:-unknown}"
+            fi
+        fi
+
+        # AIDE
+        _report_task_line "${_WIZARD_AIDE_DONE:-0}" "${MSG_TASK_AIDE}"
+        if [[ "${_WIZARD_AIDE_DONE:-0}" == "1" ]]; then
+            if type check_aide_status &>/dev/null; then
+                local aide_status
+                aide_status=$(check_aide_status 2>/dev/null)
+                echo "    - DB initialized: $(echo "${aide_status}" | grep '^aide_db_exists=' | cut -d= -f2)"
+                echo "    - Cron: $(echo "${aide_status}" | grep '^aide_cron=' | cut -d= -f2)"
+            fi
+        fi
+
+        # ClamAV
+        _report_task_line "${_WIZARD_CLAMAV_DONE:-0}" "${MSG_TASK_CLAMAV}"
+        if [[ "${_WIZARD_CLAMAV_DONE:-0}" == "1" ]]; then
+            if type check_clamav_status &>/dev/null; then
+                local clamav_status
+                clamav_status=$(check_clamav_status 2>/dev/null)
+                echo "    - DB up-to-date: $(echo "${clamav_status}" | grep '^clamav_db_uptodate=' | cut -d= -f2)"
+                echo "    - Cron: $(echo "${clamav_status}" | grep '^clamav_cron_enabled=' | cut -d= -f2)"
+            fi
+        fi
+
+        # Rootkit Detection
+        _report_task_line "${_WIZARD_ROOTKIT_DONE:-0}" "${MSG_TASK_ROOTKIT}"
+        if [[ "${_WIZARD_ROOTKIT_DONE:-0}" == "1" ]]; then
+            if type check_rootkit_status &>/dev/null; then
+                local rootkit_status
+                rootkit_status=$(check_rootkit_status 2>/dev/null)
+                echo "    - rkhunter: $(echo "${rootkit_status}" | grep '^rkhunter_installed=' | cut -d= -f2)"
+                echo "    - chkrootkit: $(echo "${rootkit_status}" | grep '^chkrootkit_installed=' | cut -d= -f2)"
+                echo "    - Cron: $(echo "${rootkit_status}" | grep '^cron_enabled=' | cut -d= -f2)"
+            fi
+        fi
+
         echo ""
 
         # ── Config files modified ──
@@ -226,6 +303,15 @@ generate_report() {
         fi
         if [[ "${_WIZARD_SERVICES_DONE:-0}" == "1" ]]; then
             echo "  ⚠ ${MSG_REPORT_WARN_SERVICES}"
+        fi
+        if [[ "${_WIZARD_AIDE_DONE:-0}" == "1" ]]; then
+            echo "  ⚠ ${MSG_REPORT_WARN_AIDE}"
+        fi
+        if [[ "${_WIZARD_CLAMAV_DONE:-0}" == "1" ]]; then
+            echo "  ⚠ ${MSG_REPORT_WARN_CLAMAV}"
+        fi
+        if [[ "${_WIZARD_ROOTKIT_DONE:-0}" == "1" ]]; then
+            echo "  ⚠ ${MSG_REPORT_WARN_ROOTKIT}"
         fi
 
         echo ""

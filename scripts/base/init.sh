@@ -93,6 +93,10 @@ install_base_tools() {
     log_step "Installing base tools..."
 
     local tools=("curl" "wget" "vim" "unzip")
+    # Full mode adds extra utility tools
+    if is_mode_full; then
+        tools+=("htop" "net-tools" "lsof" "tree" "git")
+    fi
 
     case "${pkg_manager}" in
         apt)
@@ -123,11 +127,30 @@ install_base_tools() {
     esac
 }
 
+# 验证时区是否有效
+_validate_timezone() {
+    local tz="$1"
+    if command -v timedatectl &>/dev/null; then
+        timedatectl list-timezones 2>/dev/null | grep -qx "${tz}" && return 0
+    elif [[ -d /usr/share/zoneinfo ]]; then
+        [[ -f "/usr/share/zoneinfo/${tz}" ]] && return 0
+    fi
+    return 1
+}
+
 # 设置时区
 setup_timezone() {
     local timezone="${1:-Asia/Shanghai}"
 
     log_step "Setting timezone to ${timezone}..."
+
+    # Full mode: validate timezone before applying
+    if is_mode_full; then
+        if ! _validate_timezone "${timezone}"; then
+            log_warn "$(printf "${MSG_NTP_TZ_INVALID}: %s, falling back to Asia/Shanghai" "${timezone}")"
+            timezone="Asia/Shanghai"
+        fi
+    fi
 
     if timedatectl set-timezone "${timezone}" 2>/dev/null; then
         log_success "Timezone set to ${timezone}"
@@ -137,9 +160,150 @@ setup_timezone() {
     fi
 }
 
-# ═══════════════════════════════════════════
-# 主初始化流程
-# ═══════════════════════════════════════════
+# 配置 chrony NTP 服务器
+_configure_chrony() {
+    local conf="$1"
+    if ! grep -q "^pool.*pool\\.ntp\\.org" "${conf}" 2>/dev/null; then
+        cat >> "${conf}" << EOF
+
+# Added by linux-one-key
+pool 0.pool.ntp.org iburst
+pool 1.pool.ntp.org iburst
+pool 2.pool.ntp.org iburst
+pool 3.pool.ntp.org iburst
+EOF
+    fi
+}
+
+# 配置 ntpd NTP 服务器
+_configure_ntpd() {
+    local conf="$1"
+    if ! grep -q "^pool.*pool\\.ntp\\.org" "${conf}" 2>/dev/null; then
+        cat >> "${conf}" << EOF
+
+# Added by linux-one-key
+pool 0.pool.ntp.org iburst
+pool 1.pool.ntp.org iburst
+pool 2.pool.ntp.org iburst
+pool 3.pool.ntp.org iburst
+EOF
+    fi
+}
+
+# 配置 NTP 时间同步（Full 模式）
+setup_ntp() {
+    log_title "${MSG_NTP_TITLE}"
+
+    # 检查 systemd-timesyncd 是否已运行且同步
+    if systemctl is-active systemd-timesyncd &>/dev/null 2>&1; then
+        local ntp_synced
+        ntp_synced=$(timedatectl show 2>/dev/null | grep "NTPSynchronized=" | cut -d= -f2 || echo "no")
+        if [[ "${ntp_synced}" == "yes" ]]; then
+            log_success "${MSG_NTP_ALREADY_SYNCED}"
+            return 0
+        fi
+    fi
+
+    # 检查 chrony 是否已安装且运行
+    if command -v chronyc &>/dev/null; then
+        if chronyc tracking &>/dev/null 2>&1; then
+            log_success "${MSG_NTP_ALREADY_SYNCED}"
+            return 0
+        fi
+    fi
+
+    # 检查 ntpd 是否已安装且运行
+    if command -v ntpd &>/dev/null; then
+        if systemctl is-active ntpd &>/dev/null 2>&1 || systemctl is-active ntp &>/dev/null 2>&1; then
+            log_success "${MSG_NTP_ALREADY_SYNCED}"
+            return 0
+        fi
+    fi
+
+    local pkg_manager
+    pkg_manager="$(get_detected_pkg_manager)"
+
+    # 首选 chrony，回退到 ntp
+    local ntp_pkg="chrony"
+    local ntp_service="chronyd"
+    local ntp_conf="/etc/chrony/chrony.conf"
+
+    case "${pkg_manager}" in
+        apt)
+            ntp_service="chrony"
+            ;;
+        dnf|yum)
+            ntp_service="chronyd"
+            ;;
+    esac
+
+    log_step "${MSG_NTP_DETECTING}"
+    log_info "${MSG_NTP_INSTALL_CHRONY}"
+
+    # 安装前备份配置
+    if [[ -f "${ntp_conf}" ]]; then
+        backup_file "${ntp_conf}" "${MSG_NTP_BACKUP_CONF}"
+    fi
+
+    case "${pkg_manager}" in
+        apt)
+            if apt-get install -y -qq "${ntp_pkg}" 2>/dev/null; then
+                log_success "${MSG_NTP_INSTALL_DONE}"
+            else
+                log_warn "${MSG_NTP_INSTALL_CHRONY} failed, trying ntpd"
+                ntp_pkg="ntp"
+                ntp_service="ntp"
+                ntp_conf="/etc/ntp.conf"
+                if [[ -f "${ntp_conf}" ]]; then
+                    backup_file "${ntp_conf}" "${MSG_NTP_BACKUP_CONF}"
+                fi
+                apt-get install -y -qq "ntp" 2>/dev/null || {
+                    log_error "${MSG_NTP_INSTALL_NTPD} failed"
+                    return 1
+                }
+            fi
+            ;;
+        dnf|yum)
+            if "${pkg_manager}" install -y -q "${ntp_pkg}" 2>/dev/null; then
+                log_success "${MSG_NTP_INSTALL_DONE}"
+            else
+                log_warn "${MSG_NTP_INSTALL_CHRONY} failed, trying ntpd"
+                ntp_pkg="ntp"
+                ntp_service="ntpd"
+                ntp_conf="/etc/ntp.conf"
+                if [[ -f "${ntp_conf}" ]]; then
+                    backup_file "${ntp_conf}" "${MSG_NTP_BACKUP_CONF}"
+                fi
+                "${pkg_manager}" install -y -q "ntp" 2>/dev/null || {
+                    log_error "${MSG_NTP_INSTALL_NTPD} failed"
+                    return 1
+                }
+            fi
+            ;;
+        *)
+            log_warn "Unknown package manager, skipping NTP setup"
+            return 0
+            ;;
+    esac
+
+    # 配置 NTP 服务器
+    log_step "${MSG_NTP_CONFIG}"
+    if [[ "${ntp_pkg}" == "chrony" ]]; then
+        _configure_chrony "${ntp_conf}"
+    else
+        _configure_ntpd "${ntp_conf}"
+    fi
+    log_success "${MSG_NTP_CONFIG_DONE}"
+
+    # 启动服务
+    log_step "${MSG_NTP_SERVICE_START}"
+    systemctl enable "${ntp_service}" 2>/dev/null || true
+    systemctl start "${ntp_service}" 2>/dev/null || restart_service "${ntp_service}" "${MSG_NTP_SERVICE_START}"
+    log_success "${MSG_NTP_SERVICE_DONE}"
+
+    log_separator
+    log_success "${MSG_NTP_TITLE} ${MSG_NTP_SERVICE_DONE}"
+}
 
 # 执行系统初始化
 run_init() {
@@ -153,8 +317,22 @@ run_init() {
 
     init_directories
 
-    # 设置时区（默认 Asia/Shanghai）
-    setup_timezone "Asia/Shanghai"
+    # 设置时区
+    if is_mode_full; then
+        # Full mode: interactive timezone with validation
+        local tz_input
+        tz_input=$(prompt_input "${MSG_NTP_TZ_PROMPT}" "Asia/Shanghai")
+        tz_input="${tz_input:-Asia/Shanghai}"
+        setup_timezone "${tz_input}"
+    else
+        # Lite mode: keep existing default behavior
+        setup_timezone "Asia/Shanghai"
+    fi
+
+    # NTP 时间同步（Full mode only）
+    if is_mode_full; then
+        setup_ntp
+    fi
 
     # 更新系统包
     update_system_packages

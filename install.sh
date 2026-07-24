@@ -245,6 +245,16 @@ load_dependencies() {
     # shellcheck source=/dev/null
     source "${base_dir}/mode.sh"
 
+    # 加载 swap.sh（仅 Full 模式）
+    if is_mode_full; then
+        if [[ ! -f "${base_dir}/swap.sh" ]]; then
+            echo "Error: Cannot find swap.sh at ${base_dir}/swap.sh"
+            exit 1
+        fi
+        # shellcheck source=/dev/null
+        source "${base_dir}/swap.sh"
+    fi
+
     # 加载 ssh.sh
     if [[ ! -f "${SCRIPT_DIR}/scripts/security/ssh.sh" ]]; then
         echo "Error: Cannot find ssh.sh at ${SCRIPT_DIR}/scripts/security/ssh.sh"
@@ -308,6 +318,30 @@ load_dependencies() {
     fi
     # shellcheck source=/dev/null
     source "${SCRIPT_DIR}/scripts/security/services.sh"
+
+    # 加载 autoupdate.sh (仅 Full 模式)
+    if is_mode_full; then
+        if [[ ! -f "${SCRIPT_DIR}/scripts/security/autoupdate.sh" ]]; then
+            echo "Error: Cannot find autoupdate.sh at ${SCRIPT_DIR}/scripts/security/autoupdate.sh"
+            exit 1
+        fi
+        # shellcheck source=/dev/null
+        source "${SCRIPT_DIR}/scripts/security/autoupdate.sh"
+    fi
+
+    # 加载 aide.sh / clamav.sh / rootkit.sh (仅 Full 模式)
+    if is_mode_full; then
+        for _mod in aide clamav rootkit; do
+            _f="${SCRIPT_DIR}/scripts/security/${_mod}.sh"
+            if [[ ! -f "${_f}" ]]; then
+                echo "Error: Cannot find ${_mod}.sh at ${_f}"
+                exit 1
+            fi
+            # shellcheck source=/dev/null
+            source "${_f}"
+        done
+        unset _mod _f
+    fi
 
     # 加载 report.sh (generate_report 函数)
     if [[ ! -f "${SCRIPT_DIR}/scripts/base/report.sh" ]]; then
@@ -564,6 +598,109 @@ show_system_status() {
     fi
     fi
 
+    # ─── 自动安全更新 ────────────────────────────────────────────────────
+    if is_mode_lite; then
+        _print_status_row "${MSG_AUTOUPDATE_TITLE}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
+    else
+    local au_color="${YELLOW}" au_icon="⚠️" au_detail="${MSG_STATUS_NOT_HARDENED}"
+    if type check_autoupdate_status &>/dev/null; then
+        local au_status
+        au_status=$(check_autoupdate_status 2>/dev/null)
+        local au_installed au_enabled
+        au_installed=$(echo "${au_status}" | grep '^autoupdate_installed=' | cut -d= -f2)
+        au_enabled=$(echo "${au_status}" | grep '^autoupdate_enabled=' | cut -d= -f2)
+        if [[ "${au_enabled}" == "yes" ]]; then
+            au_color="${GREEN}"; au_icon="✅"
+            au_detail="${MSG_STATUS_HARDENED}"
+        elif [[ "${au_installed}" == "yes" ]]; then
+            au_color="${YELLOW}"; au_icon="⚠️"
+            au_detail="${MSG_STATUS_PARTIAL}"
+        fi
+    fi
+    _print_status_row "${MSG_AUTOUPDATE_TITLE}" "${au_detail}" "${au_color}" "" "${au_icon}"
+    if [[ "${au_color}" == "${GREEN}" ]]; then
+        passed=$((passed + 1))
+    elif [[ "${au_color}" == "${YELLOW}" ]]; then
+        partial=$((partial + 1))
+    fi
+    fi
+
+    # ─── AIDE ───────────────────────────────────────────────────────────
+    if is_mode_lite; then
+        _print_status_row "${MSG_STATUS_AIDE}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
+    else
+    local aide_color="${RED}" aide_icon="❌" aide_detail="${MSG_STATUS_NOT_CONFIGURED}"
+    if type check_aide_status &>/dev/null; then
+        local aide_status aide_db_exists aide_cron
+        aide_status=$(check_aide_status 2>/dev/null)
+        aide_db_exists=$(echo "${aide_status}" | grep '^aide_db_exists=' | cut -d= -f2)
+        aide_cron=$(echo "${aide_status}" | grep '^aide_cron=' | cut -d= -f2)
+        if [[ "${aide_db_exists}" == "yes" ]]; then
+            aide_color="${GREEN}"; aide_icon="✅"
+            aide_detail="DB: OK, Cron: ${aide_cron}"
+        fi
+    fi
+    if [[ "${aide_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_AIDE}" "${MSG_STATUS_HARDENED}" "${aide_color}" "${aide_detail}" "${aide_icon}"
+        passed=$((passed + 1))
+    else
+        _print_status_row "${MSG_STATUS_AIDE}" "${MSG_STATUS_NOT_HARDENED}" "${aide_color}" "${aide_detail}" "${aide_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("14|${MSG_STATUS_AIDE}")
+    fi
+    fi
+
+    # ─── ClamAV ─────────────────────────────────────────────────────────
+    if is_mode_lite; then
+        _print_status_row "${MSG_STATUS_CLAMAV}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
+    else
+    local clamav_color="${RED}" clamav_icon="❌" clamav_detail="${MSG_STATUS_NOT_CONFIGURED}"
+    if type check_clamav_status &>/dev/null; then
+        local clamav_status clamav_db_uptodate clamav_cron
+        clamav_status=$(check_clamav_status 2>/dev/null)
+        clamav_db_uptodate=$(echo "${clamav_status}" | grep '^clamav_db_uptodate=' | cut -d= -f2)
+        clamav_cron=$(echo "${clamav_status}" | grep '^clamav_cron_enabled=' | cut -d= -f2)
+        if [[ "${clamav_db_uptodate}" == "yes" ]]; then
+            clamav_color="${GREEN}"; clamav_icon="✅"
+            clamav_detail="DB: OK, Cron: ${clamav_cron}"
+        fi
+    fi
+    if [[ "${clamav_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_CLAMAV}" "${MSG_STATUS_HARDENED}" "${clamav_color}" "${clamav_detail}" "${clamav_icon}"
+        passed=$((passed + 1))
+    else
+        _print_status_row "${MSG_STATUS_CLAMAV}" "${MSG_STATUS_NOT_HARDENED}" "${clamav_color}" "${clamav_detail}" "${clamav_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("15|${MSG_STATUS_CLAMAV}")
+    fi
+    fi
+
+    # ─── Rootkit Detection ─────────────────────────────────────────────
+    if is_mode_lite; then
+        _print_status_row "${MSG_STATUS_ROOTKIT}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
+    else
+    local rootkit_color="${RED}" rootkit_icon="❌" rootkit_detail="${MSG_STATUS_NOT_CONFIGURED}"
+    if type check_rootkit_status &>/dev/null; then
+        local rootkit_status rkhunter_installed chkrootkit_installed rootkit_cron
+        rootkit_status=$(check_rootkit_status 2>/dev/null)
+        rkhunter_installed=$(echo "${rootkit_status}" | grep '^rkhunter_installed=' | cut -d= -f2)
+        chkrootkit_installed=$(echo "${rootkit_status}" | grep '^chkrootkit_installed=' | cut -d= -f2)
+        rootkit_cron=$(echo "${rootkit_status}" | grep '^cron_enabled=' | cut -d= -f2)
+        if [[ "${rkhunter_installed}" == "yes" ]]; then
+            rootkit_color="${GREEN}"; rootkit_icon="✅"
+            rootkit_detail="rkhunter: OK, chkrootkit: ${chkrootkit_installed}, Cron: ${rootkit_cron}"
+        fi
+    fi
+    if [[ "${rootkit_color}" == "${GREEN}" ]]; then
+        _print_status_row "${MSG_STATUS_ROOTKIT}" "${MSG_STATUS_HARDENED}" "${rootkit_color}" "${rootkit_detail}" "${rootkit_icon}"
+        passed=$((passed + 1))
+    else
+        _print_status_row "${MSG_STATUS_ROOTKIT}" "${MSG_STATUS_NOT_HARDENED}" "${rootkit_color}" "${rootkit_detail}" "${rootkit_icon}"
+        failed=$((failed + 1))
+        recommend_items+=("16|${MSG_STATUS_ROOTKIT}")
+    fi
+    fi
+
     # ─── 顶部评分 + 建议下一步 ──────────────────────────────────────────
     echo ""
     local total=$((passed + partial + failed))
@@ -683,6 +820,14 @@ show_main_menu() {
         echo -e "      ${MSG_MAIN_MENU_SERVICES_DESC}"
     fi
     echo ""
+    # 自动安全更新（完整版专用）
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_AUTOUPDATE}${NC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_AUTOUPDATE_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_AUTOUPDATE_DESC}"
+    fi
+    echo ""
 
     # 分组 3：一键
     echo -e "${BOLD}${MSG_SECTION_QUICK}${NC}"
@@ -703,6 +848,34 @@ show_main_menu() {
     fi
     echo ""
 
+    # 分组 5：增强安全工具
+    echo -e "${BOLD}────── Security Plus ──────${NC}"
+    echo ""
+    # AIDE（完整版专用）
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_AIDE}${NC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_AIDE_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_AIDE_DESC}"
+    fi
+    echo ""
+    # ClamAV（完整版专用）
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_CLAMAV}${NC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_CLAMAV_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_CLAMAV_DESC}"
+    fi
+    echo ""
+    # Rootkit（完整版专用）
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_ROOTKIT}${NC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_ROOTKIT_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_ROOTKIT_DESC}"
+    fi
+    echo ""
+
     echo -e "  ${RED}${MSG_MAIN_MENU_EXIT}${NC}"
     echo ""
 }
@@ -711,7 +884,7 @@ show_main_menu() {
 get_main_menu_choice() {
     local choice
     while true; do
-        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-12]" "")
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-13]" "")
         # EOF / non-interactive stdin: exit gracefully
         if [[ -z "${choice}" ]]; then
             echo ""
@@ -719,7 +892,7 @@ get_main_menu_choice() {
             exit 1
         fi
         case "${choice}" in
-            [0-9]|10|11|12)
+            [0-9]|10|11|12|13|14|15|16)
                 echo "${choice}"
                 return 0
                 ;;
@@ -1078,6 +1251,158 @@ run_services_submenu_loop() {
     done
 }
 
+# Autoupdate 子菜单
+show_autoupdate_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_AUTOUPDATE_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_AUTOUPDATE_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_AUTOUPDATE_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_AUTOUPDATE_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_autoupdate_submenu_loop() {
+    while true; do
+        show_autoupdate_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_autoupdate_wizard || log_error "Auto update configuration failed"
+                press_enter
+                ;;
+            2)
+                if type show_autoupdate_info &>/dev/null; then
+                    show_autoupdate_info
+                else
+                    log_info "${MSG_HINT_STATUS_AUTOUPDATE}"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# AIDE 子菜单
+show_aide_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_AIDE_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_AIDE_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_AIDE_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_AIDE_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_aide_submenu_loop() {
+    while true; do
+        show_aide_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_aide_wizard || log_error "AIDE configuration failed"
+                press_enter
+                ;;
+            2)
+                if type check_aide_status &>/dev/null; then
+                    check_aide_status
+                else
+                    log_info "${MSG_HINT_STATUS_AIDE}"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# ClamAV 子菜单
+show_clamav_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_CLAMAV_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_CLAMAV_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_CLAMAV_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_CLAMAV_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_clamav_submenu_loop() {
+    while true; do
+        show_clamav_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_clamav_wizard || log_error "ClamAV configuration failed"
+                press_enter
+                ;;
+            2)
+                if type check_clamav_status &>/dev/null; then
+                    check_clamav_status
+                else
+                    log_info "${MSG_HINT_STATUS_CLAMAV}"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# Rootkit 子菜单
+show_rootkit_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_ROOTKIT_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_ROOTKIT_MENU_WIZARD}${NC}"
+    echo -e "  ${GREEN}${MSG_ROOTKIT_MENU_STATUS}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_ROOTKIT_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_rootkit_submenu_loop() {
+    while true; do
+        show_rootkit_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_rootkit_wizard || log_error "Rootkit detection failed"
+                press_enter
+                ;;
+            2)
+                if type check_rootkit_status &>/dev/null; then
+                    check_rootkit_status
+                else
+                    log_info "${MSG_HINT_STATUS_ROOTKIT}"
+                fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
 # ═══════════════════════════════════════════
 # 查看报告（spec §3.4 GAP-7：历史报告列表）
 # ═══════════════════════════════════════════
@@ -1154,7 +1479,113 @@ view_report() {
 # ═══════════════════════════════════════════
 
 run_full_wizard() {
-    log_title "${MSG_WIZARD_TITLE}"
+    # Refactored: delegate to run_mode_wizard with appropriate module list
+    local -a modules
+    if is_mode_lite; then
+        modules=("init" "ssh" "firewall" "kernel")
+    else
+        modules=("${MODE_ADVANCED_MODULES[@]}")
+    fi
+    run_mode_wizard "${modules[*]}" "${MSG_WIZARD_TITLE}"
+}
+
+# ═══════════════════════════════════════════
+# 加固模式选择屏幕（Batch 4）
+# ═══════════════════════════════════════════
+
+# 显示加固模式选择界面
+# 仅 Full 模式调用，Lite 模式直接进入主菜单
+# 用法: show_hardening_mode_screen
+show_hardening_mode_screen() {
+    clear 2>/dev/null || true
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_MODE_SELECT_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${MSG_MODE_SELECT_DESC}"
+    echo ""
+
+    # Option 1: Basic
+    echo -e "  ${GREEN}[1] ${MSG_MODE_BASIC}${NC}"
+    echo -e "      ${MSG_MODE_BASIC_DESC}"
+    echo -e "      ${MSG_MODE_BASIC_TIP}"
+    echo ""
+
+    # Option 2: Standard
+    echo -e "  ${GREEN}[2] ${MSG_MODE_STANDARD}${NC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MODE_STANDARD_DESC} ${YELLOW}[${MSG_MODE_REQUIRES_FULL}]${NC}"
+    else
+        echo -e "      ${MSG_MODE_STANDARD_DESC}"
+    fi
+    echo -e "      ${MSG_MODE_STANDARD_TIP}"
+    echo ""
+
+    # Option 3: Advanced
+    echo -e "  ${GREEN}[3] ${MSG_MODE_ADVANCED}${NC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MODE_ADVANCED_DESC} ${YELLOW}[${MSG_MODE_REQUIRES_FULL}]${NC}"
+    else
+        echo -e "      ${MSG_MODE_ADVANCED_DESC}"
+    fi
+    echo -e "      ${MSG_MODE_ADVANCED_TIP}"
+    echo ""
+
+    # Option 4: Custom
+    echo -e "  ${GREEN}[4] ${MSG_MODE_CUSTOM}${NC}"
+    echo -e "      ${MSG_MODE_CUSTOM_DESC}"
+    echo -e "      ${MSG_MODE_CUSTOM_TIP}"
+    echo ""
+
+    local choice
+    while true; do
+        choice=$(prompt_input "${MSG_MODE_SELECT_PROMPT}" "4")
+
+        case "${choice}" in
+            1)
+                run_mode_wizard "${MODE_BASIC_MODULES[*]}" "${MSG_MODE_WIZARD_BASIC}"
+                return 0
+                ;;
+            2)
+                if is_mode_lite; then
+                    log_warn "${MSG_MODE_REQUIRES_FULL}"
+                    continue
+                fi
+                run_mode_wizard "${MODE_STANDARD_MODULES[*]}" "${MSG_MODE_WIZARD_STANDARD}"
+                return 0
+                ;;
+            3)
+                if is_mode_lite; then
+                    log_warn "${MSG_MODE_REQUIRES_FULL}"
+                    continue
+                fi
+                run_mode_wizard "${MODE_ADVANCED_MODULES[*]}" "${MSG_MODE_WIZARD_ADVANCED}"
+                return 0
+                ;;
+            4)
+                return 0  # Custom: enter main menu
+                ;;
+            *)
+                log_error "${MSG_MENU_INVALID}"
+                ;;
+        esac
+    done
+}
+
+# ═══════════════════════════════════════════
+# 加固向导执行器（Batch 4）
+# ═══════════════════════════════════════════
+
+# 运行加固向导，按模块列表顺序执行
+# 参数: $1 空格分隔的模块名列表, $2 向导标题
+# 用法: run_mode_wizard "init ssh firewall kernel" "Basic Hardening Wizard"
+run_mode_wizard() {
+    # shellcheck disable=SC2206
+    local -a modules=($1)
+    local wizard_title="$2"
+
+    log_title "${wizard_title}"
 
     echo ""
     echo -e "${BOLD}${MSG_WIZARD_DESC}${NC}"
@@ -1163,7 +1594,7 @@ run_full_wizard() {
 
     local wizard_rc=0
 
-    # Track which modules were executed (not skipped)
+    # Track which modules were executed
     export _WIZARD_INIT_DONE=0
     export _WIZARD_SSH_DONE=0
     export _WIZARD_FIREWALL_DONE=0
@@ -1174,167 +1605,144 @@ run_full_wizard() {
     export _WIZARD_FS_DONE=0
     export _WIZARD_SERVICES_DONE=0
 
-    # ── Step 0: System Init ──
-    echo ""
-    log_title "${MSG_WIZARD_STEP_INIT}"
+    local module
+    for module in "${modules[@]}"; do
+        case "${module}" in
+            init)
+                echo ""
+                log_title "${MSG_WIZARD_STEP_INIT}"
+                if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+                    log_info "${MSG_WIZARD_SKIPPED_INIT}"
+                else
+                    if run_init; then
+                        _WIZARD_INIT_DONE=1
+                    else
+                        log_warn "${MSG_WIZARD_ERR_INIT}"
+                        log_warn "${MSG_WIZARD_ERR_INIT_DETAIL}"
+                        if ! confirm "${MSG_WIZARD_ERR_INIT_PROMPT}" "n"; then
+                            log_error "${MSG_WIZARD_ERR_INIT_ABORT}"
+                            return 1
+                        fi
+                        wizard_rc=1
+                    fi
+                fi
+                ;;
+            ssh)
+                echo ""
+                log_title "${MSG_WIZARD_STEP_SSH}"
+                if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+                    log_info "${MSG_WIZARD_SKIPPED_SSH}"
+                else
+                    if run_ssh_wizard; then
+                        _WIZARD_SSH_DONE=1
+                    else
+                        log_warn "${MSG_WIZARD_ERR_SSH}"
+                        wizard_rc=1
+                    fi
+                fi
+                ;;
+            firewall)
+                echo ""
+                log_title "${MSG_WIZARD_STEP_FIREWALL}"
+                if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+                    log_info "${MSG_WIZARD_SKIPPED_FIREWALL}"
+                else
+                    if run_firewall_wizard; then
+                        _WIZARD_FIREWALL_DONE=1
+                    else
+                        log_warn "${MSG_WIZARD_ERR_FIREWALL}"
+                        wizard_rc=1
+                    fi
+                fi
+                ;;
+            fail2ban)
+                echo ""
+                log_title "${MSG_WIZARD_STEP_FAIL2BAN}"
+                if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+                    log_info "${MSG_WIZARD_SKIPPED_FAIL2BAN}"
+                else
+                    if run_fail2ban_wizard; then
+                        _WIZARD_FAIL2BAN_DONE=1
+                    else
+                        log_warn "${MSG_WIZARD_ERR_FAIL2BAN}"
+                        wizard_rc=1
+                    fi
+                fi
+                ;;
+            audit)
+                echo ""
+                log_title "${MSG_WIZARD_STEP_AUDIT}"
+                if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+                    log_info "${MSG_WIZARD_SKIPPED_AUDIT}"
+                else
+                    if run_audit_wizard; then
+                        _WIZARD_AUDIT_DONE=1
+                    else
+                        log_warn "${MSG_WIZARD_ERR_AUDIT}"
+                        wizard_rc=1
+                    fi
+                fi
+                ;;
+            users)
+                echo ""
+                log_title "${MSG_WIZARD_STEP_USERS}"
+                if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+                    log_info "${MSG_WIZARD_SKIPPED_USERS}"
+                else
+                    if run_users_wizard; then
+                        _WIZARD_USERS_DONE=1
+                    else
+                        log_warn "${MSG_WIZARD_ERR_USERS}"
+                        wizard_rc=1
+                    fi
+                fi
+                ;;
+            kernel)
+                echo ""
+                log_title "${MSG_WIZARD_STEP_KERNEL}"
+                if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+                    log_info "${MSG_WIZARD_SKIPPED_KERNEL}"
+                else
+                    if run_kernel_wizard; then
+                        _WIZARD_KERNEL_DONE=1
+                    else
+                        log_warn "${MSG_WIZARD_ERR_KERNEL}"
+                        wizard_rc=1
+                    fi
+                fi
+                ;;
+            filesystem)
+                echo ""
+                log_title "${MSG_WIZARD_STEP_FILESYSTEM}"
+                if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+                    log_info "${MSG_WIZARD_SKIPPED_FILESYSTEM}"
+                else
+                    if run_filesystem_wizard; then
+                        _WIZARD_FS_DONE=1
+                    else
+                        log_warn "${MSG_WIZARD_ERR_FILESYSTEM}"
+                        wizard_rc=1
+                    fi
+                fi
+                ;;
+            services)
+                echo ""
+                log_title "${MSG_WIZARD_STEP_SERVICES}"
+                if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
+                    log_info "${MSG_WIZARD_SKIPPED_SERVICES}"
+                else
+                    if run_services_wizard; then
+                        _WIZARD_SERVICES_DONE=1
+                    else
+                        log_warn "${MSG_WIZARD_ERR_SERVICES}"
+                        wizard_rc=1
+                    fi
+                fi
+                ;;
+        esac
+    done
 
-    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
-        log_info "${MSG_WIZARD_SKIPPED_INIT}"
-    else
-        if run_init; then
-            _WIZARD_INIT_DONE=1
-        else
-            log_warn "${MSG_WIZARD_ERR_INIT}"
-            log_warn "${MSG_WIZARD_ERR_INIT_DETAIL}"
-            if ! confirm "${MSG_WIZARD_ERR_INIT_PROMPT}" "n"; then
-                log_error "${MSG_WIZARD_ERR_INIT_ABORT}"
-                return 1
-            fi
-            wizard_rc=1
-        fi
-    fi
-
-    # ── Step 1: SSH ──
-    echo ""
-    log_title "${MSG_WIZARD_STEP_SSH}"
-
-    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
-        log_info "${MSG_WIZARD_SKIPPED_SSH}"
-    else
-        if run_ssh_wizard; then
-            _WIZARD_SSH_DONE=1
-        else
-            log_warn "${MSG_WIZARD_ERR_SSH}"
-            wizard_rc=1
-        fi
-    fi
-
-    # ── Step 2: Firewall ──
-    echo ""
-    log_title "${MSG_WIZARD_STEP_FIREWALL}"
-
-    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
-        log_info "${MSG_WIZARD_SKIPPED_FIREWALL}"
-    else
-        if run_firewall_wizard; then
-            _WIZARD_FIREWALL_DONE=1
-        else
-            log_warn "${MSG_WIZARD_ERR_FIREWALL}"
-            wizard_rc=1
-        fi
-    fi
-
-    # ── Step 3: Fail2Ban ──
-    if is_mode_full; then
-    echo ""
-    log_title "${MSG_WIZARD_STEP_FAIL2BAN}"
-
-    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
-        log_info "${MSG_WIZARD_SKIPPED_FAIL2BAN}"
-    else
-        if run_fail2ban_wizard; then
-            _WIZARD_FAIL2BAN_DONE=1
-        else
-            log_warn "${MSG_WIZARD_ERR_FAIL2BAN}"
-            wizard_rc=1
-        fi
-    fi
-    else
-        log_info "${MSG_WIZARD_SKIPPED_FAIL2BAN} ${MSG_MODE_FULL_ONLY}"
-    fi
-
-    # ── Step 4: Audit ──
-    if is_mode_full; then
-    echo ""
-    log_title "${MSG_WIZARD_STEP_AUDIT}"
-
-    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
-        log_info "${MSG_WIZARD_SKIPPED_AUDIT}"
-    else
-        if run_audit_wizard; then
-            _WIZARD_AUDIT_DONE=1
-        else
-            log_warn "${MSG_WIZARD_ERR_AUDIT}"
-            wizard_rc=1
-        fi
-    fi
-    else
-        log_info "${MSG_WIZARD_SKIPPED_AUDIT} ${MSG_MODE_FULL_ONLY}"
-    fi
-
-    # ── Step 5: Users ──
-    if is_mode_full; then
-    echo ""
-    log_title "${MSG_WIZARD_STEP_USERS}"
-
-    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
-        log_info "${MSG_WIZARD_SKIPPED_USERS}"
-    else
-        if run_users_wizard; then
-            _WIZARD_USERS_DONE=1
-        else
-            log_warn "${MSG_WIZARD_ERR_USERS}"
-            wizard_rc=1
-        fi
-    fi
-    else
-        log_info "${MSG_WIZARD_SKIPPED_USERS} ${MSG_MODE_FULL_ONLY}"
-    fi
-
-    # ── Step 6: Kernel ──
-    echo ""
-    log_title "${MSG_WIZARD_STEP_KERNEL}"
-
-    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
-        log_info "${MSG_WIZARD_SKIPPED_KERNEL}"
-    else
-        if run_kernel_wizard; then
-            _WIZARD_KERNEL_DONE=1
-        else
-            log_warn "${MSG_WIZARD_ERR_KERNEL}"
-            wizard_rc=1
-        fi
-    fi
-
-    # ── Step 7: Filesystem ──
-    if is_mode_full; then
-    echo ""
-    log_title "${MSG_WIZARD_STEP_FILESYSTEM}"
-
-    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
-        log_info "${MSG_WIZARD_SKIPPED_FILESYSTEM}"
-    else
-        if run_filesystem_wizard; then
-            _WIZARD_FS_DONE=1
-        else
-            log_warn "${MSG_WIZARD_ERR_FILESYSTEM}"
-            wizard_rc=1
-        fi
-    fi
-    else
-        log_info "${MSG_WIZARD_SKIPPED_FILESYSTEM} ${MSG_MODE_FULL_ONLY}"
-    fi
-
-    # ── Step 8: Services ──
-    if is_mode_full; then
-    echo ""
-    log_title "${MSG_WIZARD_STEP_SERVICES}"
-
-    if confirm "${MSG_WIZARD_SKIP_STEP}" "n"; then
-        log_info "${MSG_WIZARD_SKIPPED_SERVICES}"
-    else
-        if run_services_wizard; then
-            _WIZARD_SERVICES_DONE=1
-        else
-            log_warn "${MSG_WIZARD_ERR_SERVICES}"
-            wizard_rc=1
-        fi
-    fi
-    else
-        log_info "${MSG_WIZARD_SKIPPED_SERVICES} ${MSG_MODE_FULL_ONLY}"
-    fi
-
-    # ── Step 9: Summary ──
+    # ── Summary ──
     echo ""
     log_title "${MSG_WIZARD_STEP_SUMMARY}"
 
@@ -1379,7 +1787,7 @@ run_main_menu_loop() {
             1) show_system_status ;;
             2) run_ssh_submenu_loop ;;
             3) run_firewall_submenu_loop ;;
-            4|5|6|8|9|12)
+            4|5|6|8|9|10|13|14|15|16)
                 if is_mode_lite; then
                     log_error "${MSG_ERROR_LITE_MODE}"
                     press_enter
@@ -1391,16 +1799,19 @@ run_main_menu_loop() {
                     6) run_users_submenu_loop ;;
                     8) run_filesystem_submenu_loop ;;
                     9) run_services_submenu_loop ;;
-                    12) run_k3s_submenu_loop ;;
+                    10) run_autoupdate_submenu_loop ;;
+                    13) run_k3s_submenu_loop ;;
+                    14) run_aide_submenu_loop ;;
+                    15) run_clamav_submenu_loop ;;
+                    16) run_rootkit_submenu_loop ;;
                 esac
                 ;;
             7) run_kernel_submenu_loop ;;
-            10)
+            11)
                 run_full_wizard
                 press_enter
                 ;;
-            11) view_report ;;
-            12) run_k3s_submenu_loop ;;
+            12) view_report ;;
             0) cleanup_and_exit ;;
             *)
                 log_error "${MSG_MENU_INVALID}"
@@ -1448,6 +1859,11 @@ main() {
     }
 
     print_detection_summary
+
+    # Show hardening mode selection (Full mode only)
+    if is_mode_full; then
+        show_hardening_mode_screen
+    fi
 
     # 进入主菜单循环
     run_main_menu_loop

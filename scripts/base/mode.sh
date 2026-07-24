@@ -35,8 +35,8 @@ readonly MODE_FULL="full"
 
 # Module lists
 MODE_LITE_MODULES=("ssh" "firewall" "kernel")
-MODE_FULL_MODULES=("fail2ban" "audit" "users" "filesystem" "services" "k3s")
-MODE_ALL_MODULES=("ssh" "firewall" "kernel" "fail2ban" "audit" "users" "filesystem" "services" "k3s")
+MODE_FULL_MODULES=("fail2ban" "audit" "users" "filesystem" "services" "k3s" "swap" "autoupdate" "aide" "clamav" "rootkit")
+MODE_ALL_MODULES=("ssh" "firewall" "kernel" "fail2ban" "audit" "users" "filesystem" "services" "k3s" "swap" "autoupdate" "aide" "clamav" "rootkit")
 
 # ═══════════════════════════════════════════
 # 模式判断函数
@@ -75,5 +75,43 @@ is_module_available() {
         return $?
     fi
     # Full 模式下，所有模块都可用
+    return 0
+}
+
+# ═══════════════════════════════════════════
+# 加固模式预设
+# ═══════════════════════════════════════════
+
+# Module lists for each hardening mode
+MODE_BASIC_MODULES=("init" "ssh" "firewall" "kernel")
+MODE_STANDARD_MODULES=("init" "ssh" "firewall" "fail2ban" "users" "kernel")
+MODE_ADVANCED_MODULES=("init" "ssh" "firewall" "fail2ban" "users" "audit" "services" "filesystem" "kernel")
+
+# Note: "swap" "autoupdate" "aide" "clamav" "rootkit" "k3s" are optional extras
+# NOT included in Basic/Standard/Advanced presets but available from the main menu
+
+# Get module list for a given hardening mode
+# Usage: modules=$(get_mode_modules "basic")
+get_mode_modules() {
+    local mode="$1"
+    case "${mode}" in
+        basic) echo "${MODE_BASIC_MODULES[@]}" ;;
+        standard) echo "${MODE_STANDARD_MODULES[@]}" ;;
+        advanced) echo "${MODE_ADVANCED_MODULES[@]}" ;;
+        *) echo "" ;;
+    esac
+}
+
+# Check if a hardening mode is compatible with current Lite setting
+# Usage: if is_mode_compatible "standard"; then ...
+# Returns 0 if compatible, 1 if incompatible
+is_mode_compatible() {
+    local mode="$1"
+    if is_mode_lite; then
+        case "${mode}" in
+            basic|custom) return 0 ;;
+            standard|advanced) return 1 ;;
+        esac
+    fi
     return 0
 }
