@@ -155,3 +155,61 @@ teardown() {
     run check_ssh_keys
     [[ "${status}" -ne 0 ]]
 }
+
+# ── SSH Lockout Protection Enhancement Tests ──
+
+@test "_restart_and_test_ssh function exists" {
+    type _restart_and_test_ssh
+}
+
+@test "_start_connection_watch function exists" {
+    type _start_connection_watch
+}
+
+@test "check_active_ssh_sessions function exists" {
+    type check_active_ssh_sessions
+}
+
+@test "has_console_access function exists" {
+    type has_console_access
+}
+
+@test "check_active_ssh_sessions returns 0 or 1" {
+    run check_active_ssh_sessions
+    # May or may not have active sessions in test environment
+    [[ "${status}" -eq 0 ]] || [[ "${status}" -eq 1 ]]
+}
+
+@test "has_console_access returns 0 or 1" {
+    run has_console_access
+    # May or may not have console access in test environment
+    [[ "${status}" -eq 0 ]] || [[ "${status}" -eq 1 ]]
+}
+
+@test "cancel_rollback_timer function still exists" {
+    type cancel_rollback_timer
+}
+
+@test "setup_rollback_timer function still exists" {
+    type setup_rollback_timer
+}
+
+@test "ROLLBACK_DELAY is 300 (5 minutes per PRD §6.3)" {
+    [[ "${ROLLBACK_DELAY}" -eq 300 ]]
+}
+
+@test "_is_ssh_port_listening function exists" {
+    type _is_ssh_port_listening
+}
+
+@test "_monitor_ssh_connections function exists" {
+    type _monitor_ssh_connections
+}
+
+@test "ROLLBACK_SENTINEL is empty string by default" {
+    [[ -z "${ROLLBACK_SENTINEL:-}" ]]
+}
+
+@test "ROLLBACK_MONITOR_PID is empty string by default" {
+    [[ -z "${ROLLBACK_MONITOR_PID:-}" ]]
+}

@@ -29,16 +29,18 @@ teardown() {
     [[ " ${MODE_FULL_MODULES[*]} " == *" filesystem "* ]]
     [[ " ${MODE_FULL_MODULES[*]} " == *" services "* ]]
     [[ " ${MODE_FULL_MODULES[*]} " == *" k3s "* ]]
+    [[ " ${MODE_FULL_MODULES[*]} " == *" swap "* ]]
+    [[ " ${MODE_FULL_MODULES[*]} " == *" autoupdate "* ]]
 }
 
 @test "mode: MODE_ALL_MODULES contains all modules" {
     local count=0
     for m in "${MODE_ALL_MODULES[@]}"; do
         case "${m}" in
-            ssh|firewall|kernel|fail2ban|audit|users|filesystem|services|k3s) count=$((count + 1)) ;;
+            ssh|firewall|kernel|fail2ban|audit|users|filesystem|services|k3s|swap|autoupdate) count=$((count + 1)) ;;
         esac
     done
-    [[ "${count}" -eq 9 ]]
+    [[ "${count}" -eq 11 ]]
 }
 
 @test "mode: is_mode_full returns true by default" {

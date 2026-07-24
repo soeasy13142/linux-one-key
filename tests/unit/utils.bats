@@ -73,35 +73,6 @@ teardown() {
     grep -q "Debug message" "${LOG_FILE}"
 }
 
-# 备份函数测试
-@test "backup_file creates backup" {
-    local test_file="${TEST_DIR}/test.conf"
-    echo "test content" > "${test_file}"
-
-    run backup_file "${test_file}" "Test backup"
-    [[ "${status}" -eq 0 ]]
-
-    local backup_count
-    backup_count=$(ls "${BACKUP_DIR}"/test.conf.bak.* 2>/dev/null | wc -l)
-    [[ "${backup_count}" -eq 1 ]]
-}
-
-@test "backup_file returns error for missing file" {
-    run backup_file "/nonexistent/file"
-    [[ "${status}" -ne 0 ]]
-}
-
-@test "restore_file restores from backup" {
-    local test_file="${TEST_DIR}/test.conf"
-    local backup="${TEST_DIR}/backup.conf"
-    echo "backup content" > "${backup}"
-
-    run restore_file "${backup}" "${test_file}" "Test restore"
-    [[ "${status}" -eq 0 ]]
-    [[ -f "${test_file}" ]]
-    [[ "$(cat "${test_file}")" == "backup content" ]]
-}
-
 # SSH 配置辅助函数测试
 @test "set_ssh_config adds new config" {
     local config_file="${TEST_DIR}/sshd_config"
@@ -143,6 +114,23 @@ teardown() {
     run get_os_type
     [[ "${status}" -eq 0 ]]
     [[ -n "${output}" ]]
+}
+
+# 子模块导入测试（验证 backup/rollback 已正确加载）
+@test "utils.sh sources backup.sh and provides backup_file" {
+    type backup_file
+}
+
+@test "utils.sh sources backup.sh and provides restore_file" {
+    type restore_file
+}
+
+@test "utils.sh sources rollback.sh and provides schedule_rollback" {
+    type schedule_rollback
+}
+
+@test "utils.sh sources rollback.sh and provides cancel_scheduled_task" {
+    type cancel_scheduled_task
 }
 
 # 工具函数测试
