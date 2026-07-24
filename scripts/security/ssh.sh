@@ -17,7 +17,7 @@ fi
 
 readonly SSH_CONFIG="/etc/ssh/sshd_config"
 readonly DEFAULT_SSH_PORT=2222
-readonly ROLLBACK_DELAY=300  # 5 分钟（PRD §6.3）
+readonly ROLLBACK_DELAY=300  # 5 分钟（PRD §6.3），为管理员在修改 SSH 后验证连接提供 5 分钟窗口期
 
 # 回滚定时器 PID 和 at job ID
 ROLLBACK_PID=""
@@ -616,48 +616,10 @@ _restart_and_test_ssh() {
     fi
 }
 
-# 启动连接监控进程，检测到新 SSH 连接时自动取消回滚
-_start_connection_watch() {
-    local port="$1"
-    local delay="$2"
-    local log_file=""
-
-    # 根据 OS 确定认证日志路径
-    case "${DETECTED_OS}" in
-        ubuntu|debian) log_file="/var/log/auth.log" ;;
-        centos|rhel|rocky|almalinux|fedora) log_file="/var/log/secure" ;;
-        *) log_file="/var/log/auth.log" ;;
-    esac
-
-    (
-        trap '' INT TERM
-        local elapsed=0
-        local initial_count
-        initial_count=$(grep -c "Accepted.*port ${port}" "${log_file}" 2>/dev/null || echo 0)
-        while [[ ${elapsed} -lt ${delay} ]]; do
-            sleep 30
-            elapsed=$((elapsed + 30))
-            local current_count
-            current_count=$(grep -c "Accepted.*port ${port}" "${log_file}" 2>/dev/null || echo 0)
-            if [[ ${current_count} -gt ${initial_count} ]]; then
-                # 检测到新连接！取消回滚
-                cancel_rollback_timer
-                log_success "${MSG_SSH_TEST_WATCH_CANCEL//\{port\}/${port}}"
-                exit 0
-            fi
-        done
-        log_debug "Connection watch expired without detecting new connections on port ${port}"
-    ) &
-
-    _WATCH_PID=$!
-    disown "${_WATCH_PID}" 2>/dev/null || true
-    log_info "${MSG_SSH_TEST_WATCH_START//\{port\}/${port}}"
-}
-
 # 检查是否有活动的 SSH 会话
 check_active_ssh_sessions() {
     local sessions
-    sessions=$(ss -tnp 2>/dev/null | grep -c ":22[[:space:]]" || echo 0)
+    sessions=$(ss -tnp 2>/dev/null | grep -c "ESTABLISHED.*:22[[:space:]]" || echo 0)
     if [[ "${sessions}" -gt 0 ]]; then
         log_info "Active SSH sessions detected: ${sessions}"
         return 0
@@ -671,28 +633,9 @@ has_console_access() {
         return 0
     fi
     # 检查是否有其他 tty 终端登录
-    if who -a 2>/dev/null | grep -qE '(tty|console|vc/)'; then
-        return 0
-    fi
-    return 1
-}
-
-# 检查 SSH 端口是否在监听
-# 参数: $1 port 端口号, $2 retries 重试次数 (默认3), $3 delay 重试间隔秒数 (默认2)
-_is_ssh_port_listening() {
-    local port="$1"
-    local retries="${2:-3}"
-    local delay="${3:-2}"
-
-    for ((i=0; i<retries; i++)); do
-        if command_exists ss; then
-            ss -tlnp 2>/dev/null | grep -qE ":${port}[[:space:]]" && return 0
-        elif command_exists netstat; then
-            netstat -tlnp 2>/dev/null | grep -qE ":${port}[[:space:]]" && return 0
-        fi
-        sleep "${delay}"
-    done
-    return 1
+    local console_users
+    console_users=$(LC_ALL=C who -a 2>/dev/null | grep -cE '(tty|console|vc/[0-9])' || echo 0)
+    [[ "${console_users}" -gt 0 ]]
 }
 
 # 监控新 SSH 连接的后台进程
@@ -763,7 +706,7 @@ setup_rollback_timer() {
         # 如果 at 不可用，使用后台进程 + 连接监控
         # 创建 sentinel 文件用于监控新连接
         local sentinel_file
-        sentinel_file=$(mktemp /tmp/.ssh-monitor-XXXXXX 2>/dev/null) || sentinel_file="/tmp/.ssh-monitor-${$}"
+        sentinel_file=$(mktemp /tmp/.ssh-monitor-XXXXXX 2>/dev/null) || sentinel_file="/tmp/.ssh-monitor-${$}-$(date +%s)"
 
         # 启动连接监控后台进程
         _monitor_ssh_connections "$(get_ssh_port)" "${ROLLBACK_DELAY}" "${sentinel_file}" &
@@ -826,9 +769,7 @@ run_ssh_wizard() {
     # Full mode: pre-change safety checks
     if is_mode_full; then
         # Check active SSH sessions
-        local active_sessions
-        active_sessions=$(check_active_ssh_sessions)
-        if [[ "${active_sessions}" -eq 0 ]] || ! check_active_ssh_sessions; then
+        if ! check_active_ssh_sessions; then
             log_warn "${MSG_SSH_SESSION_NONE}"
             if ! confirm "${MSG_SSH_ROLLBACK_CONFIRM_PROMPT}" "n"; then
                 log_info "Cancelled SSH hardening"
