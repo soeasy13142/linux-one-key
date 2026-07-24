@@ -17,11 +17,13 @@ fi
 
 readonly SSH_CONFIG="/etc/ssh/sshd_config"
 readonly DEFAULT_SSH_PORT=2222
-readonly ROLLBACK_DELAY=600  # 10 分钟（给 SSH 重启更多缓冲时间）
+readonly ROLLBACK_DELAY=300  # 5 分钟（PRD §6.3）
 
 # 回滚定时器 PID 和 at job ID
 ROLLBACK_PID=""
 ROLLBACK_AT_JOB=""
+ROLLBACK_SENTINEL=""
+ROLLBACK_MONITOR_PID=""
 
 # ═══════════════════════════════════════════
 # SSH 配置备份
@@ -580,6 +582,146 @@ restart_ssh() {
 }
 
 # ═══════════════════════════════════════════
+# SSH 锁定防护增强（Full 模式专用）
+# ═══════════════════════════════════════════
+
+# 重启 SSH 服务并测试新端口是否可用
+# 仅在 Full 模式下调用，Lite 模式使用 restart_ssh
+_restart_and_test_ssh() {
+    restart_ssh || return 1
+
+    # 等待服务就绪
+    local port
+    port=$(get_ssh_port)
+    local max_wait=15
+    local waited=0
+    while [[ ${waited} -lt ${max_wait} ]]; do
+        if ss -tlnp 2>/dev/null | grep -qE ":${port}[[:space:]]"; then
+            break
+        fi
+        sleep 1
+        ((waited++))
+    done
+
+    # 测试到 localhost 的 SSH 连接
+    if ssh -p "${port}" -o ConnectTimeout=5 -o StrictHostKeyChecking=no \
+         -o BatchMode=yes localhost true 2>/dev/null; then
+        log_success "${MSG_SSH_TEST_PASS//\{port\}/${port}}"
+        return 0
+    else
+        log_warn "${MSG_SSH_TEST_FAIL//\{port\}/${port}}"
+        # shellcheck disable=SC2059
+        log_warn "$(printf "${MSG_SSH_TEST_INSTRUCTIONS}" "ssh -p ${port} user@host")"
+        return 1
+    fi
+}
+
+# 启动连接监控进程，检测到新 SSH 连接时自动取消回滚
+_start_connection_watch() {
+    local port="$1"
+    local delay="$2"
+    local log_file=""
+
+    # 根据 OS 确定认证日志路径
+    case "${DETECTED_OS}" in
+        ubuntu|debian) log_file="/var/log/auth.log" ;;
+        centos|rhel|rocky|almalinux|fedora) log_file="/var/log/secure" ;;
+        *) log_file="/var/log/auth.log" ;;
+    esac
+
+    (
+        trap '' INT TERM
+        local elapsed=0
+        local initial_count
+        initial_count=$(grep -c "Accepted.*port ${port}" "${log_file}" 2>/dev/null || echo 0)
+        while [[ ${elapsed} -lt ${delay} ]]; do
+            sleep 30
+            elapsed=$((elapsed + 30))
+            local current_count
+            current_count=$(grep -c "Accepted.*port ${port}" "${log_file}" 2>/dev/null || echo 0)
+            if [[ ${current_count} -gt ${initial_count} ]]; then
+                # 检测到新连接！取消回滚
+                cancel_rollback_timer
+                log_success "${MSG_SSH_TEST_WATCH_CANCEL//\{port\}/${port}}"
+                exit 0
+            fi
+        done
+        log_debug "Connection watch expired without detecting new connections on port ${port}"
+    ) &
+
+    _WATCH_PID=$!
+    disown "${_WATCH_PID}" 2>/dev/null || true
+    log_info "${MSG_SSH_TEST_WATCH_START//\{port\}/${port}}"
+}
+
+# 检查是否有活动的 SSH 会话
+check_active_ssh_sessions() {
+    local sessions
+    sessions=$(ss -tnp 2>/dev/null | grep -c ":22[[:space:]]" || echo 0)
+    if [[ "${sessions}" -gt 0 ]]; then
+        log_info "Active SSH sessions detected: ${sessions}"
+        return 0
+    fi
+    return 1
+}
+
+# 检查是否有控制台访问权限（物理/VNC）
+has_console_access() {
+    if [[ -c /dev/tty1 ]] || [[ -c /dev/console ]]; then
+        return 0
+    fi
+    # 检查是否有其他 tty 终端登录
+    if who -a 2>/dev/null | grep -qE '(tty|console|vc/)'; then
+        return 0
+    fi
+    return 1
+}
+
+# 检查 SSH 端口是否在监听
+# 参数: $1 port 端口号, $2 retries 重试次数 (默认3), $3 delay 重试间隔秒数 (默认2)
+_is_ssh_port_listening() {
+    local port="$1"
+    local retries="${2:-3}"
+    local delay="${3:-2}"
+
+    for ((i=0; i<retries; i++)); do
+        if command_exists ss; then
+            ss -tlnp 2>/dev/null | grep -qE ":${port}[[:space:]]" && return 0
+        elif command_exists netstat; then
+            netstat -tlnp 2>/dev/null | grep -qE ":${port}[[:space:]]" && return 0
+        fi
+        sleep "${delay}"
+    done
+    return 1
+}
+
+# 监控新 SSH 连接的后台进程
+# 检测到新连接时创建 sentinel 文件
+# 参数: $1 port 端口号, $2 duration 监控时长（秒）, $3 sentinel_file 哨兵文件路径
+_monitor_ssh_connections() {
+    local port="$1"
+    local duration="$2"
+    local sentinel_file="$3"
+    local poll_interval=5
+
+    local end_time=$(( $(date +%s) + duration ))
+    while [[ $(date +%s) -lt ${end_time} ]]; do
+        local count
+        if command_exists ss; then
+            count=$(ss -tnp 2>/dev/null | grep -cE ":${port}[[:space:]].*ESTABLISHED" || true)
+        else
+            count=0
+        fi
+        if [[ "${count}" -gt 0 ]]; then
+            touch "${sentinel_file}" 2>/dev/null || true
+            return 0
+        fi
+        sleep "${poll_interval}"
+    done
+    return 1
+}
+
+# ═══════════════════════════════════════════
 # 回滚保护
 # ═══════════════════════════════════════════
 
@@ -618,10 +760,34 @@ setup_rollback_timer() {
         ROLLBACK_AT_JOB=$(echo "${at_output}" | awk '{for(i=1;i<=NF;i++) if($i=="job") print $(i+1); exit}')
         log_success "${MSG_SSH_ROLLBACK_CRON} (at job: ${ROLLBACK_AT_JOB:-unknown})"
     else
-        # 如果 at 不可用，使用后台进程
-        # 注意：不使用命令替换捕获 PID（避免子 shell 竞态），通过全局变量 _SCHEDULED_PID 传递
-        schedule_rollback "${ROLLBACK_DELAY}" "rollback_ssh" "${MSG_SSH_ROLLBACK_TIMER}"
+        # 如果 at 不可用，使用后台进程 + 连接监控
+        # 创建 sentinel 文件用于监控新连接
+        local sentinel_file
+        sentinel_file=$(mktemp /tmp/.ssh-monitor-XXXXXX 2>/dev/null) || sentinel_file="/tmp/.ssh-monitor-${$}"
+
+        # 启动连接监控后台进程
+        _monitor_ssh_connections "$(get_ssh_port)" "${ROLLBACK_DELAY}" "${sentinel_file}" &
+        local monitor_pid=$!
+        disown "${monitor_pid}" 2>/dev/null || true
+
+        # 调度回滚
+        (
+            trap '' INT TERM
+            sleep "${ROLLBACK_DELAY}"
+            # 如果 sentinel 文件存在，表示已检测到新连接，不回滚
+            if [[ -f "${sentinel_file}" ]]; then
+                rm -f "${sentinel_file}"
+                exit 0
+            fi
+            rollback_ssh
+        ) &
+
+        _SCHEDULED_PID=$!
+        disown "${_SCHEDULED_PID}" 2>/dev/null || true
+
         ROLLBACK_PID="${_SCHEDULED_PID:-}"
+        ROLLBACK_SENTINEL="${sentinel_file}"
+        ROLLBACK_MONITOR_PID="${monitor_pid}"
         log_success "${MSG_SSH_ROLLBACK_CRON} (PID: ${ROLLBACK_PID})"
     fi
 }
@@ -630,12 +796,17 @@ setup_rollback_timer() {
 cancel_rollback_timer() {
     if [[ -n "${ROLLBACK_PID:-}" ]]; then
         cancel_scheduled_task "${ROLLBACK_PID}"
-        log_success "${MSG_SSH_ROLLBACK_CANCEL}"
+    fi
+    if [[ -n "${ROLLBACK_MONITOR_PID:-}" ]]; then
+        kill "${ROLLBACK_MONITOR_PID}" 2>/dev/null || true
+    fi
+    if [[ -n "${ROLLBACK_SENTINEL:-}" ]] && [[ -f "${ROLLBACK_SENTINEL}" ]]; then
+        rm -f "${ROLLBACK_SENTINEL}" 2>/dev/null || true
     fi
     if [[ -n "${ROLLBACK_AT_JOB:-}" ]]; then
         atrm "${ROLLBACK_AT_JOB}" 2>/dev/null || true
-        log_success "${MSG_SSH_ROLLBACK_CANCEL} (at job: ${ROLLBACK_AT_JOB})"
     fi
+    log_success "${MSG_SSH_ROLLBACK_CANCEL}"
 }
 
 # ═══════════════════════════════════════════
@@ -650,6 +821,33 @@ run_ssh_wizard() {
     if ! is_root; then
         log_error "${MSG_ERROR_NOT_ROOT}"
         return 1
+    fi
+
+    # Full mode: pre-change safety checks
+    if is_mode_full; then
+        # Check active SSH sessions
+        local active_sessions
+        active_sessions=$(check_active_ssh_sessions)
+        if [[ "${active_sessions}" -eq 0 ]] || ! check_active_ssh_sessions; then
+            log_warn "${MSG_SSH_SESSION_NONE}"
+            if ! confirm "${MSG_SSH_ROLLBACK_CONFIRM_PROMPT}" "n"; then
+                log_info "Cancelled SSH hardening"
+                return 1
+            fi
+        else
+            log_info "${MSG_SSH_SESSION_ACTIVE}"
+        fi
+
+        # Check backup console access
+        if ! has_console_access; then
+            log_warn "${MSG_SSH_CONSOLE_NONE}"
+            if ! confirm "${MSG_SSH_ROLLBACK_CONFIRM_PROMPT}" "n"; then
+                log_info "Cancelled SSH hardening"
+                return 1
+            fi
+        else
+            log_info "${MSG_SSH_CONSOLE_AVAILABLE}"
+        fi
     fi
 
     # 记录配置文件原始 mtime，用于检测向导期间的外部修改
@@ -691,15 +889,26 @@ run_ssh_wizard() {
     fi
 
     # 重启 SSH 服务
-    if restart_ssh; then
-        # SSH 重启成功，无需回滚
-        log_success "${MSG_SSH_RESTART_SUCCESS}"
+    if is_mode_full; then
+        # Full 模式：使用增强的连接测试 + 连接监控
+        if _restart_and_test_ssh; then
+            log_success "${MSG_SSH_TEST_CONNECTION}"
+            setup_rollback_timer
+            log_info "${MSG_SSH_TEST_CONFIRM}"
+        else
+            setup_rollback_timer
+            log_info "${MSG_SSH_TEST_WAITING}"
+        fi
     else
-        # SSH 重启失败，设置回滚定时器以自动恢复旧配置
-        local _rollback_err="${MSG_SSH_RESTART_FAIL_ROLLBACK//\{delay\}/${ROLLBACK_DELAY}}"
-        log_error "${_rollback_err}"
-        setup_rollback_timer
-        return 1
+        # Lite 模式：保持原有简化流程
+        if restart_ssh; then
+            log_success "${MSG_SSH_RESTART_SUCCESS}"
+        else
+            local _rollback_err="${MSG_SSH_RESTART_FAIL_ROLLBACK//\{delay\}/${ROLLBACK_DELAY}}"
+            log_error "${_rollback_err}"
+            setup_rollback_timer
+            return 1
+        fi
     fi
 
     log_separator
