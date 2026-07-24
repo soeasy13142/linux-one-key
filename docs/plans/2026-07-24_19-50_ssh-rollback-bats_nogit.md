@@ -2,7 +2,7 @@
 title: "SSH 回滚保护模块单元测试 (ssh-rollback.bats)"
 created: 2026-07-24
 updated: 2026-07-24
-status: in-progress
+status: done
 source: "PRD §6.3 + ssh.sh rollback enhancement implementation"
 topic: "test"
 ---

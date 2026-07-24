@@ -2,7 +2,7 @@
 title: "发行版扩展 + Batch 1 验证 + Docker 计划状态修复"
 created: 2026-07-24
 updated: 2026-07-24
-status: in-progress
+status: done
 source: "HANDOVER.md next-steps 发行版扩展 + Batch 1 plan 未检查项 + Docker test phase1 计划状态"
 topic: "testing"
 ---

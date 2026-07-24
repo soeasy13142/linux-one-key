@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-07-24 · **版本**: v1.1.0 · **状态**: 🟢 Batch 1-4 全部完成（计划文档同步标记）
+> **最后更新**: 2026-07-24 · **版本**: v1.1.1 · **状态**: 🟢 全部待办项已完成
 
 ## 会话恢复
 
@@ -16,7 +16,7 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 
 - **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection
 - **Lite/Full 双模式**: `--lite` 低内存模式（SSH + Firewall + Kernel) vs Full 全模块
-- **测试**: 442 Bats 单元测试全部通过
+- **测试**: 481 Bats 单元测试全部通过
 - **审查**: 5 轮全项目 Code Review，发现并修复 280+ 问题
 - **最新发布**: v1.1.0（2026-07-24），Batch 2 安全与基础设施增强 + Batch 3 Security Plus
 
@@ -49,11 +49,12 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 
 ## 下一步
 
-1. **✅ 发行版扩展**: RHEL 7+, Fedora Docker 测试
-2. **⏳ ssh-rollback.bats**: 新增 SSH 回滚专用 Bats 测试文件（当前功能已实现但缺专属测试覆盖）
-3. **⏳ clamd 可选安装**: 大内存服务器可选择启用 clamd 守护进程
-4. **✅ NTP 时间同步** — 已在 Batch 1 实现（init.sh: setup_ntp）
-5. **✅ 基础工具扩充** — 已在 Batch 1 实现（install_base_tools 含 htop/net-tools/lsof/tree/git）
+本次（v1.1.1）已完成：
+1. ✅ **ssh-rollback.bats** — 新增 14 个 SSH 回滚专用测试用例
+2. ✅ **clamd 可选安装** — ClamAV 向导支持可选启用 clamd 守护进程
+3. ✅ **发行版扩展** — 新增 fedora:latest + centos:stream9 Dockerfiles
+4. ✅ **Batch 1 验收** — 全量 481 测试通过，计划文档收尾
+5. ✅ **Docker 计划状态修复** — 计划文件更新为 done
 
 > ✅ = 已实现 · 🔄 = 待验证 · ⏳ = 待实现
 

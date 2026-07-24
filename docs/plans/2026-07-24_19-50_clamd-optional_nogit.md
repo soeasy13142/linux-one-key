@@ -2,7 +2,7 @@
 title: "ClamAV 新增可选 clamd 守护进程安装"
 created: 2026-07-24
 updated: 2026-07-24
-status: in-progress
+status: done
 source: "PRD §2.13.2 — 大内存服务器可选择性启用 clamd"
 topic: "feature"
 ---
