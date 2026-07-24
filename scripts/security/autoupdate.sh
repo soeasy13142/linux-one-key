@@ -7,6 +7,13 @@
 set -eo pipefail
 # 注意: 不使用 -u (nounset)，与 utils.sh 保持一致，避免未绑定变量导致脚本意外退出
 
+# Source guard: prevent double-source crash under set -eo pipefail
+if [[ -n "${_AUTOUPDATE_LOADED:-}" ]]; then
+    # shellcheck disable=SC2317 # unreachable only under impossible conditions
+    return 0 2>/dev/null || true
+fi
+readonly _AUTOUPDATE_LOADED=1
+
 # 检查依赖
 if [[ "${_UTILS_LOADED:-}" != "1" ]]; then
     echo "Error: utils.sh must be loaded before autoupdate.sh"
@@ -150,6 +157,7 @@ EOF
 # 配置 50unattended-upgrades (安全更新专用，不自启)
 _configure_unattended_upgrades() {
     local auto_reboot="${1:-false}"  # true or false
+    local update_scope="${2:-security}"  # "security" or "all"
 
     log_step "${MSG_AUTOUPDATE_CONFIGURE} (50unattended-upgrades)"
 
@@ -158,22 +166,38 @@ _configure_unattended_upgrades() {
         backup_file "${AUTOUPDATE_CONFIG_UNATTENDED}" "Backup 50unattended-upgrades"
     fi
 
-    # 根据发行版生成 origin 匹配模式
-    local origin_pattern
+    # 根据发行版和范围生成 origin 匹配模式
+    local origin_pattern origin_all
     # shellcheck disable=SC2016
     case "${DETECTED_OS}" in
-        ubuntu) origin_pattern='origin=${distro_id}:${distro_codename}-security' ;;
-        debian) origin_pattern='origin=${distro_id}:${distro_codename}-security' ;;
-        *)      origin_pattern='origin=${distro_id}:${distro_codename}-security' ;;
+        ubuntu|debian)
+            origin_pattern='origin=${distro_id}:${distro_codename}-security'
+            origin_all='origin=${distro_id}:${distro_codename}-updates'
+            ;;
+        *)
+            origin_pattern='origin=${distro_id}:${distro_codename}-security'
+            origin_all='origin=${distro_id}:${distro_codename}-updates'
+            ;;
     esac
 
     cat > "${AUTOUPDATE_CONFIG_UNATTENDED}" << EOF
 // 50unattended-upgrades - 由 linux-one-key 自动生成
 // 生成时间: $(date '+%Y-%m-%d %H:%M:%S')
 
-// 只允许安全更新
+// 更新范围
 Unattended-Upgrade::Allowed-Origins {
     "${origin_pattern}";
+EOF
+
+    # 如果是全量更新，追加 -updates 源
+    if [[ "${update_scope}" == "all" ]]; then
+        cat >> "${AUTOUPDATE_CONFIG_UNATTENDED}" << EOF
+    "${origin_all}";
+EOF
+    fi
+
+    # 关闭 Allowed-Origins 块并写入余下配置
+    cat >> "${AUTOUPDATE_CONFIG_UNATTENDED}" << EOF
 };
 
 // 自动清理未使用的依赖
@@ -193,6 +217,13 @@ EOF
 
 # 配置 yum-cron
 _configure_yum_cron() {
+    local update_scope="${1:-security}"  # "security" or "all"
+    local update_cmd_val="security"
+
+    if [[ "${update_scope}" == "all" ]]; then
+        update_cmd_val="default"
+    fi
+
     log_step "${MSG_AUTOUPDATE_CONFIGURE} (yum-cron)"
 
     # 备份现有配置
@@ -206,8 +237,7 @@ _configure_yum_cron() {
     # 配置 /etc/yum/yum-cron.conf
     cat > "${AUTOUPDATE_CONFIG_YUM_CRON}" << EOF
 [commands]
-# 仅安全更新
-update_cmd = security
+update_cmd = ${update_cmd_val}
 # 是否应用更新（设为 yes 则自动安装）
 apply_updates = yes
 
@@ -230,8 +260,7 @@ EOF
 # 由 linux-one-key 自动生成
 CHECK_ONLY=no
 DOWNLOAD_ONLY=no
-# 仅安全更新
-UPDATE_TYPE=security
+UPDATE_TYPE=${update_cmd_val}
 EOF
     fi
 
@@ -300,6 +329,12 @@ configure_autoupdate() {
     local _scope_choice
     _scope_choice=$(prompt_input "" "1")
 
+    # 将范围选择转为配置变量
+    local _update_scope="security"
+    if [[ "${_scope_choice}" == "2" ]]; then
+        _update_scope="all"
+    fi
+
     # 自动重启策略
     echo ""
     echo -e "${BOLD}${MSG_AUTOUPDATE_REBOOT_PROMPT}${NC}"
@@ -321,10 +356,10 @@ configure_autoupdate() {
     case "${DETECTED_OS}" in
         ubuntu|debian)
             _configure_auto_upgrades
-            _configure_unattended_upgrades "${_reboot_policy}"
+            _configure_unattended_upgrades "${_reboot_policy}" "${_update_scope}"
             ;;
         centos|rhel|rocky|almalinux|fedora)
-            _configure_yum_cron
+            _configure_yum_cron "${_update_scope}"
             _enable_yum_cron_service
             ;;
         *)
@@ -445,12 +480,5 @@ show_autoupdate_info() {
             ;;
     esac
 }
-
-# ============================================================================
-# 模块加载检查
-# ============================================================================
-
-# 标记 autoupdate.sh 已加载
-readonly _AUTOUPDATE_LOADED=1
 
 log_debug "autoupdate.sh loaded successfully"

@@ -49,9 +49,15 @@ _install_clamav() {
                 return 1
             }
             # Stop clamd if auto-started (we only want freshclam + on-demand)
-            if systemctl is-active --quiet clamav-daemon 2>/dev/null; then
+            if command -v systemctl &>/dev/null; then
                 systemctl stop clamav-daemon >> "${LOG_FILE}" 2>&1 || true
                 systemctl disable clamav-daemon >> "${LOG_FILE}" 2>&1 || true
+                # Also stop freshclam systemd service to prevent conflicts with cron
+                systemctl stop clamav-freshclam >> "${LOG_FILE}" 2>&1 || true
+                systemctl disable clamav-freshclam >> "${LOG_FILE}" 2>&1 || true
+                systemctl mask clamav-freshclam >> "${LOG_FILE}" 2>&1 || true
+                systemctl stop clamav-freshclam.timer >> "${LOG_FILE}" 2>&1 || true
+                systemctl disable clamav-freshclam.timer >> "${LOG_FILE}" 2>&1 || true
             fi
             ;;
         centos|rhel|rocky|almalinux)
