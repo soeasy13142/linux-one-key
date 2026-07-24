@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-07-24 · **版本**: v1.1.1 · **状态**: 🟢 全部待办项已完成
+> **最后更新**: 2026-07-24 · **版本**: v1.5.0 · **状态**: 🟢 全部待办项已完成
 
 ## 会话恢复
 
@@ -49,12 +49,11 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 
 ## 下一步
 
-本次（v1.1.1）已完成：
-1. ✅ **ssh-rollback.bats** — 新增 14 个 SSH 回滚专用测试用例
-2. ✅ **clamd 可选安装** — ClamAV 向导支持可选启用 clamd 守护进程
-3. ✅ **发行版扩展** — 新增 fedora:latest + centos:stream9 Dockerfiles
-4. ✅ **Batch 1 验收** — 全量 481 测试通过，计划文档收尾
-5. ✅ **Docker 计划状态修复** — 计划文件更新为 done
+本次（v1.5.0）已完成：
+1. ✅ **curl 精简核心测试** — 13 测试 × 5 发行版全部通过，发现并修复 kernel.sh mkdir bug
+2. ✅ **kernel.sh 修复** — `_generate_sysctl_config()` 增加 `mkdir -p`，修复 Rocky Linux 9 兼容性
+3. ✅ **版本号更新** — `0.1.0` → `1.5.0`
+4. ✅ **测试报告归档** — `docs/test-reports/curl-lite-mode-test.md`
 
 > ✅ = 已实现 · 🔄 = 待验证 · ⏳ = 待实现
 
