@@ -102,9 +102,9 @@ _configure_aide() {
 # This file controls which files/directories are monitored
 
 # Database location
-database=file:${AIDE_DB_DIR}/aide.db.gz
-database_out=file:${AIDE_DB_DIR}/aide.db.new.gz
-gzip_db=yes
+database_in=file:${AIDE_DB_DIR}/aide.db.gz
+database_new=file:${AIDE_DB_DIR}/aide.db.new.gz
+gzip_dbout=yes
 verbose=5
 report_url=file:${AIDE_REPORT_DIR}/aide-report-${date_stamp}.txt
 
@@ -213,6 +213,9 @@ _init_aide_database() {
     # 将 .new 数据库移动到正式位置
     if [[ -f "${AIDE_DB_NEW}" ]]; then
         mv "${AIDE_DB_NEW}" "${AIDE_DB}"
+    else
+        log_error "${MSG_AIDE_INIT_DB} database file not created"
+        return 1
     fi
 
     log_success "${MSG_AIDE_INIT_DB_DONE}"

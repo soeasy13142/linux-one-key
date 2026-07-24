@@ -100,9 +100,11 @@ check_swap_status() {
         swap_info=$(swapon --show --bytes 2>/dev/null | tail -n +2)
         if [[ -n "${swap_info}" ]]; then
             swap_exists="yes"
-            swap_file=$(echo "${swap_info}" | awk '{print $1}')
+            # 收集所有设备名（逗号分隔）
+            swap_file=$(echo "${swap_info}" | awk '{print $1}' | tr '\n' ',' | sed 's/,$//')
             local swap_size_bytes
-            swap_size_bytes=$(echo "${swap_info}" | awk '{print $3}')
+            # 多设备时使用 awk 求和，避免算术错误
+            swap_size_bytes=$(echo "${swap_info}" | awk '{sum += $3} END {print sum}')
             swap_size_mb=$((swap_size_bytes / 1024 / 1024))
         fi
     fi

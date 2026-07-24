@@ -32,8 +32,8 @@ backup_file() {
 
     local filename
     filename="$(basename "${file}")"
-    # 使用 TIMESTAMP + PID 确保同一秒内的多次备份不会冲突
-    local backup_path="${BACKUP_DIR}/${filename}.bak.${TIMESTAMP}.$$"
+    # 使用 TIMESTAMP + PID + RANDOM 确保同一秒内的多次备份不会冲突（$$ 在脚本生命周期内恒定，单独使用不足以保证唯一性）
+    local backup_path="${BACKUP_DIR}/${filename}.bak.${TIMESTAMP}.$$.${RANDOM}"
 
     log_step "${description}: ${file}"
 
