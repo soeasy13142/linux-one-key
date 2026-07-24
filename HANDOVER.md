@@ -2,10 +2,10 @@
 
 > **⚠️ 强制规则**：每次修改项目时，必须同步更新本文档。详见 `.claude/rules/common/handover.md`。
 
-**最后更新**: 2026-07-21（v1.0.1 发布）
-**当前阶段**: v1.0.1 已发布 → 全项目安全审计修复完成 → 文档规范化完成 ✅
+**最后更新**: 2026-07-24（Lite/Full 双模式发布）
+**当前阶段**: v1.0.1 已发布 → Lite/Full 双模式实现完成 ✅
 
-> **新增**: K3s (Lightweight Kubernetes) 安装模块已实现（`scripts/server/k3s.sh`）
+> **新增**: Lite/Full 双模式（`--lite` 精简版，低内存服务器优化）
 
 ---
 
@@ -23,7 +23,7 @@
 
 ## 2. 当前进度
 
-### 总体状态：🟢 v0.4 全部模块完成 + 主菜单重构 v2 已实施
+### 总体状态：🟢 Lite/Full 双模式实现完成 ✅
 
 | 阶段 | 状态 | 说明 |
 |------|------|------|
@@ -42,10 +42,9 @@
 | v1.0 测试 + 文档 + 发布 | ✅ 完成 | Docker Phase 1 配置验证测试：9 distros × 8 modules = 72/72 全部通过 |
 | v1.0 K3s 安装模块 | ✅ 完成 | K3s 安装/卸载/状态检查，i18n，菜单集成，17 个 Bats 测试 |
 | v1.0 Docker Phase 2（基础设施就绪） | ✅ 完成 | 特权容器 + 服务验证 + 安全扫描 + 回滚测试（3 distros × 7 modules = 21/21 passed）|
+| v1.0.1 Lite/Full 双模式 | ✅ 完成 | mode.sh 模块注册表 + install.sh --lite 参数 + 菜单/向导/状态过滤 + i18n + mode.bats 测试 |
 
 ---
-
-
 ## 3. 文件清单
 
 > 📋 **详细文件树由 [`scripts/dev/gen-file-tree.sh`](../../scripts/dev/gen-file-tree.sh) 自动生成**，输出到 `docs/file-tree.generated.md`（gitignored，避免过期）。
@@ -72,7 +71,7 @@
 | `config/` | 配置文件模板（fail2ban/, audit/, sysctl/） |
 | `docs/code-reviews/` | Code Review 报告归档 |
 | `docs/test-reports/` | 测试报告归档 |
-| `docs/design/` | 设计文档 & 实施计划 |
+| `docs/design/` | 设计文档 & 实施计划（含 lite-vs-full-mode.md） |
 | `docs/plans/` | 计划文件目录（Plan-First 落地，命名见 [README](plans/README.md)） |
 | `docs/handover-archive.md` | 历史变更日志归档（2026-06-20~24） |
 
@@ -103,40 +102,31 @@
 
 ### 已完成
 
-1. ✅ **Round 5 分模块 Code Review 已完成**（详见 `docs/code-reviews/round-5-comprehensive.md`）
-   - 6 组并行审查，共 115 个发现（0 CRITICAL + 20 HIGH + 46 MEDIUM + 49 LOW）
-   - CRITICAL 全部清零 ✅
-   - 主要发现区域：i18n 完整性(7 HIGH)、可维护性DRY(4 HIGH/MEDIUM)、安全配置(4 HIGH)
-   - 详细修复建议见 round-5 报告
+1. ✅ **Lite/Full 双模式实现完成**（2026-07-24）
+   - **新增** `scripts/base/mode.sh` 模块注册表
+   - **install.sh 改造**：解析 `--lite` 参数，菜单/向导/状态按模式过滤
+   - **Lite 模块**：SSH + Firewall + Kernel（零/极低内存开销）
+   - **Full 独占**：Fail2Ban / Audit / Users / Filesystem / Services / K3s
+   - **i18n**：新增 11 个模式相关键
+   - **测试**：13 个 mode.bats 单元测试
 
-2. ✅ **修复 Code Review 发现的全部 32 个 bug**（详见 `docs/bug-review-report.md`）
-   - **第一批（阻断性）**: C1 变量名不匹配、C2 正则无边界、H2 banaction 硬编码
-   - **第二批（逻辑错误）**: H1 回滚定时器、H4 临时目录清理、H6 报告生成
-   - **第三批（安全加固）**: M1 eval 注入、H5 完整性校验、H3 set -u 一致性、H7 os-release 污染
-   - **第四批（MEDIUM）**: M2-M14
-   - **第五批（LOW）**: L1-L9
-
-2. ✅ **交互式重构完成**：删除一键模式（--yes/--quick），改为逐步交互式向导配置
-
-3. ✅ **Docker Phase 1 测试框架完成**（2026-07-12）
-   - **架构**：单容器执行模式 + Sentinel Marker 断言机制
-   - **9 个 Docker 镜像**：Ubuntu 20.04/22.04/24.04, Debian 11/12, CentOS 7, Rocky 8/9, Alma 9
-   - **8 个模块**：SSH / Kernel / Services / Users / Fail2Ban / Audit / Firewall / Filesystem
-   - **72/72 全部通过**
-   - **已修复 12 个调试问题**：子 Shell 变量丢失、容器状态丢失、RHEL 包冲突、CentOS 7 EOL 等
-   - **调试日志**：`docs/docker-test-debug-log.md`
-
-4. ✅ **Docker Phase 2 基础设施完成**（2026-07-12）
-   - **架构**：特权容器 + 后台运行 + docker exec 模式
-   - **3 个 Phase 2 Dockerfile**：Ubuntu 22.04 / CentOS 7 / Debian 12
-   - **7 个服务验证测试脚本**：SSH / Firewall / Fail2Ban / Audit / Users / Security-Check / Rollback
-   - **新增 common.bash 函数**：start_privileged_container / exec_in_privileged_container / stop_privileged_container
-   - **run-test.sh / test-all.sh 升级**：支持 --phase 1|2 切换
+2. ✅ **Round 5 分模块 Code Review 已完成**（详见 `docs/code-reviews/round-5-comprehensive.md`）
+3. ✅ **修复 Code Review 发现的全部 32 个 bug**
+4. ✅ **交互式重构完成**：删除一键模式
+5. ✅ **Docker Phase 1 测试框架完成**（72/72）
+6. ✅ **Docker Phase 2 基础设施完成**（21/21）
 
 ### 接下来要做
 
-1. ✅ **Phase 2 实际运行验证完成** — 21/21 全部通过（见下方 Phase 2 修复记录）
-2. **📋 v1.0 收尾**：文档完善、正式发布、CI 集成
+1. ✅ **Lite/Full 双模式** — 已完成
+2. **PRD 中未实现的补充功能**（优先级排序）：
+   - **基础工具扩充**（htop/net-tools/lsof/tree/git）— 低难度
+   - **独立 backup.sh/rollback.sh** 提取 — 中难度
+   - **自动安全更新**（unattended-upgrades/yum-cron）— 中难度
+   - **NTP 时间同步** — 低难度
+   - **Swap 文件配置** — 低难度
+   - **AIDE / ClamAV / Rootkit 检测** — 高难度
+3. **发行版验证**：RHEL 7+ / Fedora Docker 测试
 
 ### 实现顺序建议
 
@@ -400,3 +390,12 @@ v0.4 ✅ 已完成
 | 2026-07-21 | FIX | `config/audit/auditd.conf` | M12: flush 改为 DATA（CIS Level 2 / STIG 推荐）|
 | 2026-07-21 | PASS | `bats tests/unit/*.bats` | **259/259 全部通过** ✅ |
 | 2026-07-21 | RELEASE | `v1.0.1` | 补丁发布：全项目安全审计修复（10 项）+ 文档规范化 + Round 5 Review 修正 |
+|------|------|------|
+| 2026-07-24 | CREATE | `docs/design/lite-vs-full-mode.md` | Lite/Full 双模式设计文档 |
+| 2026-07-24 | CREATE | `scripts/base/mode.sh` | 模块注册表：定义 Lite/Full 模块集合 |
+| 2026-07-24 | UPDATE | `scripts/lang/zh.sh` | 新增 11 个模式相关 i18n 键 |
+| 2026-07-24 | UPDATE | `scripts/lang/en.sh` | 新增 11 个模式相关 i18n 键 |
+| 2026-07-24 | UPDATE | `install.sh` | 解析 --lite 参数；菜单/向导/状态按模式过滤 |
+| 2026-07-24 | UPDATE | `README.md` | 新增 Lite/Full 双模式文档 |
+| 2026-07-24 | UPDATE | `HANDOVER.md` | 变更日志，进度表更新 |
+| 2026-07-24 | CREATE | `tests/unit/mode.bats` | 13 个模式模块单元测试 |

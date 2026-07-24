@@ -18,6 +18,9 @@ GITHUB_REPO="soeasy13142/linux-one-key"
 GITHUB_BRANCH="main"
 GITHUB_TARBALL_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/${GITHUB_BRANCH}.tar.gz"
 
+# 运行模式：lite（精简版）或 full（完整版，默认）
+INSTALL_MODE="${INSTALL_MODE:-full}"
+
 # ═══════════════════════════════════════════
 # Bootstrap: curl 管道模式自动下载完整仓库并 re-exec
 # ═══════════════════════════════════════════
@@ -100,6 +103,9 @@ _bootstrap_and_reexec() {
 _parse_args() {
     for arg in "$@"; do
         case "${arg}" in
+            --lite)
+                export INSTALL_MODE="lite"
+                ;;
             --status)
                 export TARGET_MODULE="status"
                 ;;
@@ -107,6 +113,7 @@ _parse_args() {
                 echo "${MSG_HELP_USAGE}"
                 echo ""
                 echo "${MSG_HELP_OPTIONS}"
+                echo "${MSG_HELP_LITE}"
                 echo "${MSG_HELP_STATUS}"
                 echo "${MSG_HELP_HELP}"
                 echo ""
@@ -229,6 +236,14 @@ load_dependencies() {
     fi
     # shellcheck source=/dev/null
     source "${base_dir}/init.sh"
+
+    # 加载 mode.sh（Lite/Full 模式注册表）
+    if [[ ! -f "${base_dir}/mode.sh" ]]; then
+        echo "Error: Cannot find mode.sh at ${base_dir}/mode.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${base_dir}/mode.sh"
 
     # 加载 ssh.sh
     if [[ ! -f "${SCRIPT_DIR}/scripts/security/ssh.sh" ]]; then
@@ -387,6 +402,9 @@ show_system_status() {
     fi
 
     # ─── Fail2Ban ───────────────────────────────────────────────────────
+    if is_mode_lite; then
+        _print_status_row "${MSG_STATUS_FAIL2BAN}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
+    else
     local f2b_status="${MSG_STATUS_NOT_INSTALLED}" f2b_color="${RED}" f2b_icon="❌"
     if command -v fail2ban-client &>/dev/null; then
         f2b_status="${MSG_STATUS_INSTALLED}"
@@ -408,8 +426,12 @@ show_system_status() {
         failed=$((failed + 1))
         recommend_items+=("4|${MSG_STATUS_FAIL2BAN}")
     fi
+    fi
 
     # ─── 审计日志 ───────────────────────────────────────────────────────
+    if is_mode_lite; then
+        _print_status_row "${MSG_STATUS_AUDIT}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
+    else
     local audit_status="${MSG_STATUS_NOT_INSTALLED}" audit_color="${RED}" audit_icon="❌"
     if command -v auditctl &>/dev/null; then
         audit_status="${MSG_STATUS_INSTALLED}"
@@ -431,8 +453,12 @@ show_system_status() {
         failed=$((failed + 1))
         recommend_items+=("5|${MSG_STATUS_AUDIT}")
     fi
+    fi
 
     # ─── 用户管理 ───────────────────────────────────────────────────────
+    if is_mode_lite; then
+        _print_status_row "${MSG_STATUS_USERS}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
+    else
     local users_color="${RED}" users_icon="❌" users_detail="${MSG_STATUS_NOT_CONFIGURED}"
     if type check_users_status &>/dev/null; then
         local users_status custom_users
@@ -450,6 +476,7 @@ show_system_status() {
         _print_status_row "${MSG_STATUS_USERS}" "${MSG_STATUS_NOT_HARDENED}" "${users_color}" "${users_detail}" "${users_icon}"
         failed=$((failed + 1))
         recommend_items+=("6|${MSG_STATUS_USERS}")
+    fi
     fi
 
     # ─── 内核加固 ───────────────────────────────────────────────────────
@@ -473,6 +500,9 @@ show_system_status() {
     fi
 
     # ─── 文件系统 ───────────────────────────────────────────────────────
+    if is_mode_lite; then
+        _print_status_row "${MSG_STATUS_FILESYSTEM}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
+    else
     local fs_color="${RED}" fs_icon="❌" fs_detail="${MSG_STATUS_NOT_HARDENED}"
     if type check_filesystem_status &>/dev/null; then
         local fs_status suid_count
@@ -499,8 +529,12 @@ show_system_status() {
         failed=$((failed + 1))
         recommend_items+=("8|${MSG_STATUS_FILESYSTEM}")
     fi
+    fi
 
     # ─── 服务管理 ───────────────────────────────────────────────────────
+    if is_mode_lite; then
+        _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_NA_LITE}" "${YELLOW}" "" "⏭️"
+    else
     local svc_color="${RED}" svc_icon="❌" svc_detail="${MSG_STATUS_NOT_HARDENED}"
     if type check_services_status &>/dev/null; then
         local svc_status svc_running svc_unnecessary
@@ -527,6 +561,7 @@ show_system_status() {
         _print_status_row "${MSG_STATUS_SERVICES}" "${MSG_STATUS_NOT_HARDENED}" "${svc_color}" "${svc_detail}" "${svc_icon}"
         failed=$((failed + 1))
         recommend_items+=("9|${MSG_STATUS_SERVICES}")
+    fi
     fi
 
     # ─── 顶部评分 + 建议下一步 ──────────────────────────────────────────
@@ -566,6 +601,13 @@ show_main_menu() {
     echo ""
     echo -e "  ${BOLD}Linux Server Security Hardening ${SCRIPT_VERSION}${NC}"
     echo -e "  ${BLUE}${MSG_WELCOME}${NC}"
+
+    # 显示当前模式（Lite/Full）
+    if is_mode_lite; then
+        echo -e "  ${YELLOW}${MSG_MODE_LITE_TAG} ${MSG_MODE_LITE_DESC}${NC}"
+    else
+        echo -e "  ${GREEN}${MSG_MODE_FULL_TAG} ${MSG_MODE_FULL_DESC}${NC}"
+    fi
     echo ""
 
     # 顶部状态摘要行（spec §3.1 GAP-2）
@@ -598,23 +640,48 @@ show_main_menu() {
     echo -e "  ${GREEN}${MSG_MAIN_MENU_FIREWALL}${NC}"
     echo -e "      ${MSG_MAIN_MENU_FIREWALL_DESC}"
     echo ""
+    # Fail2Ban（完整版专用）
     echo -e "  ${GREEN}${MSG_MAIN_MENU_FAIL2BAN}${NC}"
-    echo -e "      ${MSG_MAIN_MENU_FAIL2BAN_DESC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_FAIL2BAN_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_FAIL2BAN_DESC}"
+    fi
     echo ""
+    # Audit（完整版专用）
     echo -e "  ${GREEN}${MSG_MAIN_MENU_AUDIT}${NC}"
-    echo -e "      ${MSG_MAIN_MENU_AUDIT_DESC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_AUDIT_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_AUDIT_DESC}"
+    fi
     echo ""
+    # Users（完整版专用）
     echo -e "  ${GREEN}${MSG_MAIN_MENU_USERS}${NC}"
-    echo -e "      ${MSG_MAIN_MENU_USERS_DESC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_USERS_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_USERS_DESC}"
+    fi
     echo ""
     echo -e "  ${GREEN}${MSG_MAIN_MENU_KERNEL}${NC}"
     echo -e "      ${MSG_MAIN_MENU_KERNEL_DESC}"
     echo ""
+    # Filesystem（完整版专用）
     echo -e "  ${GREEN}${MSG_MAIN_MENU_FILESYSTEM}${NC}"
-    echo -e "      ${MSG_MAIN_MENU_FILESYSTEM_DESC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_FILESYSTEM_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_FILESYSTEM_DESC}"
+    fi
     echo ""
+    # Services（完整版专用）
     echo -e "  ${GREEN}${MSG_MAIN_MENU_SERVICES}${NC}"
-    echo -e "      ${MSG_MAIN_MENU_SERVICES_DESC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_SERVICES_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_SERVICES_DESC}"
+    fi
     echo ""
 
     # 分组 3：一键
@@ -627,8 +694,13 @@ show_main_menu() {
     # 分组 4：服务器软件
     echo -e "${BOLD}${MSG_SECTION_SERVER}${NC}"
     echo ""
+    # K3s（完整版专用）
     echo -e "  ${GREEN}${MSG_MAIN_MENU_K3S}${NC}"
-    echo -e "      ${MSG_MAIN_MENU_K3S_DESC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_K3S_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_K3S_DESC}"
+    fi
     echo ""
 
     echo -e "  ${RED}${MSG_MAIN_MENU_EXIT}${NC}"
@@ -1153,6 +1225,7 @@ run_full_wizard() {
     fi
 
     # ── Step 3: Fail2Ban ──
+    if is_mode_full; then
     echo ""
     log_title "${MSG_WIZARD_STEP_FAIL2BAN}"
 
@@ -1166,8 +1239,12 @@ run_full_wizard() {
             wizard_rc=1
         fi
     fi
+    else
+        log_info "${MSG_WIZARD_SKIPPED_FAIL2BAN} ${MSG_MODE_FULL_ONLY}"
+    fi
 
     # ── Step 4: Audit ──
+    if is_mode_full; then
     echo ""
     log_title "${MSG_WIZARD_STEP_AUDIT}"
 
@@ -1181,8 +1258,12 @@ run_full_wizard() {
             wizard_rc=1
         fi
     fi
+    else
+        log_info "${MSG_WIZARD_SKIPPED_AUDIT} ${MSG_MODE_FULL_ONLY}"
+    fi
 
     # ── Step 5: Users ──
+    if is_mode_full; then
     echo ""
     log_title "${MSG_WIZARD_STEP_USERS}"
 
@@ -1195,6 +1276,9 @@ run_full_wizard() {
             log_warn "${MSG_WIZARD_ERR_USERS}"
             wizard_rc=1
         fi
+    fi
+    else
+        log_info "${MSG_WIZARD_SKIPPED_USERS} ${MSG_MODE_FULL_ONLY}"
     fi
 
     # ── Step 6: Kernel ──
@@ -1213,6 +1297,7 @@ run_full_wizard() {
     fi
 
     # ── Step 7: Filesystem ──
+    if is_mode_full; then
     echo ""
     log_title "${MSG_WIZARD_STEP_FILESYSTEM}"
 
@@ -1226,8 +1311,12 @@ run_full_wizard() {
             wizard_rc=1
         fi
     fi
+    else
+        log_info "${MSG_WIZARD_SKIPPED_FILESYSTEM} ${MSG_MODE_FULL_ONLY}"
+    fi
 
     # ── Step 8: Services ──
+    if is_mode_full; then
     echo ""
     log_title "${MSG_WIZARD_STEP_SERVICES}"
 
@@ -1240,6 +1329,9 @@ run_full_wizard() {
             log_warn "${MSG_WIZARD_ERR_SERVICES}"
             wizard_rc=1
         fi
+    fi
+    else
+        log_info "${MSG_WIZARD_SKIPPED_SERVICES} ${MSG_MODE_FULL_ONLY}"
     fi
 
     # ── Step 9: Summary ──
@@ -1287,12 +1379,22 @@ run_main_menu_loop() {
             1) show_system_status ;;
             2) run_ssh_submenu_loop ;;
             3) run_firewall_submenu_loop ;;
-            4) run_fail2ban_submenu_loop ;;
-            5) run_audit_submenu_loop ;;
-            6) run_users_submenu_loop ;;
+            4|5|6|8|9|12)
+                if is_mode_lite; then
+                    log_error "${MSG_ERROR_LITE_MODE}"
+                    press_enter
+                    continue
+                fi
+                case "${choice}" in
+                    4) run_fail2ban_submenu_loop ;;
+                    5) run_audit_submenu_loop ;;
+                    6) run_users_submenu_loop ;;
+                    8) run_filesystem_submenu_loop ;;
+                    9) run_services_submenu_loop ;;
+                    12) run_k3s_submenu_loop ;;
+                esac
+                ;;
             7) run_kernel_submenu_loop ;;
-            8) run_filesystem_submenu_loop ;;
-            9) run_services_submenu_loop ;;
             10)
                 run_full_wizard
                 press_enter

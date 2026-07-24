@@ -45,6 +45,7 @@
 - [x] i18n 国际化（中文 / English）
 - [x] 所有修改前自动备份，支持回滚
 - [x] 幂等设计，重复运行安全
+- [x] Lite/Full 双模式（`--lite` 精简版，低内存服务器优化）
 
 ---
 
@@ -81,6 +82,18 @@ sudo bash install.sh
 ```
 
 > **注意**：所有方式都需要 root 或 sudo 权限运行。
+
+### 方式四：精简模式执行（低内存服务器适用）
+
+适合低配云服务器（1GB 以下内存），只执行核心安全加固：
+
+```bash
+# 精简版（SSH + 防火墙 + 内核参数）
+curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash -s -- --lite
+
+# 或下载后执行
+sudo bash install.sh --lite
+```
 
 ---
 
@@ -234,12 +247,45 @@ Step 8: 服务管理（审计服务、禁用不必要服务、端口扫描）
 Step 9: 生成安全报告
 ```
 
+> **精简模式（`--lite`）**：步骤 3（Fail2Ban）、步骤 4（Audit）、步骤 5（用户管理）、步骤 7（文件系统）、步骤 8（服务管理）在精简模式下自动跳过，仅执行核心安全加固。
+
 ### 安全保障
 
 - **自动备份**：所有配置修改前自动备份原文件到 `/var/log/linux-one-key/backups/`
 - **幂等设计**：重复运行不会产生副作用，已配置的项目会自动跳过
 - **状态检测**：主菜单实时显示各模块的配置状态（评分 + 颜色 + 建议）
 - **回滚支持**：内核参数修改支持一键回滚到备份状态
+
+---
+
+## 精简版 / 完整版双模式
+
+脚本支持两种运行模式，通过 `--lite` 参数切换：
+
+| 模式 | 命令 | 包含模块 | 适用场景 |
+|------|------|----------|----------|
+| **完整版**（默认） | `sudo bash install.sh` | 全部 9 个安全模块 | 标准云服务器（2GB+ 内存） |
+| **精简版** | `sudo bash install.sh --lite` | SSH + 防火墙 + 内核参数 | 低内存服务器（1GB 以下） |
+
+### 精简版特点
+
+- **内存优化**：不启动 Fail2Ban（Python 守护进程 ~50-100MB）和 auditd（~20-50MB）
+- **零配置开销**：SSH 和内核参数均为纯配置文件修改
+- **快速执行**：仅含 3 个核心安全步骤，耗时减半
+
+### 在 curl 管道中使用
+
+```bash
+# 完整版（默认）
+curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash
+
+# 精简版
+curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash -s -- --lite
+```
+
+### 菜单界面差异
+
+精简版主菜单中，完整版专属模块会显示 `[仅在完整版中可用]` 标签。选择后会提示切换到完整版。
 
 ---
 

@@ -872,6 +872,22 @@ MSG_ERROR_REMOVED_ARG="Error: --%s has been removed. This script only supports i
 MSG_ERROR_REMOVED_HINT="Tip: use --status for read-only detection, or no argument for interactive menu."
 
 # ═══════════════════════════════════════════
+# Mode (Lite/Full)
+# ═══════════════════════════════════════════
+
+MSG_MODE_LITE="Lite Mode"
+MSG_MODE_FULL="Full Mode"
+MSG_MODE_CURRENT="Current Mode"
+MSG_MODE_LITE_TAG="[Lite]"
+MSG_MODE_FULL_TAG="[Full]"
+MSG_MODE_LITE_DESC="Core security only, optimized for low-memory servers"
+MSG_MODE_FULL_DESC="All security hardening features"
+MSG_MODE_FULL_ONLY="[Full mode only]"
+MSG_ERROR_LITE_MODE="This feature is only available in Full mode. Re-run without --lite to enable."
+MSG_STATUS_NA_LITE="N/A (not included in Lite mode)"
+MSG_HELP_LITE="  --lite          Lite mode: core security only (SSH/firewall/kernel)"
+
+# ═══════════════════════════════════════════
 # Command-line help text (M17 fix: i18n)
 # ═══════════════════════════════════════════
 

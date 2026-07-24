@@ -872,6 +872,22 @@ MSG_ERROR_REMOVED_ARG="错误：参数 --%s 已移除，本脚本仅支持交互
 MSG_ERROR_REMOVED_HINT="提示：使用 --status 只读检测，或不带参数进入交互菜单"
 
 # ═══════════════════════════════════════════
+# 模式 (Lite/Full)
+# ═══════════════════════════════════════════
+
+MSG_MODE_LITE="精简模式"
+MSG_MODE_FULL="完整模式"
+MSG_MODE_CURRENT="当前模式"
+MSG_MODE_LITE_TAG="[精简版]"
+MSG_MODE_FULL_TAG="[完整版]"
+MSG_MODE_LITE_DESC="仅含核心安全功能，适合低内存服务器"
+MSG_MODE_FULL_DESC="所有安全加固功能"
+MSG_MODE_FULL_ONLY="[仅在完整版中可用]"
+MSG_ERROR_LITE_MODE="此功能仅在完整版中可用。如需使用，请不加 --lite 参数重新运行"
+MSG_STATUS_NA_LITE="N/A（精简模式未包含此模块）"
+MSG_HELP_LITE="  --lite          精简模式：仅执行核心安全加固（SSH/防火墙/内核）"
+
+# ═══════════════════════════════════════════
 # 命令行帮助文本（M17 fix: i18n）
 # ═══════════════════════════════════════════
 
