@@ -6,7 +6,10 @@ set -eo pipefail
 # 注意: 不使用 -u (nounset)，与 utils.sh 保持一致，避免未绑定变量导致脚本意外退出
 
 # 源加载保护：防止重复 source 导致 readonly 变量错误
-[ -n "${_SWAP_LOADED:-}" ] && return 0
+if [[ -n "${_SWAP_LOADED:-}" ]]; then
+    # shellcheck disable=SC2317
+    return 0 2>/dev/null || true
+fi
 readonly _SWAP_LOADED=1
 
 # 检查依赖
@@ -94,15 +97,13 @@ check_swap_status() {
     # Check swap using swapon
     if command -v swapon &>/dev/null; then
         local swap_info
-        swap_info=$(swapon --show 2>/dev/null)
+        swap_info=$(swapon --show --bytes 2>/dev/null | tail -n +2)
         if [[ -n "${swap_info}" ]]; then
             swap_exists="yes"
-            swap_file=$(echo "${swap_info}" | awk 'NR>1 {print $1}' | head -1)
-            swap_size_mb=$(echo "${swap_info}" | awk 'NR>1 {print $3}' | head -1)
-            # Convert from KiB to MiB if needed
-            if [[ -n "${swap_size_mb}" ]]; then
-                swap_size_mb=$((swap_size_mb / 1024))
-            fi
+            swap_file=$(echo "${swap_info}" | awk '{print $1}')
+            local swap_size_bytes
+            swap_size_bytes=$(echo "${swap_info}" | awk '{print $3}')
+            swap_size_mb=$((swap_size_bytes / 1024 / 1024))
         fi
     fi
 
@@ -154,7 +155,7 @@ setup_swap() {
         swapoff "${SWAP_FILE_PATH}" 2>/dev/null || true
     fi
 
-    if ! dd if=/dev/zero of="${SWAP_FILE_PATH}" bs=1M count="${recommended_mb}" 2>/dev/null; then
+    if ! dd if=/dev/zero of="${SWAP_FILE_PATH}" bs=1M count="${recommended_mb}" status=none; then
         log_error "${MSG_SWAP_CREATE_FAIL}"
         return 1
     fi
@@ -163,11 +164,11 @@ setup_swap() {
 
     # 启用 swap
     log_step "${MSG_SWAP_ENABLING}"
-    if ! mkswap "${SWAP_FILE_PATH}" 2>/dev/null; then
+    if ! mkswap "${SWAP_FILE_PATH}"; then
         log_error "${MSG_SWAP_ENABLE_FAIL}"
         return 1
     fi
-    if ! swapon "${SWAP_FILE_PATH}" 2>/dev/null; then
+    if ! swapon "${SWAP_FILE_PATH}"; then
         log_error "${MSG_SWAP_ENABLE_FAIL}"
         return 1
     fi
@@ -183,6 +184,10 @@ setup_swap() {
     # 添加到 /etc/fstab
     log_step "${MSG_SWAP_FSTAB_ADD}"
     if ! grep -q "${SWAP_FILE_PATH}" /etc/fstab 2>/dev/null; then
+        if ! declare -F backup_file &>/dev/null; then
+            log_error "backup_file function not available"
+            return 1
+        fi
         backup_file "/etc/fstab" "fstab backup before swap entry"
         echo "${SWAP_FILE_PATH} none swap sw 0 0" >> /etc/fstab
     fi

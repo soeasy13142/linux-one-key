@@ -31,7 +31,18 @@ schedule_rollback() {
     local callback="$2"
     local description="${3:-Scheduled rollback}"
 
-    echo -e "${BLUE}[INFO]${NC} ${description} in ${delay} seconds" >&2
+    log_info "${description} in ${delay} seconds"
+
+    # Whitelist check: only allow known safe callbacks
+    local allowed_callbacks=("rollback_ssh")
+    local matched=0
+    for cb in "${allowed_callbacks[@]}"; do
+        [[ "${callback}" == "${cb}" ]] && { matched=1; break; }
+    done
+    if [[ ${matched} -eq 0 ]]; then
+        log_error "Invalid callback: ${callback}"
+        return 1
+    fi
 
     # 在子 shell 中忽略 INT/TERM 信号，防止 sleep 被中断导致 callback 不执行
     (

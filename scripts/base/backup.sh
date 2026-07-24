@@ -38,12 +38,14 @@ backup_file() {
     log_step "${description}: ${file}"
 
     if cp -a "${file}" "${backup_path}"; then
-        log_success "${MSG_SSH_BACKUP_SUCCESS}: ${backup_path}"
+        # shellcheck disable=SC2059
+        log_success "$(printf "${MSG_BACKUP_SUCCESS}" "${backup_path}")"
         log_debug "Backed up ${file} to ${backup_path}"
         echo "${backup_path}"
         return 0
     else
-        log_error "${MSG_SSH_BACKUP_FAIL}: ${file}"
+        # shellcheck disable=SC2059
+        log_error "$(printf "${MSG_BACKUP_FAIL}" "${file}")"
         return 1
     fi
 }
@@ -55,14 +57,15 @@ restore_file() {
     local description="${3:-${MSG_LOG_RESTORE}}"
 
     if [[ ! -f "${backup_path}" ]]; then
-        log_error "Backup file not found: ${backup_path}"
+        log_error "${MSG_ERROR_FILE_NOT_FOUND}: ${backup_path}"
         return 1
     fi
 
     log_step "${description}: ${target_path}"
 
     if cp -a "${backup_path}" "${target_path}"; then
-        log_success "Restored: ${target_path}"
+        # shellcheck disable=SC2059
+        log_success "$(printf "${MSG_RESTORE_SUCCESS}" "${target_path}")"
         log_debug "Restored ${backup_path} to ${target_path}"
         return 0
     else

@@ -259,7 +259,15 @@ EOF
 # ═══════════════════════════════════════════
 
 # Source backup and rollback modules (backward-compatible extraction)
+if [[ ! -f "${SCRIPT_DIR}/scripts/base/backup.sh" ]]; then
+    echo "ERROR: backup.sh not found" >&2
+    exit 1
+fi
 source "${SCRIPT_DIR}/scripts/base/backup.sh"
+if [[ ! -f "${SCRIPT_DIR}/scripts/base/rollback.sh" ]]; then
+    echo "ERROR: rollback.sh not found" >&2
+    exit 1
+fi
 source "${SCRIPT_DIR}/scripts/base/rollback.sh"
 
 # Verify all expected functions are available after loading submodules
