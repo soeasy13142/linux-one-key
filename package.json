@@ -1,0 +1,44 @@
+{
+  "name": "@soeasy13142/linux-one-key",
+  "version": "1.5.0",
+  "description": "Linux 云服务器安全加固 + 一键环境初始化脚本 | One-key security hardening + environment setup for Linux cloud servers",
+  "bin": {
+    "linux-one-key": "./install.sh"
+  },
+  "files": [
+    "install.sh",
+    "scripts/",
+    "config/",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soeasy13142/linux-one-key.git"
+  },
+  "keywords": [
+    "linux",
+    "security",
+    "hardening",
+    "ssh",
+    "firewall",
+    "fail2ban",
+    "ubuntu",
+    "debian",
+    "centos",
+    "rocky",
+    "almalinux"
+  ],
+  "author": "soeasy13142",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/soeasy13142/linux-one-key/issues"
+  },
+  "homepage": "https://github.com/soeasy13142/linux-one-key#readme",
+  "engines": {
+    "node": ">=18"
+  }
+}

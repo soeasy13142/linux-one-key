@@ -23,6 +23,10 @@ everything-claude-code/
 # Claude Code (local config, not pushed to remote)
 .claude/
 
+# npm
+npm-debug.log*
+node_modules/
+
 # Auto-generated
 docs/file-tree.generated.md
 .superpowers/
