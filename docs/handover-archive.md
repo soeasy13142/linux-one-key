@@ -10,6 +10,16 @@
 
 ---
 
+| 项 | 值 |
+|---|---|
+| 归档日期 | 2026-07-10（首次）/ 2026-07-24（二次：HANDOVER.md 精简重构，追加 ~170 条） |
+| 归档原因 | HANDOVER.md 按 Claude Code 规范精简为 ~70 行状态快照，所有 changelog 归入本文件 |
+| 归档范围 | 2026-06-20 ~ 2026-07-24（项目搭建期 → v1.0.1 完整历程） |
+| 归档条数 | ~346 条 |
+| 主文件 | 不再保留 changelog（git log 替代），仅保留状态/决策/下一步 |
+
+---
+
 ## Batch 2: Security & Infrastructure Enhancement (2026-07-24)
 
 **功能变更**:
@@ -23,14 +33,6 @@
 - 修改: `utils.sh`, `ssh.sh`, `install.sh`, `mode.sh`, `report.sh`, `zh.sh`, `en.sh`, `utils.bats`, `ssh.bats`, `mode.bats`, `HANDOVER.md`
 
 **测试**: 365/365 全部通过 | **ShellCheck**: 全部通过
-
-| 项 | 值 |
-|---|---|
-| 归档日期 | 2026-07-10（首次）/ 2026-07-24（二次：HANDOVER.md 精简重构，追加 ~170 条） |
-| 归档原因 | HANDOVER.md 按 Claude Code 规范精简为 ~70 行状态快照，所有 changelog 归入本文件 |
-| 归档范围 | 2026-06-20 ~ 2026-07-24（项目搭建期 → v1.0.1 完整历程） |
-| 归档条数 | ~346 条 |
-| 主文件 | 不再保留 changelog（git log 替代），仅保留状态/决策/下一步 |
 
 ---
 
