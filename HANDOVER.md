@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-08-01 · **版本**: v1.6.0 · **状态**: 🔄 v1.6.0 Batch 5a 进行中 · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
+> **最后更新**: 2026-08-01 · **版本**: v1.6.0 · **状态**: ✅ v1.6.0 Batch 5a 完成 · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
 
 ## 会话恢复
 
@@ -16,9 +16,9 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 
 - **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection
 - **Lite/Full 双模式**: `--lite` 低内存模式（SSH + Firewall + Kernel) vs Full 全模块
-- **测试**: 502 Bats 单元测试全部通过
+- **测试**: 503 Bats 单元测试全部通过
 - **审查**: 5 轮全项目 Code Review，发现并修复 280+ 问题
-- **最新发布**: v1.1.0（2026-07-24），Batch 2 安全与基础设施增强 + Batch 3 Security Plus
+- **最新发布**: v1.6.0（2026-08-01），Batch 5a 备份/回滚中心 + 安全仪表盘
 
 ## 关键决策
 
@@ -55,10 +55,13 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 3. ✅ **版本号更新** — `0.1.0` → `1.5.0`
 4. ✅ **测试报告归档** — `docs/test-reports/curl-lite-mode-test.md`
 
-本次（v1.6.0, Batch 5a）规划：
-1. ⏳ **备份/回滚中心** — [17] 菜单：历史/恢复/回滚定时器/清理（backup.sh .meta sidecar 已设计）
-2. ⏳ **安全仪表盘** — [18] 菜单：12 模块 31 项检查评分 + 风险等级
-3. ⏳ Batch 5b（sudo + 日志加固）独立 spec 排队中
+本次（v1.6.0, Batch 5a）已完成：
+1. ✅ **备份/回滚中心** — [17] 菜单：历史/恢复/回滚定时器/清理（backup.sh .meta sidecar，restore 绝对路径守卫）
+2. ✅ **安全仪表盘** — [18] 菜单：12 模块 31 项检查评分 + 风险等级（i18n 本地化）
+3. ✅ 测试增量 473 → 503，ShellCheck 干净，终审 + 修复波 + 重审通过
+
+下次（Batch 5b）规划：
+1. ⏳ **sudo + 日志加固** — 独立 spec 排队中
 
 > ✅ = 已实现 · 🔄 = 待验证 · ⏳ = 待实现
 
