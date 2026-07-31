@@ -107,3 +107,33 @@ teardown() {
     run cancel_scheduled_task ""
     [[ "${status}" -eq 1 ]]
 }
+
+# ── rollback_timer_status ──
+
+@test "rollback_timer_status returns none without timer" {
+    unset ROLLBACK_PID _SCHEDULED_PID 2>/dev/null || true
+    run rollback_timer_status
+    [[ "${status}" -ne 0 ]]
+    [[ "${output}" == "none" ]]
+}
+
+@test "rollback_timer_status detects live sleep task" {
+    unset ROLLBACK_PID _SCHEDULED_PID 2>/dev/null || true
+    sleep 30 &
+    local pid=$!
+    ROLLBACK_PID="${pid}"
+    run rollback_timer_status
+    [[ "${status}" -eq 0 ]]
+    [[ "${output}" == "${pid}" ]]
+    kill "${pid}" 2>/dev/null || true
+}
+
+@test "rollback_timer_status ignores dead pid" {
+    unset ROLLBACK_PID _SCHEDULED_PID 2>/dev/null || true
+    sleep 0.1 &
+    local pid=$!
+    ROLLBACK_PID="${pid}"
+    wait "${pid}" 2>/dev/null || true
+    run rollback_timer_status
+    [[ "${status}" -ne 0 ]]
+}

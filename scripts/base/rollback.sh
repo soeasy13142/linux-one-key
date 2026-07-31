@@ -76,4 +76,21 @@ cancel_scheduled_task() {
     return 1
 }
 
+# 只读查询：是否存在待执行的延时回滚任务
+# 输出：存活 PID（存在）或 "none"（不存在）；退出码 0=存在 1=不存在
+rollback_timer_status() {
+    local pid
+    pid="${ROLLBACK_PID:-${_SCHEDULED_PID:-}}"
+    if [[ -n "${pid}" ]] && kill -0 "${pid}" 2>/dev/null; then
+        local cmdline
+        cmdline=$(tr '\0' ' ' < "/proc/${pid}/cmdline" 2>/dev/null || echo "")
+        if [[ "${cmdline}" == *"sleep"* ]] || [[ -z "${cmdline}" ]]; then
+            echo "${pid}"
+            return 0
+        fi
+    fi
+    echo "none"
+    return 1
+}
+
 log_debug "rollback.sh loaded successfully"
