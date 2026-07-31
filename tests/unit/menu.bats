@@ -121,6 +121,9 @@ teardown() {
     [[ -n "${MSG_BACKUP_CENTER_MENU_LIST:-}" ]]
     [[ -n "${MSG_BACKUP_CENTER_MENU_BACK:-}" ]]
     [[ -n "${MSG_ERROR_RESTORE_TARGET_REQUIRED:-}" ]]
+    [[ -n "${MSG_BACKUP_CENTER_RESTORE_SYSCTL_SUCCESS:-}" ]]
+    [[ -n "${MSG_BACKUP_CENTER_RESTORE_SYSCTL_FAILED:-}" ]]
+    [[ -n "${MSG_BACKUP_CENTER_RESTORE_MODULE:-}" ]]
 }
 
 @test "zh.sh has dashboard keys" {
