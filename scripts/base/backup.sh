@@ -91,4 +91,68 @@ restore_file() {
     fi
 }
 
+# 列出备份目录下所有备份文件（排除 .meta），按文件名倒序（TIMESTAMP 主导）
+list_backups() {
+    local backup_path
+    local -a files=()
+    [[ -d "${BACKUP_DIR}" ]] || return 0
+    for backup_path in "${BACKUP_DIR}"/*.bak.*; do
+        [[ -f "${backup_path}" ]] || continue
+        [[ "${backup_path}" != *.meta ]] || continue
+        files+=("${backup_path}")
+    done
+    [[ ${#files[@]} -eq 0 ]] && return 0
+    printf '%s\n' "${files[@]}" | sort -r
+}
+
+# 读取备份的原始目标路径（.meta sidecar）
+get_backup_target() {
+    local backup_path="$1"
+    if [[ ! -f "${backup_path}.meta" ]]; then
+        return 1
+    fi
+    cat "${backup_path}.meta"
+}
+
+# 按 basename 前缀分组清理：每组保留最新 N 份（含 .meta），删除更旧
+clean_old_backups() {
+    local keep_per_name="${1:-5}"
+    local backup_path base name file
+    local -a names=() group=()
+    [[ -d "${BACKUP_DIR}" ]] || return 0
+
+    # 收集去重的文件名前缀
+    for backup_path in "${BACKUP_DIR}"/*.bak.*; do
+        [[ -f "${backup_path}" ]] || continue
+        [[ "${backup_path}" != *.meta ]] || continue
+        base="$(basename "${backup_path}")"
+        name="${base%%.bak.*}"
+        if ! printf '%s\n' "${names[@]}" | grep -qx "${name}"; then
+            names+=("${name}")
+        fi
+    done
+
+    for name in "${names[@]}"; do
+        group=()
+        for file in "${BACKUP_DIR}"/"${name}".bak.*; do
+            [[ -f "${file}" ]] || continue
+            [[ "${file}" != *.meta ]] || continue
+            group+=("${file}")
+        done
+        local sorted=()
+        while IFS= read -r file; do
+            sorted+=("${file}")
+        done < <(printf '%s\n' "${group[@]}" | sort -r)
+        local idx=0
+        for file in "${sorted[@]}"; do
+            idx=$((idx + 1))
+            if [[ "${idx}" -gt "${keep_per_name}" ]]; then
+                rm -f "${file}" "${file}.meta"
+                log_debug "Cleaned old backup: ${file}"
+            fi
+        done
+    done
+    return 0
+}
+
 log_debug "backup.sh loaded successfully"

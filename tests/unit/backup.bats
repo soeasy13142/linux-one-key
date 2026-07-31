@@ -217,3 +217,62 @@ teardown() {
     run restore_file "${backup}"
     [[ "${status}" -ne 0 ]]
 }
+
+# ── list_backups / get_backup_target / clean_old_backups ──
+
+@test "list_backups excludes .meta and newest first" {
+    local f1="${BACKUP_DIR}/test.conf.bak.20260101100000.1.1"
+    local f2="${BACKUP_DIR}/test.conf.bak.20260102100000.2.2"
+    echo "a" > "${f1}"; echo "b" > "${f2}"
+    echo "/etc/test.conf" > "${f1}.meta"; echo "/etc/test.conf" > "${f2}.meta"
+
+    run --separate-stderr list_backups
+    [[ "${status}" -eq 0 ]]
+    [[ "$(echo "${output}" | head -1)" == "${f2}" ]]
+    [[ "$(echo "${output}" | wc -l | tr -d ' ')" == "2" ]]
+}
+
+@test "list_backups returns empty when no backups" {
+    run --separate-stderr list_backups
+    [[ "${status}" -eq 0 ]]
+    [[ -z "${output}" ]]
+}
+
+@test "get_backup_target reads meta" {
+    local f1="${BACKUP_DIR}/test.conf.bak.20260101100000.1.1"
+    echo "x" > "${f1}"; echo "/etc/test.conf" > "${f1}.meta"
+    run --separate-stderr get_backup_target "${f1}"
+    [[ "${status}" -eq 0 ]]
+    [[ "${output}" == "/etc/test.conf" ]]
+}
+
+@test "get_backup_target errors without meta" {
+    local f1="${BACKUP_DIR}/test.conf.bak.20260101100000.1.1"
+    echo "x" > "${f1}"
+    run get_backup_target "${f1}"
+    [[ "${status}" -ne 0 ]]
+}
+
+@test "clean_old_backups keeps latest N per name" {
+    local name="test.conf"
+    for i in 1 2 3 4 5 6; do
+        echo "v${i}" > "${BACKUP_DIR}/${name}.bak.2026010${i}00000.${i}.${i}"
+        echo "/etc/${name}" > "${BACKUP_DIR}/${name}.bak.2026010${i}00000.${i}.${i}.meta"
+    done
+
+    run clean_old_backups 3
+    [[ "${status}" -eq 0 ]]
+    [[ "$(ls "${BACKUP_DIR}"/${name}.bak.* 2>/dev/null | grep -v meta | wc -l | tr -d ' ')" == "3" ]]
+}
+
+@test "clean_old_backups never touches newest backup" {
+    local name="test.conf"
+    echo "v1" > "${BACKUP_DIR}/${name}.bak.20260101000000.1.1"
+    echo "v2" > "${BACKUP_DIR}/${name}.bak.20260102000000.2.2"
+    echo "/etc/${name}" > "${BACKUP_DIR}/${name}.bak.20260102000000.2.2.meta"
+
+    run clean_old_backups 1
+    [[ "${status}" -eq 0 ]]
+    [[ -f "${BACKUP_DIR}/${name}.bak.20260102000000.2.2" ]]
+    [[ ! -f "${BACKUP_DIR}/${name}.bak.20260101000000.1.1" ]]
+}
