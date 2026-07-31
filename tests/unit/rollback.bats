@@ -1,5 +1,6 @@
 #!/usr/bin/env bats
 # rollback.bats - 单元测试 for scripts/base/rollback.sh
+bats_require_minimum_version 1.5.0
 
 setup() {
     export TEST_DIR="$(mktemp -d)"
@@ -122,10 +123,12 @@ teardown() {
     sleep 30 &
     local pid=$!
     ROLLBACK_PID="${pid}"
-    run rollback_timer_status
-    [[ "${status}" -eq 0 ]]
-    [[ "${output}" == "${pid}" ]]
+    run --separate-stderr rollback_timer_status
+    local st="${status}"
+    local out="${output}"
     kill "${pid}" 2>/dev/null || true
+    [[ "${st}" -eq 0 ]]
+    [[ "${out}" == "${pid}" ]]
 }
 
 @test "rollback_timer_status ignores dead pid" {
