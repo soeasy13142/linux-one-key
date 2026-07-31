@@ -52,10 +52,10 @@ CentOS Stream 9 使用 dnf。参照 `rockylinux/9.Dockerfile`。安装 `epel-rel
 
 ### 验收标准
 
-- [ ] `tests/docker/images/fedora/latest.Dockerfile` 创建完成
-- [ ] `tests/docker/images/centos/stream9.Dockerfile` 创建完成
-- [ ] `test-all.sh` 的 `PHASE1_DISTROS` 包含两个新发行版
-- [ ] HANDOVER.md 同步更新
+- [x] `tests/docker/images/fedora/latest.Dockerfile` 创建完成
+- [x] `tests/docker/images/centos/stream9.Dockerfile` 创建完成
+- [x] `test-all.sh` 的 `PHASE1_DISTROS` 包含两个新发行版
+- [x] HANDOVER.md 同步更新
 
 ---
 
@@ -83,8 +83,8 @@ bats tests/unit/*.bats
 
 ### 验收标准
 
-- [ ] `bats tests/unit/*.bats` 全部通过
-- [ ] Batch 1 计划文件最后一格 checkbox 已勾选
+- [x] `bats tests/unit/*.bats` 全部通过
+- [x] Batch 1 计划文件最后一格 checkbox 已勾选
 
 ---
 
@@ -110,9 +110,9 @@ bats tests/unit/*.bats
 
 ### 验收标准
 
-- [ ] `status` 改为 `done`
-- [ ] 全部 checkbox 已勾选
-- [ ] 补充完成说明章节
+- [x] `status` 改为 `done`
+- [x] 全部 checkbox 已勾选
+- [x] 补充完成说明章节
 
 ---
 

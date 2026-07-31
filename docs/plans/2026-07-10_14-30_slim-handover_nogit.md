@@ -46,35 +46,35 @@ topic: "docs-refactor"
 
 ### Phase 1: 变更日志归档
 
-- [ ] **1.1** 创建 `docs/handover-archive.md`（新文件），含表头说明 + 归档说明
-- [ ] **1.2** 从 `HANDOVER.md` 提取 2026-06-20 ~ 2026-06-24 的 **235 条**变更日志
-- [ ] **1.3** 将其写入 `docs/handover-archive.md`（保留原表格格式，方便查阅）
-- [ ] **1.4** `HANDOVER.md` 变更日志只保留 2026-06-25 起的 **41 条**
-- [ ] **1.5** 精简保留条目的表格列：去掉"说明"列，只保留 `日期 | 操作 | 文件路径`（3 列）
-- [ ] **1.6** 在 `HANDOVER.md` 变更日志顶部加 1 行指向归档的链接
+- [x] **1.1** 创建 `docs/handover-archive.md`（新文件），含表头说明 + 归档说明
+- [x] **1.2** 从 `HANDOVER.md` 提取 2026-06-20 ~ 2026-06-24 的 **235 条**变更日志
+- [x] **1.3** 将其写入 `docs/handover-archive.md`（保留原表格格式，方便查阅）
+- [x] **1.4** `HANDOVER.md` 变更日志只保留 2026-06-25 起的 **41 条**
+- [x] **1.5** 精简保留条目的表格列：去掉"说明"列，只保留 `日期 | 操作 | 文件路径`（3 列）
+- [x] **1.6** 在 `HANDOVER.md` 变更日志顶部加 1 行指向归档的链接
 
 ### Phase 2: 删除"已完成的工作"重复节
 
-- [ ] **2.1** 删除 `HANDOVER.md` 第 40-107 行的 `### 已完成的工作` 小节
-- [ ] **2.2** 调整 `### 总体状态` 内容，只保留版本号进度表，不重复文件清单
+- [x] **2.1** 删除 `HANDOVER.md` 第 40-107 行的 `### 已完成的工作` 小节
+- [x] **2.2** 调整 `### 总体状态` 内容，只保留版本号进度表，不重复文件清单
 
 ### Phase 3: 文件清单自动化
 
-- [ ] **3.1** 创建 `scripts/dev/gen-file-tree.sh`（Bash 脚本）
+- [x] **3.1** 创建 `scripts/dev/gen-file-tree.sh`（Bash 脚本）
   - 输出顶层目录结构：`docs/` / `scripts/` / `tests/` / `config/` 各一棵
   - 排除 `everything-claude-code/`、`.git/`、`.claude/`、`tmp/` 等
   - 输出 Markdown 格式到 `docs/file-tree.generated.md`
-- [ ] **3.2** 把 `docs/file-tree.generated.md` 加入 `.gitignore`（按用户选择"自动生成 + gitignore"）
-- [ ] **3.3** `HANDOVER.md` "文件清单"章节精简为：只列顶层目录 + 每个目录一句话用途说明 + 引用 `gen-file-tree.sh` 脚本的链接
-- [ ] **3.4** `README.md` 添加脚本说明（如何在本地重新生成树状图）
+- [x] **3.2** 把 `docs/file-tree.generated.md` 加入 `.gitignore`（按用户选择"自动生成 + gitignore"）
+- [x] **3.3** `HANDOVER.md` "文件清单"章节精简为：只列顶层目录 + 每个目录一句话用途说明 + 引用 `gen-file-tree.sh` 脚本的链接
+- [x] **3.4** `README.md` 添加脚本说明（如何在本地重新生成树状图）— 实际落地于 `docs/design/README.md`（顶层 README 重构后不含 dev 脚本）
 
 ### Phase 4: 验证 + 收尾
 
-- [ ] **4.1** 运行 `shellcheck scripts/dev/gen-file-tree.sh`
-- [ ] **4.2** 手动运行脚本验证输出正确
-- [ ] **4.3** 统计 HANDOVER.md 行数（应降到 250 行左右）
-- [ ] **4.4** 更新 CLAUDE.md 文件结构章节（反映 `docs/handover-archive.md`、`docs/file-tree.generated.md` 路径变化）
-- [ ] **4.5** 更新 HANDOVER.md 变更日志（追加本计划执行记录）
+- [x] **4.1** 运行 `shellcheck scripts/dev/gen-file-tree.sh`
+- [x] **4.2** 手动运行脚本验证输出正确
+- [x] **4.3** 统计 HANDOVER.md 行数（应降到 250 行左右）
+- [x] **4.4** 更新 CLAUDE.md 文件结构章节（反映 `docs/handover-archive.md`、`docs/file-tree.generated.md` 路径变化）
+- [x] **4.5** 更新 HANDOVER.md 变更日志（追加本计划执行记录）
 
 ## 预期产出
 

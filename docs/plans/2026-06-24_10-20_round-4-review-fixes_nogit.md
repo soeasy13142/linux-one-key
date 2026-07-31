@@ -93,10 +93,10 @@ shellcheck scripts/security/audit.sh
 
 ## Acceptance
 
-- [ ] H1: `auseport` 已修复
-- [ ] M1: `case` 有 default 分支
-- [ ] M2: 报告菜单有描述文本
-- [ ] M3: 测试覆盖 standard 不含 modules
-- [ ] L1: mkdir 错误有日志
-- [ ] L2: 模板标注级别
-- [ ] HANDOVER.md 已更新
+- [x] H1: `auseport` 已修复
+- [x] M1: `case` 有 default 分支
+- [x] M2: 报告菜单有描述文本
+- [x] M3: 测试覆盖 standard 不含 modules
+- [x] L1: mkdir 错误有日志
+- [x] L2: 模板标注级别
+- [x] HANDOVER.md 已更新

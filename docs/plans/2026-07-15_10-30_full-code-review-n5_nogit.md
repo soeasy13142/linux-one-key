@@ -48,11 +48,11 @@ linux-one-key 项目已历经 4 轮 Code Review：
 
 ## 执行步骤
 
-- [ ] 步骤 1: 创建计划文件（本文件），与用户对齐
-- [ ] 步骤 2: 并行审查 Group A-F（6 个 SubAgent）
-- [ ] 步骤 3: 汇总审查结果，去重、分类、分级
-- [ ] 步骤 4: 生成审查报告到 `docs/code-reviews/round-5-comprehensive.md`
-- [ ] 步骤 5: 输出结果给用户 + 更新 HANDOVER.md
+- [x] 步骤 1: 创建计划文件（本文件），与用户对齐
+- [x] 步骤 2: 并行审查 Group A-F（6 个 SubAgent）
+- [x] 步骤 3: 汇总审查结果，去重、分类、分级
+- [x] 步骤 4: 生成审查报告到 `docs/code-reviews/round-5-comprehensive.md`
+- [x] 步骤 5: 输出结果给用户 + 更新 HANDOVER.md
 
 ## 预期产出
 

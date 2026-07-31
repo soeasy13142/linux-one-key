@@ -141,12 +141,12 @@ bats tests/unit/*.bats  # ensure no regressions
 
 ## Acceptance
 
-- [ ] services.sh created with all functions
-- [ ] i18n keys added for zh and en
-- [ ] Menu integration working (item [9], shifted wizard/report)
-- [ ] Full wizard includes services step
-- [ ] Status detection shows services info
-- [ ] Report includes services section
-- [ ] Unit tests pass (25+ cases)
-- [ ] ShellCheck passes on all modified files
-- [ ] All existing tests still pass
+- [x] services.sh created with all functions
+- [x] i18n keys added for zh and en
+- [x] Menu integration working (item [9], shifted wizard/report)
+- [x] Full wizard includes services step
+- [x] Status detection shows services info
+- [x] Report includes services section
+- [x] Unit tests pass (25+ cases)
+- [x] ShellCheck passes on all modified files
+- [x] All existing tests still pass
