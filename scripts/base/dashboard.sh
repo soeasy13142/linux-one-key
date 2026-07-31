@@ -222,6 +222,13 @@ dashboard_render() {
     if [[ "${total_all}" -gt 0 ]]; then
         pct=$(( total_pass * 100 / total_all ))
         level="$(dashboard_risk_level "${pct}")"
+        # i18n: 把内部 low/medium/high/critical 映射到 MSG_DASHBOARD_RISK_* 翻译
+        case "${level}" in
+            low)      level="${MSG_DASHBOARD_RISK_LOW}" ;;
+            medium)   level="${MSG_DASHBOARD_RISK_MEDIUM}" ;;
+            high)     level="${MSG_DASHBOARD_RISK_HIGH}" ;;
+            critical) level="${MSG_DASHBOARD_RISK_CRITICAL}" ;;
+        esac
         log_info "${MSG_DASHBOARD_TOTAL}: ${total_pass}/${total_all} (${pct}%)"
         log_info "${MSG_DASHBOARD_RISK}: ${level}"
     fi
