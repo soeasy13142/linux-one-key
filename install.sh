@@ -1514,21 +1514,13 @@ show_hardening_mode_screen() {
 
     # Option 2: Standard
     echo -e "  ${GREEN}[2] ${MSG_MODE_STANDARD}${NC}"
-    if is_mode_lite; then
-        echo -e "      ${MSG_MODE_STANDARD_DESC} ${YELLOW}[${MSG_MODE_REQUIRES_FULL}]${NC}"
-    else
-        echo -e "      ${MSG_MODE_STANDARD_DESC}"
-    fi
+    echo -e "      ${MSG_MODE_STANDARD_DESC}"
     echo -e "      ${MSG_MODE_STANDARD_TIP}"
     echo ""
 
     # Option 3: Advanced
     echo -e "  ${GREEN}[3] ${MSG_MODE_ADVANCED}${NC}"
-    if is_mode_lite; then
-        echo -e "      ${MSG_MODE_ADVANCED_DESC} ${YELLOW}[${MSG_MODE_REQUIRES_FULL}]${NC}"
-    else
-        echo -e "      ${MSG_MODE_ADVANCED_DESC}"
-    fi
+    echo -e "      ${MSG_MODE_ADVANCED_DESC}"
     echo -e "      ${MSG_MODE_ADVANCED_TIP}"
     echo ""
 
@@ -1553,18 +1545,10 @@ show_hardening_mode_screen() {
                 return 0
                 ;;
             2)
-                if is_mode_lite; then
-                    log_warn "${MSG_MODE_REQUIRES_FULL}"
-                    continue
-                fi
                 run_mode_wizard "${MODE_STANDARD_MODULES[*]}" "${MSG_MODE_WIZARD_STANDARD}"
                 return 0
                 ;;
             3)
-                if is_mode_lite; then
-                    log_warn "${MSG_MODE_REQUIRES_FULL}"
-                    continue
-                fi
                 run_mode_wizard "${MODE_ADVANCED_MODULES[*]}" "${MSG_MODE_WIZARD_ADVANCED}"
                 return 0
                 ;;
