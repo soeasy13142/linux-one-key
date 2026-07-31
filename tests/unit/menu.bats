@@ -124,6 +124,8 @@ teardown() {
     [[ -n "${MSG_BACKUP_CENTER_RESTORE_SYSCTL_SUCCESS:-}" ]]
     [[ -n "${MSG_BACKUP_CENTER_RESTORE_SYSCTL_FAILED:-}" ]]
     [[ -n "${MSG_BACKUP_CENTER_RESTORE_MODULE:-}" ]]
+    [[ -n "${MSG_BACKUP_CENTER_MODULE_PROMPT:-}" ]]
+    [[ -n "${MSG_BACKUP_CENTER_RESTORE_FAILED:-}" ]]
 }
 
 @test "zh.sh has dashboard keys" {
@@ -132,4 +134,27 @@ teardown() {
     [[ -n "${MSG_DASHBOARD_TITLE:-}" ]]
     [[ -n "${MSG_DASHBOARD_RISK_LOW:-}" ]]
     [[ -n "${MSG_DASHBOARD_RISK_CRITICAL:-}" ]]
+}
+
+@test "install.sh menu defines [17]/[18] and gates with is_mode_full" {
+    run grep -E 'MSG_MAIN_MENU_BACKUP_CENTER' "${SCRIPT_DIR}/install.sh"
+    [[ "$status" -eq 0 ]]
+    run grep -E 'MSG_MAIN_MENU_DASHBOARD' "${SCRIPT_DIR}/install.sh"
+    [[ "$status" -eq 0 ]]
+    run bash -c "grep -nE '17\) run_backup_center_menu|18\) run_dashboard_menu' '${SCRIPT_DIR}/install.sh'"
+    [[ "$status" -eq 0 ]]
+    run bash -c "sed -n '/17|18/,/esac/p' '${SCRIPT_DIR}/install.sh' | grep -q is_mode_lite"
+    [[ "$status" -eq 0 ]]
+}
+
+@test "install.sh sources backup_center.sh and dashboard.sh in load_dependencies" {
+    run grep -F 'scripts/base/backup_center.sh' "${SCRIPT_DIR}/install.sh"
+    [[ "$status" -eq 0 ]]
+    run grep -F 'scripts/base/dashboard.sh' "${SCRIPT_DIR}/install.sh"
+    [[ "$status" -eq 0 ]]
+}
+
+@test "get_main_menu_choice accepts 17 and 18" {
+    run grep -E '\[0-9\]\|1\[0-8\]' "${SCRIPT_DIR}/install.sh"
+    [[ "$status" -eq 0 ]]
 }

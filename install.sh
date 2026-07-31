@@ -358,6 +358,21 @@ load_dependencies() {
     fi
     # shellcheck source=/dev/null
     source "${SCRIPT_DIR}/scripts/server/k3s.sh"
+
+    # 加载 backup_center.sh / dashboard.sh（Batch 5a 编排与呈现层）
+    if [[ ! -f "${SCRIPT_DIR}/scripts/base/backup_center.sh" ]]; then
+        echo "Error: Cannot find backup_center.sh at ${SCRIPT_DIR}/scripts/base/backup_center.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/scripts/base/backup_center.sh"
+
+    if [[ ! -f "${SCRIPT_DIR}/scripts/base/dashboard.sh" ]]; then
+        echo "Error: Cannot find dashboard.sh at ${SCRIPT_DIR}/scripts/base/dashboard.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/scripts/base/dashboard.sh"
 }
 
 # ═══════════════════════════════════════════
@@ -876,6 +891,26 @@ show_main_menu() {
     fi
     echo ""
 
+    # 分组 6：运维工具（完整版专用）
+    echo -e "${BOLD}${MSG_SECTION_OPS}${NC}"
+    echo ""
+    # 备份/回滚中心（完整版专用）
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_BACKUP_CENTER}${NC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_BACKUP_CENTER_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_BACKUP_CENTER_DESC}"
+    fi
+    echo ""
+    # 安全仪表盘（完整版专用）
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_DASHBOARD}${NC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_DASHBOARD_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_DASHBOARD_DESC}"
+    fi
+    echo ""
+
     echo -e "  ${RED}${MSG_MAIN_MENU_EXIT}${NC}"
     echo ""
 }
@@ -884,7 +919,7 @@ show_main_menu() {
 get_main_menu_choice() {
     local choice
     while true; do
-        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-16]" "")
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-18]" "")
         # EOF / non-interactive stdin: exit gracefully
         if [[ -z "${choice}" ]]; then
             echo ""
@@ -892,7 +927,7 @@ get_main_menu_choice() {
             exit 1
         fi
         case "${choice}" in
-            [0-9]|10|11|12|13|14|15|16)
+            [0-9]|1[0-8])
                 echo "${choice}"
                 return 0
                 ;;
@@ -1769,6 +1804,164 @@ cleanup_and_exit() {
 }
 
 # ═══════════════════════════════════════════
+# 备份/回滚中心 子菜单
+# ═══════════════════════════════════════════
+show_backup_center_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_BACKUP_CENTER_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_BACKUP_CENTER_MENU_LIST}${NC}"
+    echo -e "  ${GREEN}${MSG_BACKUP_CENTER_MENU_RESTORE}${NC}"
+    echo -e "  ${GREEN}${MSG_BACKUP_CENTER_MENU_ROLLBACK}${NC}"
+    echo -e "  ${GREEN}${MSG_BACKUP_CENTER_MENU_CLEAN}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_BACKUP_CENTER_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_backup_center_menu() {
+    while true; do
+        show_backup_center_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-4]" "")
+        case "${choice}" in
+            1) backup_center_show_history; press_enter ;;
+            2) backup_center_interactive_restore ;;
+            3) backup_center_interactive_rollback ;;
+            4) backup_center_interactive_clean ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# 查看备份历史（只读）
+backup_center_show_history() {
+    local modules
+    modules="$(backup_center_list_modules)"
+    if [[ -z "${modules}" ]]; then
+        log_info "${MSG_BACKUP_CENTER_NO_BACKUPS}"
+        return 0
+    fi
+    log_title "${MSG_BACKUP_CENTER_HISTORY_TITLE}"
+    local backup_path meta module
+    while IFS= read -r backup_path; do
+        [[ -f "${backup_path}" ]] || continue
+        meta="$(cat "${backup_path}.meta" 2>/dev/null || echo "")"
+        module="other"
+        [[ -n "${meta}" ]] && module="$(backup_center_module_of_path "${meta}")"
+        printf "  [%-10s] %s\n" "${module}" "$(basename "${backup_path}")"
+    done < <(list_backups)
+}
+
+# 一键恢复（带双重确认）
+backup_center_interactive_restore() {
+    local modules
+    modules="$(backup_center_list_modules)"
+    if [[ -z "${modules}" ]]; then
+        log_info "${MSG_BACKUP_CENTER_NO_BACKUPS}"
+        press_enter
+        return 0
+    fi
+    log_title "${MSG_BACKUP_CENTER_SELECT_MODULE}"
+    local module
+    printf '%s\n' "${modules}" | sed 's/^/  - /'
+    local target_module
+    target_module=$(prompt_input "${MSG_BACKUP_CENTER_MODULE_PROMPT}" "")
+    if [[ -z "${target_module}" ]]; then
+        return 0
+    fi
+
+    # 列出该模块将恢复的文件（按目标路径去重）
+    local backup_path meta files=() seen=()
+    while IFS= read -r backup_path; do
+        [[ -f "${backup_path}" ]] || continue
+        meta="$(cat "${backup_path}.meta" 2>/dev/null || echo "")"
+        if [[ -n "${meta}" ]] && [[ "$(backup_center_module_of_path "${meta}")" == "${target_module}" ]] && ! printf '%s\n' "${seen[@]}" | grep -qx "${meta}"; then
+            files+=("${meta}")
+            seen+=("${meta}")
+        fi
+    done < <(list_backups)
+    if [[ ${#files[@]} -eq 0 ]]; then
+        log_info "${MSG_BACKUP_CENTER_NO_RESTORABLE}"
+        press_enter
+        return 0
+    fi
+
+    log_warn "${MSG_BACKUP_CENTER_CONFIRM_RESTORE}"
+    printf '  %s\n' "${files[@]}" | sed 's/^/    - /'
+    local ans
+    ans=$(prompt_input "${MSG_BACKUP_CENTER_CONFIRM_PROMPT}" "n")
+    if [[ "${ans}" != "y" ]] && [[ "${ans}" != "Y" ]]; then
+        log_info "${MSG_BACKUP_CENTER_RESTORE_ABORTED}"
+        press_enter
+        return 0
+    fi
+
+    if backup_center_restore_module "${target_module}"; then
+        log_success "${MSG_BACKUP_CENTER_RESTORED}: ${target_module}"
+        # 对最近恢复的备份执行钩子
+        local latest
+        for backup_path in "${files[@]}"; do
+            meta="$(cat "${backup_path}.meta" 2>/dev/null || echo "")"
+            if latest="$(backup_center_latest_for_target "${meta}")"; then
+                backup_center_post_restore "${latest}"
+            fi
+        done
+    else
+        # shellcheck disable=SC2059
+        log_error "$(printf "${MSG_BACKUP_CENTER_RESTORE_FAILED}" "${target_module}")"
+    fi
+    press_enter
+}
+
+# SSH 回滚定时器管理
+backup_center_interactive_rollback() {
+    local status
+    if status="$(rollback_timer_status)"; then
+        # shellcheck disable=SC2059
+        log_info "$(printf "${MSG_BACKUP_CENTER_ROLLBACK_PENDING}" "${status}")"
+        local ans
+        ans=$(prompt_input "${MSG_BACKUP_CENTER_ROLLBACK_CANCEL} (y/N)" "n")
+        if [[ "${ans}" == "y" ]] || [[ "${ans}" == "Y" ]]; then
+            if cancel_rollback_timer 2>/dev/null || cancel_scheduled_task "${status}" 2>/dev/null; then
+                log_success "${MSG_BACKUP_CENTER_ROLLBACK_CANCEL}"
+            else
+                log_error "${MSG_BACKUP_CENTER_ROLLBACK_NO_PID}"
+            fi
+        fi
+    else
+        log_info "${MSG_BACKUP_CENTER_ROLLBACK_NONE}"
+    fi
+    press_enter
+}
+
+# 清理旧备份
+backup_center_interactive_clean() {
+    local ans
+    ans=$(prompt_input "${MSG_BACKUP_CENTER_CLEAN_CONFIRM}" "n")
+    if [[ "${ans}" != "y" ]] && [[ "${ans}" != "Y" ]]; then
+        return 0
+    fi
+    if clean_old_backups 5; then
+        log_success "${MSG_BACKUP_CENTER_CLEAN_DONE}"
+    else
+        log_info "${MSG_BACKUP_CENTER_CLEAN_EMPTY}"
+    fi
+    press_enter
+}
+
+# ═══════════════════════════════════════════
+# 安全仪表盘
+# ═══════════════════════════════════════════
+run_dashboard_menu() {
+    dashboard_render
+    press_enter
+}
+
+# ═══════════════════════════════════════════
 # 主菜单循环
 # ═══════════════════════════════════════════
 
@@ -1807,6 +2000,17 @@ run_main_menu_loop() {
                 press_enter
                 ;;
             12) view_report ;;
+            17|18)
+                if is_mode_lite; then
+                    log_error "${MSG_ERROR_LITE_MODE}"
+                    press_enter
+                    continue
+                fi
+                case "${choice}" in
+                    17) run_backup_center_menu ;;
+                    18) run_dashboard_menu ;;
+                esac
+                ;;
             0) cleanup_and_exit ;;
             *)
                 log_error "${MSG_MENU_INVALID}"
