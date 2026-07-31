@@ -162,7 +162,7 @@ sudo bash install.sh
 
 ### 单元测试 / Unit Tests
 
-- **271 个** Bats 测试用例覆盖全部模块（271 test cases across all modules）
+- **481 个** Bats 测试用例覆盖全部模块（481 test cases across all modules）
 - 覆盖正常路径、边界条件、幂等性、回滚验证（normal, edge, idempotency, rollback）
 - 持续集成中自动运行（ShellCheck + Bats）
 
@@ -204,7 +204,7 @@ linux-one-key/
 │   ├── audit/                 # auditd 配置和规则模板
 │   └── sysctl/                # sysctl 安全参数模板
 ├── tests/
-│   ├── unit/                  # 271 Bats 单元测试
+│   ├── unit/                  # 481 Bats 单元测试
 │   └── docker/                # Docker 自动化测试框架
 │       ├── images/            # 9 个发行版 Dockerfile
 │       ├── tests/             # 8 个模块测试脚本 + Phase 2 目录
