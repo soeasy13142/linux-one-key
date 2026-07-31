@@ -1924,7 +1924,7 @@ backup_center_interactive_rollback() {
         # shellcheck disable=SC2059
         log_info "$(printf "${MSG_BACKUP_CENTER_ROLLBACK_PENDING}" "${status}")"
         local ans
-        ans=$(prompt_input "${MSG_BACKUP_CENTER_ROLLBACK_CANCEL} (y/N)" "n")
+        ans=$(prompt_input "${MSG_BACKUP_CENTER_ROLLBACK_CANCEL_CONFIRM}" "n")
         if [[ "${ans}" == "y" ]] || [[ "${ans}" == "Y" ]]; then
             if cancel_rollback_timer 2>/dev/null || cancel_scheduled_task "${status}" 2>/dev/null; then
                 log_success "${MSG_BACKUP_CENTER_ROLLBACK_CANCEL}"

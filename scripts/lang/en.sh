@@ -937,6 +937,7 @@ MSG_BACKUP_CENTER_RESTORE_FAILED="Restore failed for module %s: one or more file
 MSG_BACKUP_CENTER_ROLLBACK_NONE="No SSH rollback timer pending"
 MSG_BACKUP_CENTER_ROLLBACK_PENDING="SSH rollback timer pending (PID %s)"
 MSG_BACKUP_CENTER_ROLLBACK_CANCEL="Rollback timer cancelled"
+MSG_BACKUP_CENTER_ROLLBACK_CANCEL_CONFIRM="Cancel rollback timer? (y/N)"
 MSG_BACKUP_CENTER_ROLLBACK_NO_PID="No rollback timer to cancel"
 MSG_BACKUP_CENTER_CLEAN_CONFIRM="Old backups beyond retention will be deleted. Confirm? (y/N)"
 MSG_BACKUP_CENTER_CLEAN_DONE="Old backups cleaned"
