@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![ShellCheck](https://img.shields.io/badge/ShellCheck-Passing-brightgreen.svg)](https://www.shellcheck.net/)
-[![Bats Tests](https://img.shields.io/badge/Tests-473-brightgreen.svg)](tests/unit/)
+[![Bats Tests](https://img.shields.io/badge/Tests-502-brightgreen.svg)](tests/unit/)
 [![Docker Phase1](https://img.shields.io/badge/Docker%20Phase1-72%2F72-brightgreen.svg)](tests/docker/)
 [![Docker Phase2](https://img.shields.io/badge/Docker%20Phase2-21%2F21-brightgreen.svg)](tests/docker/)
 [![curl Lite Test](https://img.shields.io/badge/curl%20Lite-13%2F13%20×%205-brightgreen.svg)](docs/test-reports/curl-lite-mode-test.md)
@@ -56,6 +56,8 @@
 - [x] 所有修改前自动备份，支持回滚
 - [x] 幂等设计，重复运行安全
 - [x] curl 管道一键执行 / npm（`npx`）分发
+- [x] 备份/回滚中心（浏览备份历史、按模块一键恢复、回滚定时器管理、清理旧备份）— Full 版
+- [x] 安全仪表盘（多模块 CIS 合规评分 + 风险等级）— Full 版
 
 ---
 
@@ -170,7 +172,7 @@ sudo bash install.sh
 
 ### 单元测试 / Unit Tests
 
-- **473 个** Bats 测试用例覆盖全部模块（473 test cases across all modules）
+- **502 个** Bats 测试用例覆盖全部模块（502 test cases across all modules）
 - 覆盖正常路径、边界条件、幂等性、回滚验证（normal, edge, idempotency, rollback）
 - 持续集成中自动运行（ShellCheck + Bats）
 
@@ -212,7 +214,7 @@ linux-one-key/
 │   ├── audit/                 # auditd 配置和规则模板
 │   └── sysctl/                # sysctl 安全参数模板
 ├── tests/
-│   ├── unit/                  # 473 Bats 单元测试
+│   ├── unit/                  # 502 Bats 单元测试
 │   └── docker/                # Docker 自动化测试框架
 │       ├── images/            # 9 个发行版 Dockerfile
 │       ├── tests/             # 8 个模块测试脚本 + Phase 2 目录
@@ -271,6 +273,11 @@ Step 9: 生成安全报告
 - **幂等设计**：重复运行不会产生副作用，已配置的项目会自动跳过
 - **状态检测**：主菜单实时显示各模块的配置状态（评分 + 颜色 + 建议）
 - **回滚支持**：内核参数修改支持一键回滚到备份状态
+
+### 运维工具（Full 版）
+
+- **[17] 备份/回滚中心**：浏览 `/var/log/linux-one-key/backups/` 备份历史；按模块一键恢复到原路径；查看/取消 SSH 回滚定时器；按保留策略清理旧备份。恢复操作需双重确认。
+- **[18] 安全仪表盘**：12 个安全模块 × 31 项检查的合规评分（SSH 5 / Firewall 3 / Fail2Ban 3 / Audit 3 / Users 2 / Kernel 2 / Filesystem 2 / Services 2 / AutoUpdate 2 / AIDE 2 / ClamAV 2 / Rootkit 3），总分 + 风险等级（≥90 Low · 75-89 Medium · 60-74 High · <60 Critical）。
 
 ---
 
