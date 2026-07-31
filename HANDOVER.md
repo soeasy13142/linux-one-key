@@ -16,7 +16,7 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 
 - **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection
 - **Lite/Full 双模式**: `--lite` 低内存模式（SSH + Firewall + Kernel) vs Full 全模块
-- **测试**: 481 Bats 单元测试全部通过
+- **测试**: 473 Bats 单元测试全部通过
 - **审查**: 5 轮全项目 Code Review，发现并修复 280+ 问题
 - **最新发布**: v1.1.0（2026-07-24），Batch 2 安全与基础设施增强 + Batch 3 Security Plus
 

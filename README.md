@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![ShellCheck](https://img.shields.io/badge/ShellCheck-Passing-brightgreen.svg)](https://www.shellcheck.net/)
-[![Bats Tests](https://img.shields.io/badge/Tests-481-brightgreen.svg)](tests/unit/)
+[![Bats Tests](https://img.shields.io/badge/Tests-473-brightgreen.svg)](tests/unit/)
 [![Docker Phase1](https://img.shields.io/badge/Docker%20Phase1-72%2F72-brightgreen.svg)](tests/docker/)
 [![Docker Phase2](https://img.shields.io/badge/Docker%20Phase2-21%2F21-brightgreen.svg)](tests/docker/)
 [![curl Lite Test](https://img.shields.io/badge/curl%20Lite-13%2F13%20×%205-brightgreen.svg)](docs/test-reports/curl-lite-mode-test.md)
@@ -34,6 +34,7 @@
 
 - [x] ⚡ **Lite/Full 双模式**（`--lite` 精简版 vs 完整版，低内存服务器优化）
 - [x] SSH 安全加固（端口、密钥、算法、登录策略）
+- [x] SSH 回滚保护（修改前检测活动会话，连接测试失败自动回滚）
 - [x] 防火墙配置（UFW / firewalld 自动适配）
 - [x] Fail2Ban 入侵防护（SSH 暴力破解防护）
 - [x] 用户管理（创建、sudo 授权、密钥部署）
@@ -41,13 +42,20 @@
 - [x] 文件系统安全审计（SUID/SGID、权限异常）
 - [x] 系统服务安全审计（开放端口、监听服务）
 - [x] auditd 审计规则（CIS 基准，三档级别）
+- [x] NTP 时间同步（chrony / ntpd 自动适配 + 时区配置）
+- [x] Swap 配置（自动检测 + 智能扩容）
+- [x] 自动安全更新（AutoUpdate）
+- [x] AIDE 文件完整性监控
+- [x] ClamAV 病毒扫描（可选 clamd 守护进程）
+- [x] Rootkit 检测
+- [x] K3s 一键安装
 - [x] 交互式菜单向导，每步确认
 - [x] 快速开始 + 自定义配置双模式
-- [x] 多发行版支持（CentOS 7+ / Ubuntu 20.04+ / Debian 11+ / Rocky / Alma）
+- [x] 多发行版支持（CentOS 7+ / Ubuntu 20.04+ / Debian 11+ / Rocky / Alma / Fedora）
 - [x] i18n 国际化（中文 / English）
 - [x] 所有修改前自动备份，支持回滚
 - [x] 幂等设计，重复运行安全
-- [x] Lite/Full 双模式（`--lite` 精简版，低内存服务器优化）
+- [x] curl 管道一键执行 / npm（`npx`）分发
 
 ---
 
@@ -162,7 +170,7 @@ sudo bash install.sh
 
 ### 单元测试 / Unit Tests
 
-- **481 个** Bats 测试用例覆盖全部模块（481 test cases across all modules）
+- **473 个** Bats 测试用例覆盖全部模块（473 test cases across all modules）
 - 覆盖正常路径、边界条件、幂等性、回滚验证（normal, edge, idempotency, rollback）
 - 持续集成中自动运行（ShellCheck + Bats）
 
@@ -204,7 +212,7 @@ linux-one-key/
 │   ├── audit/                 # auditd 配置和规则模板
 │   └── sysctl/                # sysctl 安全参数模板
 ├── tests/
-│   ├── unit/                  # 481 Bats 单元测试
+│   ├── unit/                  # 473 Bats 单元测试
 │   └── docker/                # Docker 自动化测试框架
 │       ├── images/            # 9 个发行版 Dockerfile
 │       ├── tests/             # 8 个模块测试脚本 + Phase 2 目录
