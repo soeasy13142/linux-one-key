@@ -785,7 +785,6 @@ MSG_SERVICES_WIZARD_DONE="Service management configuration complete"
 # ═══════════════════════════════════════════
 # NTP Time Sync
 # ═══════════════════════════════════════════
-# TODO: NTP module not yet implemented - keys reserved for future use
 
 MSG_NTP_TITLE="NTP Time Sync"
 MSG_NTP_SETTING="Configuring NTP time sync..."
@@ -811,7 +810,6 @@ MSG_NTP_SYNC_FAIL="Time sync failed"
 # ═══════════════════════════════════════════
 # Swap Configuration
 # ═══════════════════════════════════════════
-# TODO: Swap module not yet implemented - keys reserved for future use
 
 MSG_SWAP_TITLE="Swap Configuration"
 MSG_SWAP_CHECKING="Checking swap status..."
@@ -1031,7 +1029,6 @@ MSG_MODE_CUSTOM="Custom"
 MSG_MODE_CUSTOM_DESC="Full control, pick each item"
 MSG_MODE_CUSTOM_TIP="For users with specific needs"
 MSG_MODE_SELECT_PROMPT="Enter option [1-4] (default: 4)"
-MSG_MODE_REQUIRES_FULL="This mode requires Full mode (without --lite)"
 MSG_MODE_WIZARD_BASIC="Basic Hardening Wizard"
 MSG_MODE_WIZARD_STANDARD="Standard Hardening Wizard"
 MSG_MODE_WIZARD_ADVANCED="Advanced Hardening Wizard"

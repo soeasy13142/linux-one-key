@@ -785,7 +785,6 @@ MSG_SERVICES_WIZARD_DONE="服务管理配置完成"
 # ═══════════════════════════════════════════
 # NTP 时间同步
 # ═══════════════════════════════════════════
-# TODO: NTP module not yet implemented - keys reserved for future use
 
 MSG_NTP_TITLE="NTP 时间同步"
 MSG_NTP_SETTING="正在配置 NTP 时间同步..."
@@ -811,7 +810,6 @@ MSG_NTP_SYNC_FAIL="时间同步失败"
 # ═══════════════════════════════════════════
 # Swap 配置
 # ═══════════════════════════════════════════
-# TODO: Swap module not yet implemented - keys reserved for future use
 
 MSG_SWAP_TITLE="Swap 配置"
 MSG_SWAP_CHECKING="正在检测 Swap 状态..."
@@ -1031,7 +1029,6 @@ MSG_MODE_CUSTOM="自定义"
 MSG_MODE_CUSTOM_DESC="逐项选择，完全控制"
 MSG_MODE_CUSTOM_TIP="推荐：有特殊需求的用户"
 MSG_MODE_SELECT_PROMPT="请输入选项 [1-4] (默认: 4)"
-MSG_MODE_REQUIRES_FULL="此模式需要完整版 (不带 --lite)"
 MSG_MODE_WIZARD_BASIC="基础加固向导"
 MSG_MODE_WIZARD_STANDARD="标准加固向导"
 MSG_MODE_WIZARD_ADVANCED="高级加固向导"
