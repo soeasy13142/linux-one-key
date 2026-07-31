@@ -111,3 +111,22 @@ teardown() {
     [[ -n "${MSG_STATUS_SSH_PORT_DEFAULT}" ]]
     [[ "${MSG_STATUS_SSH_PORT_HARDENED}" != "${MSG_STATUS_SSH_PORT_DEFAULT}" ]]
 }
+
+@test "zh.sh has Batch 5a menu + backup center keys" {
+    source "${SCRIPT_DIR}/scripts/base/utils.sh"
+    load_lang "${SCRIPT_DIR}"
+    [[ -n "${MSG_MAIN_MENU_BACKUP_CENTER:-}" ]]
+    [[ -n "${MSG_MAIN_MENU_DASHBOARD:-}" ]]
+    [[ -n "${MSG_BACKUP_CENTER_TITLE:-}" ]]
+    [[ -n "${MSG_BACKUP_CENTER_MENU_LIST:-}" ]]
+    [[ -n "${MSG_BACKUP_CENTER_MENU_BACK:-}" ]]
+    [[ -n "${MSG_ERROR_RESTORE_TARGET_REQUIRED:-}" ]]
+}
+
+@test "zh.sh has dashboard keys" {
+    source "${SCRIPT_DIR}/scripts/base/utils.sh"
+    load_lang "${SCRIPT_DIR}"
+    [[ -n "${MSG_DASHBOARD_TITLE:-}" ]]
+    [[ -n "${MSG_DASHBOARD_RISK_LOW:-}" ]]
+    [[ -n "${MSG_DASHBOARD_RISK_CRITICAL:-}" ]]
+}
