@@ -105,21 +105,3 @@ get_mode_modules() {
         *) echo "" ;;
     esac
 }
-
-# Check if a hardening mode is compatible with current Lite setting
-# Usage: if is_mode_compatible "standard"; then ...
-# Returns 0 if compatible, 1 if incompatible
-# TODO: This function is defined as a future API for mode compatibility checks.
-#       It is NOT currently wired into any production code path but is tested
-#       (tests/unit/mode-selection.bats) and documented in plans. Wire it in
-#       when the mode-selection UI needs runtime compatibility validation.
-is_mode_compatible() {
-    local mode="$1"
-    if is_mode_lite; then
-        case "${mode}" in
-            basic|custom) return 0 ;;
-            standard|advanced) return 1 ;;
-        esac
-    fi
-    return 0
-}
