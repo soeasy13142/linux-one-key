@@ -912,6 +912,7 @@ MSG_MAIN_MENU_BACKUP_CENTER_DESC="Browse backups, one-key restore, rollback time
 MSG_MAIN_MENU_DASHBOARD="[18] Security Dashboard"
 MSG_MAIN_MENU_DASHBOARD_DESC="Multi-module CIS compliance scoring and risk level"
 MSG_ERROR_RESTORE_TARGET_REQUIRED="Restore failed: target path missing (no .meta metadata)"
+MSG_ERROR_RESTORE_TARGET_NOT_ABSOLUTE="Restore failed: target path must be absolute"
 MSG_BACKUP_CENTER_TITLE="Backup & Rollback Center"
 MSG_BACKUP_CENTER_MENU_LIST="1. View backup history"
 MSG_BACKUP_CENTER_MENU_RESTORE="2. Restore module"

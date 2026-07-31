@@ -78,6 +78,12 @@ restore_file() {
         fi
     fi
 
+    # 安全：显式目标路径同样必须是绝对路径（spec §5.5），杜绝相对/空白填充路径写入进程 CWD
+    if [[ -n "${target_path}" && "${target_path}" != /* ]]; then
+        log_error "${MSG_ERROR_RESTORE_TARGET_NOT_ABSOLUTE}"
+        return 1
+    fi
+
     log_step "${description}: ${target_path}"
 
     if cp -a "${backup_path}" "${target_path}"; then
