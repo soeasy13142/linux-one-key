@@ -1,5 +1,6 @@
 #!/usr/bin/env bats
 # backup.bats - 单元测试 for scripts/base/backup.sh
+bats_require_minimum_version 1.5.0
 
 setup() {
     export TEST_DIR="$(mktemp -d)"
@@ -58,7 +59,8 @@ teardown() {
     [[ "${status}" -eq 0 ]]
 
     local backup_count
-    backup_count=$(ls "${BACKUP_DIR}"/test.conf.bak.* 2>/dev/null | wc -l)
+    # 排除 .meta sidecar（备份元数据，非备份文件本身）
+    backup_count=$(find "${BACKUP_DIR}" -maxdepth 1 -name 'test.conf.bak.*' ! -name '*.meta' | wc -l)
     [[ "${backup_count}" -eq 1 ]]
 }
 
@@ -165,4 +167,53 @@ teardown() {
     run restore_file "${backup2}" "${test_file}" "Restore v2"
     [[ "${status}" -eq 0 ]]
     [[ "$(cat "${test_file}")" == "version 2" ]]
+}
+
+# ── .meta sidecar & restore target resolution ──
+
+@test "backup_file writes .meta sidecar with original path" {
+    local test_file="${TEST_DIR}/test.conf"
+    echo "content" > "${test_file}"
+
+    run --separate-stderr backup_file "${test_file}"
+    [[ "${status}" -eq 0 ]]
+
+    local backup_path="${output}"
+    [[ -f "${backup_path}.meta" ]]
+    [[ "$(cat "${backup_path}.meta")" == "${test_file}" ]]
+}
+
+@test "restore_file restores via .meta when target omitted" {
+    local test_file="${TEST_DIR}/test.conf"
+    echo "original" > "${test_file}"
+
+    run --separate-stderr backup_file "${test_file}"
+    local backup_path="${output}"
+
+    echo "modified" > "${test_file}"
+
+    run restore_file "${backup_path}"
+    [[ "${status}" -eq 0 ]]
+    [[ "$(cat "${test_file}")" == "original" ]]
+}
+
+@test "restore_file rejects relative path from .meta" {
+    local test_file="${TEST_DIR}/test.conf"
+    echo "content" > "${test_file}"
+
+    run --separate-stderr backup_file "${test_file}"
+    local backup_path="${output}"
+
+    echo "relative/path" > "${backup_path}.meta"
+
+    run restore_file "${backup_path}"
+    [[ "${status}" -ne 0 ]]
+}
+
+@test "restore_file errors when no meta and no explicit target" {
+    local backup="${TEST_DIR}/orphan.conf"
+    echo "content" > "${backup}"
+
+    run restore_file "${backup}"
+    [[ "${status}" -ne 0 ]]
 }

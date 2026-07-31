@@ -41,6 +41,8 @@ backup_file() {
         # shellcheck disable=SC2059
         log_success "$(printf "${MSG_BACKUP_SUCCESS}" "${backup_path}")"
         log_debug "Backed up ${file} to ${backup_path}"
+        # 记录原始绝对路径到 sidecar，供备份中心按原始路径恢复（写失败不阻断备份）
+        echo "${file}" > "${backup_path}.meta" 2>/dev/null || true
         echo "${backup_path}"
         return 0
     else
@@ -53,12 +55,27 @@ backup_file() {
 # 恢复文件
 restore_file() {
     local backup_path="$1"
-    local target_path="$2"
+    local target_path="${2:-}"
     local description="${3:-${MSG_LOG_RESTORE}}"
 
     if [[ ! -f "${backup_path}" ]]; then
         log_error "${MSG_ERROR_FILE_NOT_FOUND}: ${backup_path}"
         return 1
+    fi
+
+    # 目标未显式给出时，从 .meta sidecar 解析原始路径
+    if [[ -z "${target_path}" ]]; then
+        if [[ -f "${backup_path}.meta" ]]; then
+            target_path="$(cat "${backup_path}.meta" 2>/dev/null || echo "")"
+            # 安全：meta 必须是绝对路径
+            if [[ -z "${target_path}" ]] || [[ "${target_path}" != /* ]]; then
+                log_error "${MSG_ERROR_RESTORE_TARGET_REQUIRED}"
+                return 1
+            fi
+        else
+            log_error "${MSG_ERROR_RESTORE_TARGET_REQUIRED}"
+            return 1
+        fi
     fi
 
     log_step "${description}: ${target_path}"
