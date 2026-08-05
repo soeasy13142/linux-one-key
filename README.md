@@ -49,6 +49,7 @@
 - [x] ClamAV 病毒扫描（可选 clamd 守护进程）
 - [x] Rootkit 检测
 - [x] K3s 一键安装
+- [x] 更换软件源（交互式选站，vendored LinuxMirrors，支持多发行版）
 - [x] 交互式菜单向导，每步确认
 - [x] 快速开始 + 自定义配置双模式
 - [x] 多发行版支持（CentOS 7+ / Ubuntu 20.04+ / Debian 11+ / Rocky / Alma / Fedora）
@@ -172,7 +173,7 @@ sudo bash install.sh
 
 ### 单元测试 / Unit Tests
 
-- **503 个** Bats 测试用例覆盖全部模块（503 test cases across all modules）
+- **512 个** Bats 测试用例覆盖全部模块（512 test cases across all modules）
 - 覆盖正常路径、边界条件、幂等性、回滚验证（normal, edge, idempotency, rollback）
 - 持续集成中自动运行（ShellCheck + Bats）
 
@@ -278,6 +279,7 @@ Step 9: 生成安全报告
 
 - **[17] 备份/回滚中心**：浏览 `/var/log/linux-one-key/backups/` 备份历史；按模块一键恢复到原路径；查看/取消 SSH 回滚定时器；按保留策略清理旧备份。恢复操作需双重确认。
 - **[18] 安全仪表盘**：12 个安全模块 × 31 项检查的合规评分（SSH 5 / Firewall 3 / Fail2Ban 3 / Audit 3 / Users 2 / Kernel 2 / Filesystem 2 / Services 2 / AutoUpdate 2 / AIDE 2 / ClamAV 2 / Rootkit 3），总分 + 风险等级（≥90 Low · 75-89 Medium · 60-74 High · <60 Critical）。
+- **[19] 更换软件源**：交互式更换系统软件源（vendored [LinuxMirrors](https://github.com/SuperManito/LinuxMirrors)，支持 Debian/Ubuntu/CentOS/Rocky/Alma/openEuler 等；含恢复官方源、查看当前源）— Lite/Full 均可用
 
 ---
 
@@ -389,6 +391,7 @@ curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/inst
 | Fail2Ban 文档 | https://github.com/fail2ban/fail2ban/wiki |
 | auditd 文档 | https://man7.org/linux/man-pages/man8/auditd.8.html |
 | dev-sec Hardening | https://dev-sec.io/ |
+| LinuxMirrors（软件源更换） | https://github.com/SuperManito/LinuxMirrors |
 
 ---
 
@@ -419,3 +422,4 @@ curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/inst
 - [konstruktoid/hardening](https://github.com/konstruktoid/hardening) — Ubuntu 加固脚本参考
 - [Bats](https://github.com/bats-core/bats-core) — Bash 自动化测试框架
 - [ShellCheck](https://www.shellcheck.net/) — Shell 脚本静态分析工具
+- [SuperManito/LinuxMirrors](https://github.com/SuperManito/LinuxMirrors) — 软件源更换功能（vendored，MIT，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)）
