@@ -154,7 +154,7 @@ teardown() {
     [[ "$status" -eq 0 ]]
 }
 
-@test "get_main_menu_choice accepts 17 and 18" {
-    run grep -E '\[0-9\]\|1\[0-8\]' "${SCRIPT_DIR}/install.sh"
+@test "get_main_menu_choice accepts 17-19" {
+    run grep -E '\[0-9\]\|1\[0-9\]' "${SCRIPT_DIR}/install.sh"
     [[ "$status" -eq 0 ]]
 }

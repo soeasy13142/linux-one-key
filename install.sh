@@ -359,6 +359,14 @@ load_dependencies() {
     # shellcheck source=/dev/null
     source "${SCRIPT_DIR}/scripts/server/k3s.sh"
 
+    # 加载 mirror.sh (更换软件源模块)
+    if [[ ! -f "${SCRIPT_DIR}/scripts/server/mirror.sh" ]]; then
+        echo "Error: Cannot find mirror.sh at ${SCRIPT_DIR}/scripts/server/mirror.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/scripts/server/mirror.sh"
+
     # 加载 backup_center.sh / dashboard.sh（Batch 5a 编排与呈现层）
     if [[ ! -f "${SCRIPT_DIR}/scripts/base/backup_center.sh" ]]; then
         echo "Error: Cannot find backup_center.sh at ${SCRIPT_DIR}/scripts/base/backup_center.sh"
@@ -910,6 +918,10 @@ show_main_menu() {
         echo -e "      ${MSG_MAIN_MENU_DASHBOARD_DESC}"
     fi
     echo ""
+    # 更换软件源（Lite/Full 全模式可用）
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_MIRROR}${NC}"
+    echo -e "      ${MSG_MAIN_MENU_MIRROR_DESC}"
+    echo ""
 
     echo -e "  ${RED}${MSG_MAIN_MENU_EXIT}${NC}"
     echo ""
@@ -919,7 +931,7 @@ show_main_menu() {
 get_main_menu_choice() {
     local choice
     while true; do
-        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-18]" "")
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-19]" "")
         # EOF / non-interactive stdin: exit gracefully
         if [[ -z "${choice}" ]]; then
             echo ""
@@ -927,7 +939,7 @@ get_main_menu_choice() {
             exit 1
         fi
         case "${choice}" in
-            [0-9]|1[0-8])
+            [0-9]|1[0-9])
                 echo "${choice}"
                 return 0
                 ;;
@@ -2011,6 +2023,7 @@ run_main_menu_loop() {
                     18) run_dashboard_menu ;;
                 esac
                 ;;
+            19) run_mirror_submenu_loop ;;
             0) cleanup_and_exit ;;
             *)
                 log_error "${MSG_MENU_INVALID}"
