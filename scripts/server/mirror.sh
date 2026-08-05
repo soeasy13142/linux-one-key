@@ -85,8 +85,7 @@ show_current_sources() {
 
     case "${pkg_manager}" in
         apt)
-            # TODO(i18n): 需要独立"当前软件源"标题键；lang 文件由并行 agent 维护，暂复用菜单项文案
-            log_info "${MSG_MIRROR_MENU_VIEW_SOURCE}"
+            log_info "${MSG_MIRROR_VIEW_TITLE}"
             _print_source_file "/etc/apt/sources.list"
             if [[ -d /etc/apt/sources.list.d/ ]]; then
                 local src_file
@@ -97,8 +96,7 @@ show_current_sources() {
             fi
             ;;
         yum|dnf)
-            # TODO(i18n): 需要独立"当前软件源"标题键；lang 文件由并行 agent 维护，暂复用菜单项文案
-            log_info "${MSG_MIRROR_MENU_VIEW_SOURCE}"
+            log_info "${MSG_MIRROR_VIEW_TITLE}"
             if [[ -d /etc/yum.repos.d/ ]]; then
                 local repo_file
                 for repo_file in /etc/yum.repos.d/*.repo; do
@@ -108,8 +106,7 @@ show_current_sources() {
             fi
             ;;
         *)
-            # TODO(i18n): 需要独立"暂不支持显示当前软件源"键；lang 文件由并行 agent 维护，暂复用通用提示
-            log_warn "${MSG_MIRROR_MENU_INVALID}"
+            log_warn "${MSG_MIRROR_UNSUPPORTED}"
             ;;
     esac
     return 0
@@ -142,23 +139,21 @@ run_mirror_submenu_loop() {
         choice=$(prompt_input "${MSG_MIRROR_MENU_PROMPT} [0-3]" "")
         case "${choice}" in
             1)
-                # TODO(i18n): 需要独立"即将修改系统软件源文件"警告键；lang 文件由并行 agent 维护，暂复用确认键
                 log_warn "${MSG_MIRROR_CONFIRM_CHANGE}"
                 if confirm "${MSG_MIRROR_CONFIRM_CHANGE}" "y"; then
-                    run_mirror_flow || log_error "Mirror source change failed"
+                    run_mirror_flow || log_error "${MSG_MIRROR_ERROR_CHANGE}"
                 fi
                 press_enter
                 ;;
             2)
-                # TODO(i18n): 需要独立"即将修改系统软件源文件"警告键；lang 文件由并行 agent 维护，暂复用确认键
                 log_warn "${MSG_MIRROR_CONFIRM_RESTORE}"
                 if confirm "${MSG_MIRROR_CONFIRM_RESTORE}" "y"; then
-                    run_mirror_flow --use-official-source || log_error "Mirror source restore failed"
+                    run_mirror_flow --use-official-source || log_error "${MSG_MIRROR_ERROR_RESTORE}"
                 fi
                 press_enter
                 ;;
             3)
-                show_current_sources || log_error "Mirror source view failed"
+                show_current_sources || log_error "${MSG_MIRROR_ERROR_VIEW}"
                 press_enter
                 ;;
             0) return 0 ;;
