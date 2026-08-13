@@ -2,7 +2,7 @@
 title: "服务器软件 + 开发工具模块兑现路线图（Batch 6a-6e）"
 created: 2026-08-13
 updated: 2026-08-13
-status: in-progress
+status: done
 source: "scripts/{server,dev,utils}/README.md 规划中(v0.3+) 的未建模块；用户选定「兑现已规划的运维/开发模块」方向"
 topic: "feature"
 ---
@@ -161,3 +161,10 @@ topic: "feature"
 
 - 2026-08-13: 创建路线图，status=draft。
 - 2026-08-13: 用户确认 3 个决策点（菜单 [20]+[21]、docker 归 server/、保守默认加固）；status=in-progress。下一步：Batch 6a（docker + nginx）精设计 → 实现。
+- 2026-08-13: **Batch 6a-6e 全部完成** ✅ — 14 个模块全部落地：
+  - 6a: docker + nginx（Bats 544）
+  - 6b: redis/postgresql/mysql/memcached（Bats 612）
+  - 6c: node-exporter/prometheus/grafana（Bats 660）
+  - 6d: git/editor/runtimes/build-toolchain（Bats 705）
+  - 6e: rabbitmq（Bats 720）
+  - 菜单 [20] 服务器软件 + [21] 开发工具已接入；`check.sh` 单列延后至独立计划执行。status=done。
