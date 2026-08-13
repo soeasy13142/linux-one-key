@@ -1265,6 +1265,59 @@ MSG_STATUS_ROOTKIT="Rootkit 检测"
 MSG_REPORT_WARN_ROOTKIT="Rootkit 检测工具已安装，建议每周运行 rkhunter --check"
 MSG_TASK_ROOTKIT="Rootkit 检测"
 
+# ═══════════════════════════════════════════
+# sudo 与日志加固（Batch 5b）
+# ═══════════════════════════════════════════
+
+MSG_MAIN_MENU_SUDO_LOG="[22] sudo 与日志加固"
+MSG_MAIN_MENU_SUDO_LOG_DESC="sudo 权限收紧、命令全量日志、journald 持久化、日志轮转安全"
+
+MSG_SUDO_LOG_MENU_TITLE="sudo 与日志加固"
+MSG_SUDO_LOG_MENU_SUDO="[1] sudo 安全加固"
+MSG_SUDO_LOG_MENU_LOGGING="[2] 日志安全加固"
+MSG_SUDO_LOG_MENU_BACK="[0] 返回主菜单"
+
+# sudo 加固
+MSG_SUDO_TITLE="sudo 安全加固"
+MSG_SUDO_WIZARD_TITLE="sudo 安全加固向导"
+MSG_SUDO_WIZARD_DESC="收紧 sudoers 默认参数、写入加固 drop-in（visudo 校验）、开启 sudo 命令全量日志"
+MSG_SUDO_WIZARD_START="是否开始 sudo 安全加固？"
+MSG_SUDO_WIZARD_SKIPPED="跳过 sudo 安全加固"
+MSG_SUDO_WIZARD_DONE="sudo 安全加固完成"
+MSG_SUDO_ALREADY_HARDENED="sudo 加固配置已存在，跳过"
+MSG_SUDO_BACKUP_DROPIN="备份 sudoers 加固配置"
+MSG_SUDO_RESTORE_DROPIN="恢复 sudoers 加固配置"
+MSG_SUDO_DROPIN_WRITE_FAILED="sudoers 加固配置写入失败，已回滚"
+MSG_SUDO_DROPIN_DONE="sudoers 加固配置已写入并通过 visudo 校验"
+MSG_SUDO_VISUDO_FAILED="visudo 校验失败，已回滚 sudoers 加固配置"
+MSG_SUDO_NOPASSWD_RISK="检测到 NOPASSWD 配置：允许部分用户/命令免密执行 sudo，存在安全风险，请确认是否符合预期"
+MSG_SUDO_LOG_PERMS_DONE="sudo 命令日志文件权限已确认"
+MSG_SUDO_LOGROTATE_DONE="sudo 日志轮转配置已写入"
+MSG_SUDO_LOGROTATE_EXISTS="sudo 日志轮转配置已存在，跳过"
+MSG_SUDO_DONE="sudo 安全加固完成"
+
+# 日志加固
+MSG_LOG_TITLE="日志安全加固"
+MSG_LOG_WIZARD_TITLE="日志安全加固向导"
+MSG_LOG_WIZARD_DESC="journald 持久化与大小限制、logrotate 安全配置、/var/log 关键日志权限修复"
+MSG_LOG_WIZARD_START="是否开始日志安全加固？"
+MSG_LOG_WIZARD_SKIPPED="跳过日志安全加固"
+MSG_LOG_WIZARD_DONE="日志安全加固完成"
+MSG_LOG_BACKUP_CONF="备份日志安全配置文件"
+MSG_LOG_JOURNALD_EXISTS="journald 加固配置已存在，跳过"
+MSG_LOG_JOURNALD_DONE="journald 加固配置已写入"
+MSG_LOG_JOURNALD_RESTART_DONE="systemd-journald 已重启，配置生效"
+MSG_LOG_JOURNALD_RESTART_WARN="systemd-journald 重启失败（容器/受限环境常见），配置将在下次重启生效"
+MSG_LOG_LOGROTATE_EXISTS="logrotate 安全配置已存在，跳过"
+MSG_LOG_LOGROTATE_DONE="logrotate 安全配置已写入"
+MSG_LOG_PERM_FIXING="正在修复日志文件权限"
+MSG_LOG_PERM_FIXED="日志文件权限已修复"
+MSG_LOG_PERM_FIX_FAILED="日志文件权限修复失败"
+MSG_LOG_CHOWN_FAILED="无法修改日志文件属主（需要 root 权限）"
+MSG_LOG_PERM_ALL_OK="关键日志文件权限全部正确"
+MSG_LOG_PERM_ISSUES="发现日志文件权限异常"
+MSG_LOG_DONE="日志安全加固完成"
+
 # ===== 更换软件源（mirror.sh，vendored from LinuxMirrors）=====
 MSG_MIRROR_COMMANDS_HELP="命令选项(名称/含义/值)：
 

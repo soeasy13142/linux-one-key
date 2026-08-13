@@ -1265,6 +1265,59 @@ MSG_STATUS_ROOTKIT="Rootkit Detection"
 MSG_REPORT_WARN_ROOTKIT="Rootkit detection tools installed. Run rkhunter --check weekly."
 MSG_TASK_ROOTKIT="Rootkit Detection"
 
+# ═══════════════════════════════════════════
+# sudo & Log Hardening (Batch 5b)
+# ═══════════════════════════════════════════
+
+MSG_MAIN_MENU_SUDO_LOG="[22] sudo & Log Hardening"
+MSG_MAIN_MENU_SUDO_LOG_DESC="Tighten sudo defaults, full command logging, journald persistence, secure logrotate"
+
+MSG_SUDO_LOG_MENU_TITLE="sudo & Log Hardening"
+MSG_SUDO_LOG_MENU_SUDO="[1] sudo Hardening"
+MSG_SUDO_LOG_MENU_LOGGING="[2] Log Hardening"
+MSG_SUDO_LOG_MENU_BACK="[0] Back to main menu"
+
+# sudo hardening
+MSG_SUDO_TITLE="sudo Hardening"
+MSG_SUDO_WIZARD_TITLE="sudo Hardening Wizard"
+MSG_SUDO_WIZARD_DESC="Tighten sudoers defaults, write hardened drop-in (visudo-checked), enable full sudo command logging"
+MSG_SUDO_WIZARD_START="Start sudo hardening?"
+MSG_SUDO_WIZARD_SKIPPED="Skipping sudo hardening"
+MSG_SUDO_WIZARD_DONE="sudo hardening complete"
+MSG_SUDO_ALREADY_HARDENED="sudo hardening config already exists, skipping"
+MSG_SUDO_BACKUP_DROPIN="Backing up sudoers hardening config"
+MSG_SUDO_RESTORE_DROPIN="Restoring sudoers hardening config"
+MSG_SUDO_DROPIN_WRITE_FAILED="Failed to write sudoers hardening config, rolled back"
+MSG_SUDO_DROPIN_DONE="sudoers hardening config written and visudo-checked"
+MSG_SUDO_VISUDO_FAILED="visudo check failed, rolled back sudoers hardening config"
+MSG_SUDO_NOPASSWD_RISK="NOPASSWD rule detected: some users/commands run sudo without a password. This is a security risk, please confirm it is intentional."
+MSG_SUDO_LOG_PERMS_DONE="sudo command log permissions confirmed"
+MSG_SUDO_LOGROTATE_DONE="sudo log rotation config written"
+MSG_SUDO_LOGROTATE_EXISTS="sudo log rotation config already exists, skipping"
+MSG_SUDO_DONE="sudo hardening complete"
+
+# log hardening
+MSG_LOG_TITLE="Log Hardening"
+MSG_LOG_WIZARD_TITLE="Log Hardening Wizard"
+MSG_LOG_WIZARD_DESC="journald persistence & size limits, secure logrotate config, /var/log key log permission fixes"
+MSG_LOG_WIZARD_START="Start log hardening?"
+MSG_LOG_WIZARD_SKIPPED="Skipping log hardening"
+MSG_LOG_WIZARD_DONE="Log hardening complete"
+MSG_LOG_BACKUP_CONF="Backing up log hardening config"
+MSG_LOG_JOURNALD_EXISTS="journald hardening config already exists, skipping"
+MSG_LOG_JOURNALD_DONE="journald hardening config written"
+MSG_LOG_JOURNALD_RESTART_DONE="systemd-journald restarted, config applied"
+MSG_LOG_JOURNALD_RESTART_WARN="Failed to restart systemd-journald (common in containers/restricted envs); config will apply at next boot"
+MSG_LOG_LOGROTATE_EXISTS="logrotate safety config already exists, skipping"
+MSG_LOG_LOGROTATE_DONE="logrotate safety config written"
+MSG_LOG_PERM_FIXING="Fixing log file permissions"
+MSG_LOG_PERM_FIXED="Log file permissions fixed"
+MSG_LOG_PERM_FIX_FAILED="Failed to fix log file permissions"
+MSG_LOG_CHOWN_FAILED="Cannot change log file owner (requires root)"
+MSG_LOG_PERM_ALL_OK="All critical log file permissions correct"
+MSG_LOG_PERM_ISSUES="Log files with permission issues found"
+MSG_LOG_DONE="Log hardening complete"
+
 # ===== 更换软件源（mirror.sh，vendored from LinuxMirrors）=====
 MSG_MIRROR_COMMANDS_HELP="Command options(name/meaning/value):
 
