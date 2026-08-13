@@ -1883,3 +1883,36 @@ MSG_BUILD_TOOLCHAIN_MENU_UNINSTALL="[2] Uninstall build toolchain"
 MSG_BUILD_TOOLCHAIN_MENU_STATUS="[3] Check build toolchain status"
 MSG_BUILD_TOOLCHAIN_MENU_BACK="[0] Back"
 MSG_BUILD_TOOLCHAIN_UNINSTALL_WARN="Removing build-essential may affect other packages that depend on it (best-effort removal)"
+
+# ═══════════════════════════════════════════
+# Server Software (Message Queue)
+# ═══════════════════════════════════════════
+
+MSG_SERVER_MENU_RABBITMQ="[10] RabbitMQ"
+
+# RabbitMQ (Message Queue)
+MSG_RABBITMQ_TITLE="RabbitMQ Message Queue"
+MSG_RABBITMQ_INSTALLING="Installing RabbitMQ..."
+MSG_RABBITMQ_INSTALLED="RabbitMQ installed successfully"
+MSG_RABBITMQ_ALREADY="RabbitMQ already installed, skipping"
+MSG_RABBITMQ_FAILED="RabbitMQ installation failed"
+MSG_RABBITMQ_CANCELLED="RabbitMQ operation cancelled"
+MSG_RABBITMQ_CONFIRM="Install RabbitMQ?"
+MSG_RABBITMQ_CONFIRM_UNINSTALL="Uninstall RabbitMQ?"
+MSG_RABBITMQ_UNINSTALLING="Uninstalling RabbitMQ..."
+MSG_RABBITMQ_UNINSTALLED="RabbitMQ uninstalled"
+MSG_RABBITMQ_UNINSTALL_FAILED="RabbitMQ uninstall failed"
+MSG_RABBITMQ_NOT_INSTALLED="RabbitMQ not installed"
+MSG_RABBITMQ_STATUS_CHECKING="Checking RabbitMQ status..."
+MSG_RABBITMQ_STATUS_RUNNING="RabbitMQ service running"
+MSG_RABBITMQ_STATUS_NOT_RUNNING="RabbitMQ service not running"
+MSG_RABBITMQ_CONFIG_WRITTEN="RabbitMQ security baseline applied (default guest account removed)"
+MSG_RABBITMQ_CONFIG_EXISTS="RabbitMQ already secured, skipping"
+MSG_RABBITMQ_CONFIG_MISSING="RabbitMQ security baseline not applied"
+MSG_RABBITMQ_BACKUP_CONFIG="Backing up RabbitMQ config"
+MSG_RABBITMQ_ENABLE_FAILED="Failed to enable/start RabbitMQ service"
+MSG_RABBITMQ_MENU_TITLE="RabbitMQ Message Queue"
+MSG_RABBITMQ_MENU_INSTALL="[1] Install RabbitMQ"
+MSG_RABBITMQ_MENU_UNINSTALL="[2] Uninstall RabbitMQ"
+MSG_RABBITMQ_MENU_STATUS="[3] Check RabbitMQ status"
+MSG_RABBITMQ_MENU_BACK="[0] Back"
