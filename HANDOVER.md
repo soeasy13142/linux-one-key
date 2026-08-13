@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-08-13 · **版本**: v1.6.0 · **状态**: ✅ Batch 6b（数据库/缓存）完成 · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
+> **最后更新**: 2026-08-13 · **版本**: v1.6.0 · **状态**: ✅ Batch 6c（监控）完成 · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
 
 ## 会话恢复
 
@@ -14,9 +14,9 @@ ls docs/plans/                 # 待执行计划
 
 Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 
-- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection / **Mirror（更换软件源）** / **Docker** / **Nginx** / **Redis** / **PostgreSQL** / **MySQL** / **Memcached**
+- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection / **Mirror（更换软件源）** / **Docker** / **Nginx** / **Redis** / **PostgreSQL** / **MySQL** / **Memcached** / **Node Exporter** / **Prometheus** / **Grafana**
 - **Lite/Full 双模式**: `--lite` 低内存模式（SSH + Firewall + Kernel) vs Full 全模块
-- **测试**: 612 Bats 单元测试全部通过
+- **测试**: 660 Bats 单元测试全部通过
 - **审查**: 5 轮全项目 Code Review，发现并修复 280+ 问题
 - **最新发布**: v1.6.0（2026-08-01），Batch 5a 备份/回滚中心 + 安全仪表盘
 - **新增 [19] 更换软件源**: vendored LinuxMirrors（MIT）完整交互，Lite/Full 均可用
@@ -50,6 +50,7 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 - **菜单编号变更**: Batch 2 新增自动安全更新菜单项 [10]，后续编号相应改变：[11] 完整向导、[12] 查看报告、[13] K3s。Batch 3 新增 [14] AIDE、[15] ClamAV、[16] Rootkit。Batch 5a 新增 [17] 备份中心、[18] 仪表盘。本次新增 [19] 更换软件源（Lite/Full 均可用）
 - **vendored lm_core.sh 8094 行**: 属第三方代码有意例外（违反"文件<800 行"规范）；只在 mirror.sh 的 `run_mirror_flow` subshell 内 source，绝不顶层 source
 - **MSG_MIRROR_\* 键**: 来自 LinuxMirrors 语言包机械生成，zh/en 必须对称；lm_core 每处 `msg "key"` 都有对应键（mirror.bats 有完整性测试兜底）
+- **prometheus drop-in 绑定 localhost**: 用 systemd drop-in 覆盖 `ExecStart` 加 `--web.listen-address` 时，硬编码了 Debian/Ubuntu 的存储路径（`/var/lib/prometheus/metrics2`）；RHEL 族为 `/var/lib/prometheus`（无 metrics2 后缀），该 drop-in 在 RHEL 上不通用（已知限制，主验证目标为 Debian/Ubuntu）
 
 ## 下一步
 
@@ -82,8 +83,15 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 5. ✅ **Memcached 加固** — localhost + 禁 UDP + 限内存
 6. ✅ 测试 544 → 612，ShellCheck 干净
 
-下次（Batch 6c）规划：
-1. ⏳ **监控** — node-exporter / prometheus / grafana（复用骨架）
+本次（Batch 6c）已完成：
+1. ✅ **监控** — node_exporter / prometheus / grafana 三模块（install/uninstall/status + 安全基线 + Bats）
+2. ✅ **Node Exporter** — systemd 加固 drop-in + 双名适配（Debian/Ubuntu 用 prometheus-node-exporter）
+3. ✅ **Prometheus** — 绑定 localhost（systemd drop-in 覆盖 --web.listen-address）
+4. ✅ **Grafana** — 官方 OSS 源 + 绑定 localhost + 禁用匿名访问
+5. ✅ 测试 612 → 660，ShellCheck 干净
+
+下次（Batch 6d）规划：
+1. ⏳ **开发工具** — git / editor / runtimes / build-toolchain（复用骨架）
 2. ⏳ **Batch 5b「sudo + 日志加固」** — 独立 spec 仍排队中
 
 > ✅ = 已实现 · 🔄 = 待验证 · ⏳ = 待实现
