@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-08-13 · **版本**: v1.6.0 · **状态**: 🔄 Batch 6a（Docker + Nginx）进行中 · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
+> **最后更新**: 2026-08-13 · **版本**: v1.6.0 · **状态**: ✅ Batch 6b（数据库/缓存）完成 · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
 
 ## 会话恢复
 
@@ -14,9 +14,9 @@ ls docs/plans/                 # 待执行计划
 
 Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 
-- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection / **Mirror（更换软件源）** / **Docker** / **Nginx**
+- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection / **Mirror（更换软件源）** / **Docker** / **Nginx** / **Redis** / **PostgreSQL** / **MySQL** / **Memcached**
 - **Lite/Full 双模式**: `--lite` 低内存模式（SSH + Firewall + Kernel) vs Full 全模块
-- **测试**: 544 Bats 单元测试全部通过
+- **测试**: 612 Bats 单元测试全部通过
 - **审查**: 5 轮全项目 Code Review，发现并修复 280+ 问题
 - **最新发布**: v1.6.0（2026-08-01），Batch 5a 备份/回滚中心 + 安全仪表盘
 - **新增 [19] 更换软件源**: vendored LinuxMirrors（MIT）完整交互，Lite/Full 均可用
@@ -74,8 +74,16 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 3. ✅ **Nginx 加固** — 安全响应头 drop-in（隐藏版本/X-Frame-Options/nosniff/Referrer-Policy）+ HSTS opt-in
 4. ✅ 测试 512 → 544，ShellCheck 干净
 
-下次（Batch 6b）规划：
-1. ⏳ **数据库 & 缓存** — redis / postgresql / mysql / memcached（复用 6a 骨架）
+本次（Batch 6b）已完成：
+1. ✅ **数据库 & 缓存** — redis / postgresql / mysql / memcached 四模块（install/uninstall/status + 安全基线 + Bats）
+2. ✅ **Redis 加固** — 绑定 localhost + 禁用 FLUSHALL/FLUSHDB/CONFIG/EVAL
+3. ✅ **PostgreSQL 加固** — scram-sha-256 + 仅监听 localhost
+4. ✅ **MySQL/MariaDB 加固** — 非交互 mysql_secure_installation + bind 127.0.0.1
+5. ✅ **Memcached 加固** — localhost + 禁 UDP + 限内存
+6. ✅ 测试 544 → 612，ShellCheck 干净
+
+下次（Batch 6c）规划：
+1. ⏳ **监控** — node-exporter / prometheus / grafana（复用骨架）
 2. ⏳ **Batch 5b「sudo + 日志加固」** — 独立 spec 仍排队中
 
 > ✅ = 已实现 · 🔄 = 待验证 · ⏳ = 待实现
