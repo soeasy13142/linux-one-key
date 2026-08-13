@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-08-05 · **版本**: v1.6.0 · **状态**: ✅ v1.6.0 Batch 5a 完成 + mirror 换源模块合入 · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
+> **最后更新**: 2026-08-13 · **版本**: v1.6.0 · **状态**: 🔄 Batch 6a（Docker + Nginx）进行中 · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
 
 ## 会话恢复
 
@@ -14,9 +14,9 @@ ls docs/plans/                 # 待执行计划
 
 Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 
-- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection / **Mirror（更换软件源）**
+- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection / **Mirror（更换软件源）** / **Docker** / **Nginx**
 - **Lite/Full 双模式**: `--lite` 低内存模式（SSH + Firewall + Kernel) vs Full 全模块
-- **测试**: 512 Bats 单元测试全部通过
+- **测试**: 544 Bats 单元测试全部通过
 - **审查**: 5 轮全项目 Code Review，发现并修复 280+ 问题
 - **最新发布**: v1.6.0（2026-08-01），Batch 5a 备份/回滚中心 + 安全仪表盘
 - **新增 [19] 更换软件源**: vendored LinuxMirrors（MIT）完整交互，Lite/Full 均可用
@@ -68,8 +68,15 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 1. ✅ **[19] 更换软件源** — vendored LinuxMirrors 完整交互（选站/协议/EPEL/升级），subshell 隔离 + MSG_MIRROR_* i18n，Lite/Full 均可用
 2. ✅ **合规声明** — THIRD_PARTY_NOTICES.md（MIT 全文）+ README 致谢；测试 503 → 512，ShellCheck 干净
 
-下次（Batch 5b）规划：
-1. ⏳ **sudo + 日志加固** — 独立 spec 排队中
+本次（Batch 6a）已完成：
+1. ✅ **[20] 服务器软件** — 新增 docker.sh + nginx.sh（install/uninstall/status + 安全基线），菜单 [20] 接入
+2. ✅ **Docker 加固** — daemon.json 保守基线（日志限幅/icc/live-restore）+ userns-remap 激进 opt-in
+3. ✅ **Nginx 加固** — 安全响应头 drop-in（隐藏版本/X-Frame-Options/nosniff/Referrer-Policy）+ HSTS opt-in
+4. ✅ 测试 512 → 544，ShellCheck 干净
+
+下次（Batch 6b）规划：
+1. ⏳ **数据库 & 缓存** — redis / postgresql / mysql / memcached（复用 6a 骨架）
+2. ⏳ **Batch 5b「sudo + 日志加固」** — 独立 spec 仍排队中
 
 > ✅ = 已实现 · 🔄 = 待验证 · ⏳ = 待实现
 

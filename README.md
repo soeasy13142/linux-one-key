@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![ShellCheck](https://img.shields.io/badge/ShellCheck-Passing-brightgreen.svg)](https://www.shellcheck.net/)
-[![Bats Tests](https://img.shields.io/badge/Tests-503-brightgreen.svg)](tests/unit/)
+[![Bats Tests](https://img.shields.io/badge/Tests-544-brightgreen.svg)](tests/unit/)
 [![Docker Phase1](https://img.shields.io/badge/Docker%20Phase1-72%2F72-brightgreen.svg)](tests/docker/)
 [![Docker Phase2](https://img.shields.io/badge/Docker%20Phase2-21%2F21-brightgreen.svg)](tests/docker/)
 [![curl Lite Test](https://img.shields.io/badge/curl%20Lite-13%2F13%20×%205-brightgreen.svg)](docs/test-reports/curl-lite-mode-test.md)
@@ -49,6 +49,8 @@
 - [x] ClamAV 病毒扫描（可选 clamd 守护进程）
 - [x] Rootkit 检测
 - [x] K3s 一键安装
+- [x] Docker 一键安装 + daemon.json 安全加固
+- [x] Nginx 一键安装 + 安全响应头基线
 - [x] 更换软件源（交互式选站，vendored LinuxMirrors，支持多发行版）
 - [x] 交互式菜单向导，每步确认
 - [x] 快速开始 + 自定义配置双模式
@@ -173,7 +175,7 @@ sudo bash install.sh
 
 ### 单元测试 / Unit Tests
 
-- **512 个** Bats 测试用例覆盖全部模块（512 test cases across all modules）
+- **544 个** Bats 测试用例覆盖全部模块（544 test cases across all modules）
 - 覆盖正常路径、边界条件、幂等性、回滚验证（normal, edge, idempotency, rollback）
 - 持续集成中自动运行（ShellCheck + Bats）
 
@@ -215,7 +217,7 @@ linux-one-key/
 │   ├── audit/                 # auditd 配置和规则模板
 │   └── sysctl/                # sysctl 安全参数模板
 ├── tests/
-│   ├── unit/                  # 503 Bats 单元测试
+│   ├── unit/                  # 544 Bats 单元测试
 │   └── docker/                # Docker 自动化测试框架
 │       ├── images/            # 9 个发行版 Dockerfile
 │       ├── tests/             # 8 个模块测试脚本 + Phase 2 目录
@@ -280,6 +282,7 @@ Step 9: 生成安全报告
 - **[17] 备份/回滚中心**：浏览 `/var/log/linux-one-key/backups/` 备份历史；按模块一键恢复到原路径；查看/取消 SSH 回滚定时器；按保留策略清理旧备份。恢复操作需双重确认。
 - **[18] 安全仪表盘**：12 个安全模块 × 31 项检查的合规评分（SSH 5 / Firewall 3 / Fail2Ban 3 / Audit 3 / Users 2 / Kernel 2 / Filesystem 2 / Services 2 / AutoUpdate 2 / AIDE 2 / ClamAV 2 / Rootkit 3），总分 + 风险等级（≥90 Low · 75-89 Medium · 60-74 High · <60 Critical）。
 - **[19] 更换软件源**：交互式更换系统软件源（vendored [LinuxMirrors](https://github.com/SuperManito/LinuxMirrors)，支持 Debian/Ubuntu/CentOS/Rocky/Alma/openEuler 等；含恢复官方源、查看当前源）— Lite/Full 均可用
+- **[20] 服务器软件**：安装 Docker、Nginx 等常用软件并应用安全基线（Docker daemon.json 加固、Nginx 安全响应头）— Full 版
 
 ---
 
