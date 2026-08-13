@@ -319,6 +319,20 @@ load_dependencies() {
     # shellcheck source=/dev/null
     source "${SCRIPT_DIR}/scripts/security/services.sh"
 
+    # 加载 sudo.sh / logging.sh (仅 Full 模式)
+    if is_mode_full; then
+        for _mod in sudo logging; do
+            _f="${SCRIPT_DIR}/scripts/security/${_mod}.sh"
+            if [[ ! -f "${_f}" ]]; then
+                echo "Error: Cannot find ${_mod}.sh at ${_f}"
+                exit 1
+            fi
+            # shellcheck source=/dev/null
+            source "${_f}"
+        done
+        unset _mod _f
+    fi
+
     # 加载 autoupdate.sh (仅 Full 模式)
     if is_mode_full; then
         if [[ ! -f "${SCRIPT_DIR}/scripts/security/autoupdate.sh" ]]; then
@@ -891,6 +905,14 @@ show_main_menu() {
         echo -e "      ${MSG_MAIN_MENU_AUTOUPDATE_DESC}"
     fi
     echo ""
+    # sudo 与日志加固（完整版专用）
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_SUDO_LOG}${NC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_SUDO_LOG_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_SUDO_LOG_DESC}"
+    fi
+    echo ""
 
     # 分组 3：一键
     echo -e "${BOLD}${MSG_SECTION_QUICK}${NC}"
@@ -987,7 +1009,7 @@ show_main_menu() {
 get_main_menu_choice() {
     local choice
     while true; do
-        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-21]" "")
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-22]" "")
         # EOF / non-interactive stdin: exit gracefully
         if [[ -z "${choice}" ]]; then
             echo ""
@@ -995,7 +1017,7 @@ get_main_menu_choice() {
             exit 1
         fi
         case "${choice}" in
-            [0-9]|1[0-9]|2[0-1])
+            [0-9]|1[0-9]|2[0-2])
                 echo "${choice}"
                 return 0
                 ;;
@@ -1498,6 +1520,43 @@ run_rootkit_submenu_loop() {
                 else
                     log_info "${MSG_HINT_STATUS_ROOTKIT}"
                 fi
+                press_enter
+                ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
+# ═══════════════════════════════════════════
+# sudo 与日志加固 子菜单（Batch 5b）
+# ═══════════════════════════════════════════
+
+show_sudo_log_submenu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_SUDO_LOG_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_SUDO_LOG_MENU_SUDO}${NC}"
+    echo -e "  ${GREEN}${MSG_SUDO_LOG_MENU_LOGGING}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_SUDO_LOG_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_sudo_log_menu_loop() {
+    while true; do
+        show_sudo_log_submenu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1)
+                run_sudo_wizard || log_error "sudo hardening failed"
+                press_enter
+                ;;
+            2)
+                run_logging_wizard || log_error "log hardening failed"
                 press_enter
                 ;;
             0) return 0 ;;
@@ -2169,6 +2228,14 @@ run_main_menu_loop() {
                     continue
                 fi
                 run_dev_menu_loop
+                ;;
+            22)
+                if is_mode_lite; then
+                    log_error "${MSG_ERROR_LITE_MODE}"
+                    press_enter
+                    continue
+                fi
+                run_sudo_log_menu_loop
                 ;;
             0) cleanup_and_exit ;;
             *)
