@@ -375,6 +375,18 @@ load_dependencies() {
     # shellcheck source=/dev/null
     source "${SCRIPT_DIR}/scripts/server/nginx.sh"
 
+    # 加载数据库/缓存模块 (redis / postgresql / mysql / memcached)
+    for _mod in redis postgresql mysql memcached; do
+        _f="${SCRIPT_DIR}/scripts/server/${_mod}.sh"
+        if [[ ! -f "${_f}" ]]; then
+            echo "Error: Cannot find ${_mod}.sh at ${_f}"
+            exit 1
+        fi
+        # shellcheck source=/dev/null
+        source "${_f}"
+    done
+    unset _mod _f
+
     # 加载 mirror.sh (更换软件源模块)
     if [[ ! -f "${SCRIPT_DIR}/scripts/server/mirror.sh" ]]; then
         echo "Error: Cannot find mirror.sh at ${SCRIPT_DIR}/scripts/server/mirror.sh"
@@ -2009,6 +2021,10 @@ show_server_menu() {
     echo ""
     echo -e "  ${GREEN}${MSG_SERVER_MENU_DOCKER}${NC}"
     echo -e "  ${GREEN}${MSG_SERVER_MENU_NGINX}${NC}"
+    echo -e "  ${GREEN}${MSG_SERVER_MENU_REDIS}${NC}"
+    echo -e "  ${GREEN}${MSG_SERVER_MENU_POSTGRES}${NC}"
+    echo -e "  ${GREEN}${MSG_SERVER_MENU_MYSQL}${NC}"
+    echo -e "  ${GREEN}${MSG_SERVER_MENU_MEMCACHED}${NC}"
     echo ""
     echo -e "  ${RED}${MSG_SERVER_MENU_BACK}${NC}"
     echo ""
@@ -2018,10 +2034,14 @@ run_server_menu_loop() {
     while true; do
         show_server_menu
         local choice
-        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-6]" "")
         case "${choice}" in
             1) run_docker_submenu_loop ;;
             2) run_nginx_submenu_loop ;;
+            3) run_redis_submenu_loop ;;
+            4) run_postgres_submenu_loop ;;
+            5) run_mysql_submenu_loop ;;
+            6) run_memcached_submenu_loop ;;
             0) return 0 ;;
             *) log_error "${MSG_MENU_INVALID}" ;;
         esac
