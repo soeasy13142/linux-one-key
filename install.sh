@@ -387,6 +387,18 @@ load_dependencies() {
     done
     unset _mod _f
 
+    # 加载开发工具模块 (git / editor / runtimes / build_toolchain)
+    for _mod in git editor runtimes build_toolchain; do
+        _f="${SCRIPT_DIR}/scripts/dev/${_mod}.sh"
+        if [[ ! -f "${_f}" ]]; then
+            echo "Error: Cannot find ${_mod}.sh at ${_f}"
+            exit 1
+        fi
+        # shellcheck source=/dev/null
+        source "${_f}"
+    done
+    unset _mod _f
+
     # 加载 mirror.sh (更换软件源模块)
     if [[ ! -f "${SCRIPT_DIR}/scripts/server/mirror.sh" ]]; then
         echo "Error: Cannot find mirror.sh at ${SCRIPT_DIR}/scripts/server/mirror.sh"
@@ -906,6 +918,14 @@ show_main_menu() {
         echo -e "      ${MSG_MAIN_MENU_SERVER_DESC}"
     fi
     echo ""
+    # 开发工具（完整版专用）
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_DEV}${NC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_DEV_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_DEV_DESC}"
+    fi
+    echo ""
 
     # 分组 5：增强安全工具
     echo -e "${BOLD}────── Security Plus ──────${NC}"
@@ -967,7 +987,7 @@ show_main_menu() {
 get_main_menu_choice() {
     local choice
     while true; do
-        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-20]" "")
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-21]" "")
         # EOF / non-interactive stdin: exit gracefully
         if [[ -z "${choice}" ]]; then
             echo ""
@@ -975,7 +995,7 @@ get_main_menu_choice() {
             exit 1
         fi
         case "${choice}" in
-            [0-9]|1[0-9]|20)
+            [0-9]|1[0-9]|2[0-1])
                 echo "${choice}"
                 return 0
                 ;;
@@ -2054,6 +2074,37 @@ run_server_menu_loop() {
     done
 }
 
+show_dev_menu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_DEV_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_DEV_MENU_GIT}${NC}"
+    echo -e "  ${GREEN}${MSG_DEV_MENU_EDITOR}${NC}"
+    echo -e "  ${GREEN}${MSG_DEV_MENU_RUNTIMES}${NC}"
+    echo -e "  ${GREEN}${MSG_DEV_MENU_BUILD_TOOLCHAIN}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_DEV_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_dev_menu_loop() {
+    while true; do
+        show_dev_menu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-4]" "")
+        case "${choice}" in
+            1) run_git_submenu_loop ;;
+            2) run_editor_submenu_loop ;;
+            3) run_runtimes_submenu_loop ;;
+            4) run_build_toolchain_submenu_loop ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
 run_main_menu_loop() {
     while true; do
         show_main_menu
@@ -2108,6 +2159,14 @@ run_main_menu_loop() {
                     continue
                 fi
                 run_server_menu_loop
+                ;;
+            21)
+                if is_mode_lite; then
+                    log_error "${MSG_ERROR_LITE_MODE}"
+                    press_enter
+                    continue
+                fi
+                run_dev_menu_loop
                 ;;
             0) cleanup_and_exit ;;
             *)
