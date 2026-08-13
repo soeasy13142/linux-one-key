@@ -359,6 +359,22 @@ load_dependencies() {
     # shellcheck source=/dev/null
     source "${SCRIPT_DIR}/scripts/server/k3s.sh"
 
+    # 加载 docker.sh (Docker 容器引擎模块)
+    if [[ ! -f "${SCRIPT_DIR}/scripts/server/docker.sh" ]]; then
+        echo "Error: Cannot find docker.sh at ${SCRIPT_DIR}/scripts/server/docker.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/scripts/server/docker.sh"
+
+    # 加载 nginx.sh (Nginx Web 服务器模块)
+    if [[ ! -f "${SCRIPT_DIR}/scripts/server/nginx.sh" ]]; then
+        echo "Error: Cannot find nginx.sh at ${SCRIPT_DIR}/scripts/server/nginx.sh"
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/scripts/server/nginx.sh"
+
     # 加载 mirror.sh (更换软件源模块)
     if [[ ! -f "${SCRIPT_DIR}/scripts/server/mirror.sh" ]]; then
         echo "Error: Cannot find mirror.sh at ${SCRIPT_DIR}/scripts/server/mirror.sh"
@@ -870,6 +886,14 @@ show_main_menu() {
         echo -e "      ${MSG_MAIN_MENU_K3S_DESC}"
     fi
     echo ""
+    # 服务器软件（完整版专用）
+    echo -e "  ${GREEN}${MSG_MAIN_MENU_SERVER}${NC}"
+    if is_mode_lite; then
+        echo -e "      ${MSG_MAIN_MENU_SERVER_DESC} ${YELLOW}${MSG_MODE_FULL_ONLY}${NC}"
+    else
+        echo -e "      ${MSG_MAIN_MENU_SERVER_DESC}"
+    fi
+    echo ""
 
     # 分组 5：增强安全工具
     echo -e "${BOLD}────── Security Plus ──────${NC}"
@@ -931,7 +955,7 @@ show_main_menu() {
 get_main_menu_choice() {
     local choice
     while true; do
-        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-19]" "")
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-20]" "")
         # EOF / non-interactive stdin: exit gracefully
         if [[ -z "${choice}" ]]; then
             echo ""
@@ -939,7 +963,7 @@ get_main_menu_choice() {
             exit 1
         fi
         case "${choice}" in
-            [0-9]|1[0-9])
+            [0-9]|1[0-9]|20)
                 echo "${choice}"
                 return 0
                 ;;
@@ -1977,6 +2001,33 @@ run_dashboard_menu() {
 # 主菜单循环
 # ═══════════════════════════════════════════
 
+show_server_menu() {
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  ${MSG_SERVER_MENU_TITLE}${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${GREEN}${MSG_SERVER_MENU_DOCKER}${NC}"
+    echo -e "  ${GREEN}${MSG_SERVER_MENU_NGINX}${NC}"
+    echo ""
+    echo -e "  ${RED}${MSG_SERVER_MENU_BACK}${NC}"
+    echo ""
+}
+
+run_server_menu_loop() {
+    while true; do
+        show_server_menu
+        local choice
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-2]" "")
+        case "${choice}" in
+            1) run_docker_submenu_loop ;;
+            2) run_nginx_submenu_loop ;;
+            0) return 0 ;;
+            *) log_error "${MSG_MENU_INVALID}" ;;
+        esac
+    done
+}
+
 run_main_menu_loop() {
     while true; do
         show_main_menu
@@ -2024,6 +2075,14 @@ run_main_menu_loop() {
                 esac
                 ;;
             19) run_mirror_submenu_loop ;;
+            20)
+                if is_mode_lite; then
+                    log_error "${MSG_ERROR_LITE_MODE}"
+                    press_enter
+                    continue
+                fi
+                run_server_menu_loop
+                ;;
             0) cleanup_and_exit ;;
             *)
                 log_error "${MSG_MENU_INVALID}"
