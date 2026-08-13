@@ -14,6 +14,8 @@
 | `kernel.sh` | 内核安全加固（sysctl） | ✅ 完成 |
 | `filesystem.sh` | 文件系统安全 | ✅ 完成 |
 | `services.sh` | 服务管理 | ✅ 完成 |
+| `sudo.sh` | sudo 安全加固 | ✅ 完成 |
+| `logging.sh` | 日志安全加固 | ✅ 完成 |
 
 ## 模块说明
 
@@ -100,6 +102,26 @@
 - 可自定义安全端口列表（默认 22/80/443）
 - 支持 `/proc/net/tcp` fallback
 
+### sudo.sh — sudo 安全加固
+
+收紧 sudo 默认行为并开启命令全量日志：
+
+- sudoers 默认参数：`requiretty`、`secure_path`、`timestamp_timeout=5`
+- 写入加固 drop-in `/etc/sudoers.d/99-linux-one-key-sudo`（写前备份、写后 `visudo -c` 校验、失败立即回滚）
+- 校验 NOPASSWD 白名单，存在则警告风险
+- 开启 `Defaults logfile="/var/log/sudo.log"` 全量记录 sudo 命令，配套 logrotate 轮转
+- 确认 `/var/log/sudo.log` 权限（root:root, 0640）
+- 幂等：已加固项跳过
+
+### logging.sh — 日志安全加固
+
+日志持久化与权限加固：
+
+- journald 持久化 + 大小限制：drop-in `/etc/systemd/journald.conf.d/99-linux-one-key.conf`（`Storage=persistent`、`SystemMaxUse`、`MaxRetentionSec`），随后 `systemctl try-restart systemd-journald`（失败仅 warn）
+- logrotate 安全配置 drop-in：权限 `0640` / `su root` / `compress` / `dateext`
+- `/var/log` 关键日志文件权限检查：owner root、`600/640`，异常则修复
+- 幂等：已加固项跳过
+
 ## 通用模式
 
 所有安全模块遵循统一的向导模式：
@@ -128,5 +150,7 @@ run_xxx_wizard() {
 | `kernel.sh` | `utils.sh` |
 | `filesystem.sh` | `utils.sh` |
 | `services.sh` | `utils.sh` |
+| `sudo.sh` | `utils.sh` |
+| `logging.sh` | `utils.sh` |
 
 所有模块都依赖 `scripts/base/utils.sh`（通过 source guard 检查）。模块之间无相互依赖，可独立运行。
