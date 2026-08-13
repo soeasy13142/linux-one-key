@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-08-13 · **版本**: v1.6.0 · **状态**: ✅ Batch 6e 完成（路线图 6a-6e 全部落地）· **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
+> **最后更新**: 2026-08-13 · **版本**: v1.6.0 · **状态**: ✅ Batch 5b + check.sh 收尾完成（HANDOVER 剩余待办清零）· **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
 
 ## 会话恢复
 
@@ -14,9 +14,9 @@ ls docs/plans/                 # 待执行计划
 
 Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 
-- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection / **Mirror（更换软件源）** / **Docker** / **Nginx** / **Redis** / **PostgreSQL** / **MySQL** / **Memcached** / **Node Exporter** / **Prometheus** / **Grafana** / **Git** / **Editor** / **Runtimes** / **Build Toolchain** / **RabbitMQ**
+- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection / **Mirror（更换软件源）** / **Docker** / **Nginx** / **Redis** / **PostgreSQL** / **MySQL** / **Memcached** / **Node Exporter** / **Prometheus** / **Grafana** / **Git** / **Editor** / **Runtimes** / **Build Toolchain** / **RabbitMQ** / **Sudo（加固）** / **Logging（日志加固）** / **check.sh（CIS/STIG 合规扫描器 CLI）**
 - **Lite/Full 双模式**: `--lite` 低内存模式（SSH + Firewall + Kernel) vs Full 全模块
-- **测试**: 720 Bats 单元测试全部通过
+- **测试**: 795 Bats 单元测试全部通过
 - **审查**: 5 轮全项目 Code Review，发现并修复 280+ 问题
 - **最新发布**: v1.6.0（2026-08-01），Batch 5a 备份/回滚中心 + 安全仪表盘
 - **新增 [19] 更换软件源**: vendored LinuxMirrors（MIT）完整交互，Lite/Full 均可用
@@ -47,7 +47,7 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 - **i18n**: 用户可见文本一律用 `MSG_*` 变量（`scripts/lang/`），不硬编码中英文
 - **backup.sh / rollback.sh 加载**: 由 utils.sh 在加载过程中 source，此时 `_UTILS_LOADED` 尚未设置（在 utils.sh 末尾设置）。子模块的 guard 不检查 `_UTILS_LOADED`
 - **SSH Full 模式增强**: `_restart_and_test_ssh()` 需 SSH 密钥已配置才能通过连接测试（失败是预期的，会自动设置回滚定时器）
-- **菜单编号变更**: Batch 2 新增自动安全更新菜单项 [10]，后续编号相应改变：[11] 完整向导、[12] 查看报告、[13] K3s。Batch 3 新增 [14] AIDE、[15] ClamAV、[16] Rootkit。Batch 5a 新增 [17] 备份中心、[18] 仪表盘。本次新增 [19] 更换软件源（Lite/Full 均可用）
+- **菜单编号变更**: Batch 2 新增自动安全更新菜单项 [10]，后续编号相应改变：[11] 完整向导、[12] 查看报告、[13] K3s。Batch 3 新增 [14] AIDE、[15] ClamAV、[16] Rootkit。Batch 5a 新增 [17] 备份中心、[18] 仪表盘。[19] 更换软件源（Lite/Full 均可用）。Batch 6a-6e 新增 [20] 服务器软件、[21] 开发工具。Batch 5b 新增 [22] sudo 与日志加固（Full-only）
 - **vendored lm_core.sh 8094 行**: 属第三方代码有意例外（违反"文件<800 行"规范）；只在 mirror.sh 的 `run_mirror_flow` subshell 内 source，绝不顶层 source
 - **MSG_MIRROR_\* 键**: 来自 LinuxMirrors 语言包机械生成，zh/en 必须对称；lm_core 每处 `msg "key"` 都有对应键（mirror.bats 有完整性测试兜底）
 - **prometheus drop-in 绑定 localhost**: 用 systemd drop-in 覆盖 `ExecStart` 加 `--web.listen-address` 时，硬编码了 Debian/Ubuntu 的存储路径（`/var/lib/prometheus/metrics2`）；RHEL 族为 `/var/lib/prometheus`（无 metrics2 后缀），该 drop-in 在 RHEL 上不通用（已知限制，主验证目标为 Debian/Ubuntu）
@@ -102,11 +102,16 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 1. ✅ **消息队列** — rabbitmq 模块（install/uninstall/status + 删除默认 guest 账号 + 管理插件 opt-in）
 2. ✅ 测试 705 → 720，ShellCheck 干净
 
-**路线图 Batch 6a-6e 全部完成 ✅**（14 个服务器/开发模块）。剩余待办：
-1. ⏳ **Batch 5b「sudo + 日志加固」** — 独立 spec 仍排队中
-2. ⏳ **check.sh（CIS/STIG 合规扫描器）** — 单列延后
+本次（Batch 5b + check.sh）已完成：
+1. ✅ **sudo 加固** — `scripts/security/sudo.sh`：requiretty/secure_path/timestamp_timeout、NOPASSWD 白名单 warn、drop-in `99-linux-one-key-sudo`（写前备份 → 0440 → `visudo -c` 双重校验失败回滚）、sudo 命令全量日志 `/var/log/sudo.log`（root:root 0640 + logrotate）
+2. ✅ **日志加固** — `scripts/security/logging.sh`：journald drop-in（Storage=persistent/SystemMaxUse/MaxRetentionSec）+ `try-restart`（失败仅 warn）、logrotate 安全 drop-in、`/var/log` 关键文件 owner root + 600/640 修复
+3. ✅ **菜单 [22] sudo 与日志加固** — Full-only，子菜单（sudo 向导 / 日志向导）
+4. ✅ **check.sh** — `scripts/utils/check.sh` 独立 CLI（ssh/sudo/log/kernel 4 节只读扫描，`--json` + exit code 0/1/2，路径环境变量可 mock）；`scripts/utils/README.md` 补用法
+5. ✅ 测试 720 → 795（+45 sudo/logging +30 check），ShellCheck 干净
 
 > ✅ = 已实现 · 🔄 = 待验证 · ⏳ = 待实现
+
+**HANDOVER 剩余待办已全部清零 ✅**。如需后续扩展方向：check.sh 增加更多检查节（firewall/filesystem）、或接入 CI（Docker Phase 矩阵纳入新模块）。
 
 ## 参考
 
