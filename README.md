@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![ShellCheck](https://img.shields.io/badge/ShellCheck-Passing-brightgreen.svg)](https://www.shellcheck.net/)
-[![Bats Tests](https://img.shields.io/badge/Tests-660-brightgreen.svg)](tests/unit/)
+[![Bats Tests](https://img.shields.io/badge/Tests-705-brightgreen.svg)](tests/unit/)
 [![Docker Phase1](https://img.shields.io/badge/Docker%20Phase1-72%2F72-brightgreen.svg)](tests/docker/)
 [![Docker Phase2](https://img.shields.io/badge/Docker%20Phase2-21%2F21-brightgreen.svg)](tests/docker/)
 [![curl Lite Test](https://img.shields.io/badge/curl%20Lite-13%2F13%20×%205-brightgreen.svg)](docs/test-reports/curl-lite-mode-test.md)
@@ -53,6 +53,7 @@
 - [x] Nginx 一键安装 + 安全响应头基线
 - [x] Redis / PostgreSQL / MySQL / Memcached 一键安装 + 安全基线
 - [x] Node Exporter / Prometheus / Grafana 监控栈一键安装 + 安全基线
+- [x] Git / 编辑器 / 语言运行时 / 编译工具链 一键配置与安装
 - [x] 更换软件源（交互式选站，vendored LinuxMirrors，支持多发行版）
 - [x] 交互式菜单向导，每步确认
 - [x] 快速开始 + 自定义配置双模式
@@ -177,7 +178,7 @@ sudo bash install.sh
 
 ### 单元测试 / Unit Tests
 
-- **660 个** Bats 测试用例覆盖全部模块（660 test cases across all modules）
+- **705 个** Bats 测试用例覆盖全部模块（705 test cases across all modules）
 - 覆盖正常路径、边界条件、幂等性、回滚验证（normal, edge, idempotency, rollback）
 - 持续集成中自动运行（ShellCheck + Bats）
 
@@ -219,7 +220,7 @@ linux-one-key/
 │   ├── audit/                 # auditd 配置和规则模板
 │   └── sysctl/                # sysctl 安全参数模板
 ├── tests/
-│   ├── unit/                  # 660 Bats 单元测试
+│   ├── unit/                  # 705 Bats 单元测试
 │   └── docker/                # Docker 自动化测试框架
 │       ├── images/            # 9 个发行版 Dockerfile
 │       ├── tests/             # 8 个模块测试脚本 + Phase 2 目录
@@ -285,6 +286,7 @@ Step 9: 生成安全报告
 - **[18] 安全仪表盘**：12 个安全模块 × 31 项检查的合规评分（SSH 5 / Firewall 3 / Fail2Ban 3 / Audit 3 / Users 2 / Kernel 2 / Filesystem 2 / Services 2 / AutoUpdate 2 / AIDE 2 / ClamAV 2 / Rootkit 3），总分 + 风险等级（≥90 Low · 75-89 Medium · 60-74 High · <60 Critical）。
 - **[19] 更换软件源**：交互式更换系统软件源（vendored [LinuxMirrors](https://github.com/SuperManito/LinuxMirrors)，支持 Debian/Ubuntu/CentOS/Rocky/Alma/openEuler 等；含恢复官方源、查看当前源）— Lite/Full 均可用
 - **[20] 服务器软件**：安装 Docker、Nginx、Redis、PostgreSQL、MySQL、Memcached、Node Exporter、Prometheus、Grafana 等常用软件并应用安全基线（daemon.json 加固、安全响应头、数据库本地监听 + 强认证、缓存 localhost + 禁 UDP、监控 localhost 绑定 + systemd 加固）— Full 版
+- **[21] 开发工具**：安装 Git、编辑器（Vim/Nano）、语言运行时（Node/Python/Go）、编译工具链（gcc/make/cmake）— Full 版
 
 ---
 
