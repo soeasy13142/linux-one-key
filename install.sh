@@ -375,8 +375,8 @@ load_dependencies() {
     # shellcheck source=/dev/null
     source "${SCRIPT_DIR}/scripts/server/nginx.sh"
 
-    # 加载数据库/缓存模块 (redis / postgresql / mysql / memcached)
-    for _mod in redis postgresql mysql memcached; do
+    # 加载数据库/缓存/监控模块
+    for _mod in redis postgresql mysql memcached node_exporter prometheus grafana; do
         _f="${SCRIPT_DIR}/scripts/server/${_mod}.sh"
         if [[ ! -f "${_f}" ]]; then
             echo "Error: Cannot find ${_mod}.sh at ${_f}"
@@ -2025,6 +2025,9 @@ show_server_menu() {
     echo -e "  ${GREEN}${MSG_SERVER_MENU_POSTGRES}${NC}"
     echo -e "  ${GREEN}${MSG_SERVER_MENU_MYSQL}${NC}"
     echo -e "  ${GREEN}${MSG_SERVER_MENU_MEMCACHED}${NC}"
+    echo -e "  ${GREEN}${MSG_SERVER_MENU_NODE_EXPORTER}${NC}"
+    echo -e "  ${GREEN}${MSG_SERVER_MENU_PROMETHEUS}${NC}"
+    echo -e "  ${GREEN}${MSG_SERVER_MENU_GRAFANA}${NC}"
     echo ""
     echo -e "  ${RED}${MSG_SERVER_MENU_BACK}${NC}"
     echo ""
@@ -2034,7 +2037,7 @@ run_server_menu_loop() {
     while true; do
         show_server_menu
         local choice
-        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-6]" "")
+        choice=$(prompt_input "${MSG_MAIN_MENU_PROMPT} [0-9]" "")
         case "${choice}" in
             1) run_docker_submenu_loop ;;
             2) run_nginx_submenu_loop ;;
@@ -2042,6 +2045,9 @@ run_server_menu_loop() {
             4) run_postgres_submenu_loop ;;
             5) run_mysql_submenu_loop ;;
             6) run_memcached_submenu_loop ;;
+            7) run_node_exporter_submenu_loop ;;
+            8) run_prometheus_submenu_loop ;;
+            9) run_grafana_submenu_loop ;;
             0) return 0 ;;
             *) log_error "${MSG_MENU_INVALID}" ;;
         esac
