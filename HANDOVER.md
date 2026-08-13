@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-08-13 · **版本**: v1.6.0 · **状态**: ✅ Batch 6d（开发工具）完成 · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
+> **最后更新**: 2026-08-13 · **版本**: v1.6.0 · **状态**: ✅ Batch 6e 完成（路线图 6a-6e 全部落地）· **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
 
 ## 会话恢复
 
@@ -14,9 +14,9 @@ ls docs/plans/                 # 待执行计划
 
 Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 
-- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection / **Mirror（更换软件源）** / **Docker** / **Nginx** / **Redis** / **PostgreSQL** / **MySQL** / **Memcached** / **Node Exporter** / **Prometheus** / **Grafana** / **Git** / **Editor** / **Runtimes** / **Build Toolchain**
+- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection / **Mirror（更换软件源）** / **Docker** / **Nginx** / **Redis** / **PostgreSQL** / **MySQL** / **Memcached** / **Node Exporter** / **Prometheus** / **Grafana** / **Git** / **Editor** / **Runtimes** / **Build Toolchain** / **RabbitMQ**
 - **Lite/Full 双模式**: `--lite` 低内存模式（SSH + Firewall + Kernel) vs Full 全模块
-- **测试**: 705 Bats 单元测试全部通过
+- **测试**: 720 Bats 单元测试全部通过
 - **审查**: 5 轮全项目 Code Review，发现并修复 280+ 问题
 - **最新发布**: v1.6.0（2026-08-01），Batch 5a 备份/回滚中心 + 安全仪表盘
 - **新增 [19] 更换软件源**: vendored LinuxMirrors（MIT）完整交互，Lite/Full 均可用
@@ -98,9 +98,13 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 5. ✅ **Build Toolchain** — build-essential/gcc/make/cmake
 6. ✅ 测试 660 → 705，ShellCheck 干净
 
-下次（Batch 6e）规划：
-1. ⏳ **消息队列** — rabbitmq（复用骨架）
-2. ⏳ **Batch 5b「sudo + 日志加固」** — 独立 spec 仍排队中
+本次（Batch 6e）已完成：
+1. ✅ **消息队列** — rabbitmq 模块（install/uninstall/status + 删除默认 guest 账号 + 管理插件 opt-in）
+2. ✅ 测试 705 → 720，ShellCheck 干净
+
+**路线图 Batch 6a-6e 全部完成 ✅**（14 个服务器/开发模块）。剩余待办：
+1. ⏳ **Batch 5b「sudo + 日志加固」** — 独立 spec 仍排队中
+2. ⏳ **check.sh（CIS/STIG 合规扫描器）** — 单列延后
 
 > ✅ = 已实现 · 🔄 = 待验证 · ⏳ = 待实现
 
