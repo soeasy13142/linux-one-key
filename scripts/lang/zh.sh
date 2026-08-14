@@ -860,6 +860,12 @@ MSG_SSH_TEST_INSTRUCTIONS="在其他终端中运行: ssh -p {port} user@host"
 
 MSG_GOODBYE="再见！"
 
+# ── Lite 运行痕迹清理 ──
+MSG_CLEANUP_PROMPT="是否清理脚本运行痕迹（日志/备份/报告）？清理后将无法回滚。"
+MSG_CLEANUP_DONE="运行痕迹已清理"
+MSG_CLEANUP_PARTIAL="部分运行痕迹清理失败（已保留）"
+MSG_CLEANUP_SKIPPED="已保留运行痕迹"
+
 # ═══════════════════════════════════════════
 # 自动安全更新
 # ═══════════════════════════════════════════

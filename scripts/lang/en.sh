@@ -860,6 +860,12 @@ MSG_SSH_TEST_INSTRUCTIONS="In another terminal, run: ssh -p %s user@host"
 
 MSG_GOODBYE="Goodbye!"
 
+# ── Lite runtime cleanup ──
+MSG_CLEANUP_PROMPT="Clean up script runtime traces (logs/backups/reports)? Rollback will no longer be possible."
+MSG_CLEANUP_DONE="Runtime traces cleaned."
+MSG_CLEANUP_PARTIAL="Some runtime traces could not be cleaned (kept)."
+MSG_CLEANUP_SKIPPED="Runtime traces kept."
+
 # ═══════════════════════════════════════════
 # Auto Security Updates
 # ═══════════════════════════════════════════
