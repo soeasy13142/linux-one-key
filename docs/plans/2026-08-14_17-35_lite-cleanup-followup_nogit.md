@@ -2,7 +2,7 @@
 title: "Lite cleanup 后续收尾 + README 重构"
 created: 2026-08-14
 updated: 2026-08-14
-status: draft
+status: done
 source: "最终审查（fable 2026-08-14）Minor 建议 + 用户需求：README 根据项目进度重构"
 topic: "refactor"
 ---
@@ -60,3 +60,4 @@ v1.8.0 Lite 运行痕迹清理功能已完成（最终审查 Ready to merge: Yes
 ## 进度记录
 
 - 2026-08-14: 创建计划，status=draft
+- 2026-08-14: 完成（subagent 并行执行，全量 Bats 806/806 通过；cleanup.sh /tmp 失败告警 + 新测试；HANDOVER 过时行修复；README 重构补全 v1.8.0 模块集），status=done
