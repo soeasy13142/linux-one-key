@@ -203,16 +203,42 @@ linux-one-key/
 │   │   ├── utils.sh           # 工具函数库（日志、备份、SSH 配置辅助）
 │   │   ├── detect.sh          # 系统检测（OS、权限、网络、包管理器）
 │   │   ├── init.sh            # 系统初始化（目录创建、系统更新）
+│   │   ├── mode.sh            # Lite/Full 模式注册表（模块归属）
+│   │   ├── swap.sh            # Swap 配置（自动检测 + 智能扩容）— Full
+│   │   ├── backup.sh          # 备份原语（备份/回滚核心）
+│   │   ├── rollback.sh        # SSH 回滚保护（定时器 + 自动恢复）
+│   │   ├── cleanup.sh         # Lite 退出前清理运行痕迹
+│   │   ├── backup_center.sh   # 备份/回滚中心（浏览/恢复/清理）— Full
+│   │   ├── dashboard.sh       # 安全仪表盘（合规评分 + 风险等级）— Full
 │   │   └── report.sh          # 安全报告生成
-│   ├── security/              # 安全加固模块
-│   │   ├── ssh.sh             # SSH 安全加固
+│   ├── security/              # 安全加固模块（标注 — Full 的为完整版专属）
+│   │   ├── ssh.sh             # SSH 安全加固（端口、密钥、回滚保护）
 │   │   ├── firewall.sh        # 防火墙配置（UFW / firewalld）
-│   │   ├── fail2ban.sh        # Fail2Ban 入侵防护
-│   │   ├── audit.sh           # 审计日志配置（auditd）
-│   │   ├── users.sh           # 用户管理
 │   │   ├── kernel.sh          # 内核安全加固（sysctl）
-│   │   ├── filesystem.sh      # 文件系统安全
-│   │   └── services.sh        # 服务管理
+│   │   ├── fail2ban.sh        # Fail2Ban 入侵防护 — Full
+│   │   ├── audit.sh           # 审计日志配置（auditd）— Full
+│   │   ├── users.sh           # 用户管理 — Full
+│   │   ├── filesystem.sh      # 文件系统安全（SUID 审计）— Full
+│   │   ├── services.sh        # 服务管理 — Full
+│   │   ├── autoupdate.sh      # 自动安全更新 — Full
+│   │   ├── sudo.sh            # sudo 权限收紧 — Full
+│   │   ├── logging.sh         # 日志安全加固（journald 持久化等）— Full
+│   │   ├── aide.sh            # AIDE 文件完整性监控 — Full
+│   │   ├── clamav.sh          # ClamAV 病毒扫描 — Full
+│   │   └── rootkit.sh         # Rootkit 检测 — Full
+│   ├── server/                # 服务器软件安装
+│   │   ├── docker.sh · nginx.sh                        # 容器 / Web 服务器
+│   │   ├── redis.sh · postgresql.sh · mysql.sh · memcached.sh · rabbitmq.sh  # 数据库/缓存/消息队列
+│   │   ├── node_exporter.sh · prometheus.sh · grafana.sh                     # 监控栈
+│   │   ├── k3s.sh            # K3s 轻量级 Kubernetes — Full
+│   │   └── mirror.sh         # 更换软件源（vendored mirrors/lm_core.sh）
+│   ├── dev/                   # 开发工具
+│   │   ├── git.sh             # Git 安装与配置
+│   │   ├── editor.sh          # 编辑器（Vim / Nano）
+│   │   ├── runtimes.sh        # 语言运行时（Node / Python / Go）
+│   │   └── build_toolchain.sh # 编译工具链（gcc / make / cmake）
+│   ├── utils/                 # 运维工具
+│   │   └── check.sh           # CIS/STIG 合规扫描器 CLI
 │   └── lang/                  # 国际化
 │       ├── zh.sh              # 中文翻译
 │       └── en.sh              # 英文翻译
@@ -238,10 +264,20 @@ linux-one-key/
 
 ### 模块加载顺序
 
-脚本按以下顺序加载模块，确保依赖关系正确：
+脚本按以下顺序加载模块，确保依赖关系正确（括号标注模式限制）：
 
 ```
-utils.sh -> detect.sh -> init.sh -> lang.sh -> security modules -> report.sh
+utils.sh → lang(zh/en) → detect.sh → init.sh → mode.sh
+→ cleanup.sh（仅 Lite）· swap.sh（仅 Full）
+→ security 模块（按推荐顺序）：
+    ssh → firewall → fail2ban → audit → users → kernel → filesystem → services
+    → sudo + logging（仅 Full）→ autoupdate（仅 Full）→ aide + clamav + rootkit（仅 Full）
+→ report.sh
+→ server 模块：k3s → docker → nginx
+    → redis → postgresql → mysql → memcached → node_exporter → prometheus → grafana → rabbitmq
+→ dev 模块：git → editor → runtimes → build_toolchain
+→ mirror.sh（更换软件源）
+→ backup_center.sh → dashboard.sh（备份/回滚中心、安全仪表盘）
 ```
 
 ---
@@ -254,25 +290,29 @@ utils.sh -> detect.sh -> init.sh -> lang.sh -> security modules -> report.sh
 
 | 模式 | 说明 |
 |------|------|
-| **快速开始** | 依次执行所有安全加固步骤，每步确认后继续 |
-| **自定义配置** | 从菜单中选择单独执行某一项加固操作 |
+| **完整安全配置向导（菜单 [11]）** | 依次执行所有安全加固步骤，每步确认/可跳过 |
+| **自定义配置（主菜单 [1]-[22]）** | 从主菜单中选择单独执行某一项加固操作 |
 
 ### 向导流程
+
+Full 模式启动时先选择加固档位（基础 / 标准 / 高级 / 自定义），随后进入主菜单。菜单 **[11] 完整安全配置向导** 按「高级」档位顺序逐步执行（每步确认，可跳过）：
 
 ```
 Step 0: 系统初始化（更新包管理器、创建目录）
 Step 1: SSH 安全加固（端口、密钥、登录策略）
 Step 2: 防火墙配置（UFW / firewalld 规则）
 Step 3: Fail2Ban 入侵防护（自动封禁策略）
-Step 4: 审计日志配置（auditd 规则级别）
-Step 5: 用户管理（创建用户、密钥、sudo）
-Step 6: 内核安全加固（sysctl 参数）
+Step 4: 用户管理（创建用户、密钥、sudo）
+Step 5: 审计日志配置（auditd 规则级别）
+Step 6: 服务管理（审计服务、禁用不必要服务、端口扫描）
 Step 7: 文件系统安全（SUID 审计、权限检查）
-Step 8: 服务管理（审计服务、禁用不必要服务、端口扫描）
+Step 8: 内核安全加固（sysctl 参数）
 Step 9: 生成安全报告
 ```
 
-> **精简模式（`--lite`）**：步骤 3（Fail2Ban）、步骤 4（Audit）、步骤 5（用户管理）、步骤 7（文件系统）、步骤 8（服务管理）在精简模式下自动跳过，仅执行核心安全加固。
+> 完整主菜单为 **[1]-[22]**：除上述向导步骤外，其余模块（自动安全更新 [10]、K3s [13]、AIDE [14]、ClamAV [15]、Rootkit [16]、备份/回滚中心 [17]、安全仪表盘 [18]、更换软件源 [19]、服务器软件 [20]、开发工具 [21]、sudo 与日志加固 [22]）均可从主菜单单独执行。
+
+> **精简模式（`--lite`）**：完整向导仅执行核心步骤（init → SSH → 防火墙 → 内核），Fail2Ban / Audit / 用户管理 / 文件系统 / 服务管理 等自动跳过，仅执行核心安全加固。
 
 ### 安全保障
 
@@ -288,6 +328,7 @@ Step 9: 生成安全报告
 - **[19] 更换软件源**：交互式更换系统软件源（vendored [LinuxMirrors](https://github.com/SuperManito/LinuxMirrors)，支持 Debian/Ubuntu/CentOS/Rocky/Alma/openEuler 等；含恢复官方源、查看当前源）— Lite/Full 均可用
 - **[20] 服务器软件**：安装 Docker、Nginx、Redis、PostgreSQL、MySQL、Memcached、Node Exporter、Prometheus、Grafana、RabbitMQ 等常用软件并应用安全基线（daemon.json 加固、安全响应头、数据库本地监听 + 强认证、缓存 localhost + 禁 UDP、监控 localhost 绑定 + systemd 加固、消息队列删除默认 guest 账号）— Full 版
 - **[21] 开发工具**：安装 Git、编辑器（Vim/Nano）、语言运行时（Node/Python/Go）、编译工具链（gcc/make/cmake）— Full 版
+- **[22] sudo 与日志加固**：sudo 权限收紧、命令全量日志（bash 审计）、journald 持久化、日志轮转与权限安全 — Full 版
 
 ---
 
