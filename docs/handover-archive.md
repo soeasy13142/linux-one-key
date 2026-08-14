@@ -315,3 +315,19 @@
 | 2026-07-24 | REWRITE | `.claude/CLAUDE.md` | consolidating-docs skill 重构 |
 | 2026-07-24 | FIX | `docs/README.md`, `docs/design/README.md`, docs/plans/ | cross-reference 修复 |
 | 2026-07-24 | REWRITE | `HANDOVER.md` | 精简为 ~70 行状态快照，全量 changelog 归入本文件 |
+
+---
+
+## v1.8.0: Lite 运行痕迹清理（2026-08-14）
+
+**功能变更**:
+- **Lite 运行痕迹清理** — 新增 `scripts/base/cleanup.sh`（`cleanup_lite_traces()` 幂等清理函数）：清理 `/var/log/linux-one-key`（日志/备份/报告）+ `/tmp/.ssh-askpass-*`/`.ssh-monitor-*` 临时文件，保留加固配置本身
+- **退出前询问** — `install.sh cleanup_and_exit()` Lite-gated：`confirm "${MSG_CLEANUP_PROMPT}" "y"`（默认清理）→ 清理；选 n 保留痕迹；Ctrl+C/中断（`_cleanup_on_exit`）与 `--status` 模式不清理
+- **回滚配套** — 清理前 `_cancel_active_rollback()` 取消活跃回滚定时器；清理后失去手动回滚能力（用户已确认接受）
+- **Gotcha 兜底** — `log_*` 内部 `_ensure_log_dir` 会在 LOG_DIR 删除后重建目录，清理函数与退出路径均做兜底 `rm -rf`
+
+**文件变更**:
+- 新增: `scripts/base/cleanup.sh`、`tests/unit/cleanup.bats`（10 cases）
+- 修改: `install.sh`、`scripts/lang/zh.sh`、`scripts/lang/en.sh`（+4 `MSG_CLEANUP_*`）、`scripts/base/utils.sh`（版本 v1.8.0）、`package.json`、`HANDOVER.md`、`README.md`
+
+**测试**: 795 → 805 全部通过 | **ShellCheck**: 全部通过

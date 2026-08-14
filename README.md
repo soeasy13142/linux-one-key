@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![ShellCheck](https://img.shields.io/badge/ShellCheck-Passing-brightgreen.svg)](https://www.shellcheck.net/)
-[![Bats Tests](https://img.shields.io/badge/Tests-720-brightgreen.svg)](tests/unit/)
+[![Bats Tests](https://img.shields.io/badge/Tests-805-brightgreen.svg)](tests/unit/)
 [![Docker Phase1](https://img.shields.io/badge/Docker%20Phase1-72%2F72-brightgreen.svg)](tests/docker/)
 [![Docker Phase2](https://img.shields.io/badge/Docker%20Phase2-21%2F21-brightgreen.svg)](tests/docker/)
 [![curl Lite Test](https://img.shields.io/badge/curl%20Lite-13%2F13%20×%205-brightgreen.svg)](docs/test-reports/curl-lite-mode-test.md)
@@ -179,7 +179,7 @@ sudo bash install.sh
 
 ### 单元测试 / Unit Tests
 
-- **720 个** Bats 测试用例覆盖全部模块（720 test cases across all modules）
+- **805 个** Bats 测试用例覆盖全部模块（805 test cases across all modules）
 - 覆盖正常路径、边界条件、幂等性、回滚验证（normal, edge, idempotency, rollback）
 - 持续集成中自动运行（ShellCheck + Bats）
 
@@ -221,7 +221,7 @@ linux-one-key/
 │   ├── audit/                 # auditd 配置和规则模板
 │   └── sysctl/                # sysctl 安全参数模板
 ├── tests/
-│   ├── unit/                  # 720 Bats 单元测试
+│   ├── unit/                  # 805 Bats 单元测试
 │   └── docker/                # Docker 自动化测试框架
 │       ├── images/            # 9 个发行版 Dockerfile
 │       ├── tests/             # 8 个模块测试脚本 + Phase 2 目录
@@ -310,6 +310,8 @@ curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/inst
 | 守护进程 | 仅防火墙 1 个轻量 daemon，其余为纯配置文件修改 |
 | 适用场景 | **1GB 以下内存**的轻量云服务器（阿里云轻量、AWS t2.nano/nano 等） |
 | 执行耗时 | 约完整版一半 |
+
+> **退出清理**：Lite 模式正常退出前会询问是否清理脚本运行痕迹（`/var/log/linux-one-key` 日志/备份/报告 + `/tmp` SSH 临时文件），默认清理（选 n 可保留）；清理后保留加固配置本身，但会失去手动回滚能力。Ctrl+C/中断退出不清理。
 
 ### 🏢 完整模式（默认） — 全功能安全加固
 
@@ -407,6 +409,7 @@ curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/inst
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.8.0 | 2026-08-14 | Lite 运行痕迹清理（cleanup.sh + 退出前询问）；805 Bats |
 | v1.7.0 | 2026-08-14 | Batch 5b sudo+日志加固（菜单 [22]）+ check.sh CIS/STIG 合规扫描器 CLI；795 Bats |
 | v1.6.0 | 2026-08-01 | Batch 5a 备份/回滚中心 + 安全仪表盘；[19] 更换软件源；Batch 6a-6e 服务器/开发模块 |
 | v1.5.0 | 2026-07-24 | curl 精简核心测试、kernel.sh 修复、Batch 1-4 模块落地 |

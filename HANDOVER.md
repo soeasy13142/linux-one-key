@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-08-14 · **版本**: v1.7.0 · **状态**: ✅ Batch 5b + check.sh 收尾完成（HANDOVER 剩余待办清零）· **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
+> **最后更新**: 2026-08-14 · **版本**: v1.8.0 · **状态**: ✅ Lite 运行痕迹清理完成（HANDOVER 剩余待办清零）· **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
 
 ## 会话恢复
 
@@ -14,14 +14,15 @@ ls docs/plans/                 # 待执行计划
 
 Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 
-- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection / **Mirror（更换软件源）** / **Docker** / **Nginx** / **Redis** / **PostgreSQL** / **MySQL** / **Memcached** / **Node Exporter** / **Prometheus** / **Grafana** / **Git** / **Editor** / **Runtimes** / **Build Toolchain** / **RabbitMQ** / **Sudo（加固）** / **Logging（日志加固）** / **check.sh（CIS/STIG 合规扫描器 CLI）**
+- **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection / **Mirror（更换软件源）** / **Docker** / **Nginx** / **Redis** / **PostgreSQL** / **MySQL** / **Memcached** / **Node Exporter** / **Prometheus** / **Grafana** / **Git** / **Editor** / **Runtimes** / **Build Toolchain** / **RabbitMQ** / **Sudo（加固）** / **Logging（日志加固）** / **check.sh（CIS/STIG 合规扫描器 CLI）** / **cleanup.sh（Lite 运行痕迹清理）**
 - **Lite/Full 双模式**: `--lite` 低内存模式（SSH + Firewall + Kernel) vs Full 全模块
-- **测试**: 795 Bats 单元测试全部通过
+- **测试**: 805 Bats 单元测试全部通过
 - **审查**: 5 轮全项目 Code Review，发现并修复 280+ 问题
-- **最新发布**: v1.7.0（2026-08-14），Batch 5b sudo+日志加固 + check.sh 合规扫描器
+- **最新发布**: v1.8.0（2026-08-14），Lite 运行痕迹清理（cleanup.sh + 退出前询问）
 - **新增 [19] 更换软件源**: vendored LinuxMirrors（MIT）完整交互，Lite/Full 均可用
 - **新增 [22] sudo 与日志加固**: Full-only 子菜单（sudoers 收紧 + sudo 命令全量日志 + journald 持久化 + logrotate 加固）
 - **新增 check.sh**: CIS/STIG 合规扫描器 CLI（ssh/sudo/log/kernel 4 节，`--json` + exit code）
+- **Lite 运行痕迹清理**: Lite 正常退出前询问是否清理 `/var/log/linux-one-key`（日志/备份/报告）+ `/tmp` SSH 临时文件，默认清理，保留加固配置
 
 ## 关键决策
 
@@ -39,6 +40,7 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 | curl 交互输入 | exec 后重定向 /dev/tty | stdin 在管道结束后为 EOF |
 | sed 兼容 | uname 检测双语法 | macOS `sed -i ''` vs Linux `sed -i` |
 | 换源功能 | vendored LinuxMirrors（MIT）+ subshell 隔离 | 避免 8000 行第三方脚本的命名/全局变量冲突；i18n 走 MSG_MIRROR_* |
+| Lite 痕迹清理 | 独立 `scripts/base/cleanup.sh` + 退出前询问默认 Y（`[Y/n]`） | 符合 many-small-files 规范、可单测；清理日志/备份/报告 + /tmp 临时文件，保留加固配置 |
 
 ## Gotchas
 
@@ -53,6 +55,7 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 - **vendored lm_core.sh 8094 行**: 属第三方代码有意例外（违反"文件<800 行"规范）；只在 mirror.sh 的 `run_mirror_flow` subshell 内 source，绝不顶层 source
 - **MSG_MIRROR_\* 键**: 来自 LinuxMirrors 语言包机械生成，zh/en 必须对称；lm_core 每处 `msg "key"` 都有对应键（mirror.bats 有完整性测试兜底）
 - **prometheus drop-in 绑定 localhost**: 用 systemd drop-in 覆盖 `ExecStart` 加 `--web.listen-address` 时，硬编码了 Debian/Ubuntu 的存储路径（`/var/lib/prometheus/metrics2`）；RHEL 族为 `/var/lib/prometheus`（无 metrics2 后缀），该 drop-in 在 RHEL 上不通用（已知限制，主验证目标为 Debian/Ubuntu）
+- **`_ensure_log_dir` 重建 LOG_DIR**: `log_*` 内部调用 `_ensure_log_dir`，删除 LOG_DIR 后再写日志会重建该目录；`cleanup_lite_traces` 与 `cleanup_and_exit` 退出路径均需兜底 `rm -rf` 保证最终无目录
 
 ## 下一步
 
@@ -111,9 +114,14 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 4. ✅ **check.sh** — `scripts/utils/check.sh` 独立 CLI（ssh/sudo/log/kernel 4 节只读扫描，`--json` + exit code 0/1/2，路径环境变量可 mock）；`scripts/utils/README.md` 补用法
 5. ✅ 测试 720 → 795（+45 sudo/logging +30 check），ShellCheck 干净
 
+本次（v1.8.0, Lite cleanup）已完成：
+1. ✅ **Lite 运行痕迹清理** — `scripts/base/cleanup.sh` `cleanup_lite_traces()`：清理 `/var/log/linux-one-key`（日志/备份/报告）+ `/tmp/.ssh-askpass-*`/`.ssh-monitor-*` 临时文件，保留加固配置本身
+2. ✅ **退出前询问** — `cleanup_and_exit()` Lite-gated：`confirm "${MSG_CLEANUP_PROMPT}" "y"`（默认清理）→ 清理；选 n 保留痕迹；Ctrl+C/中断与 `--status` 模式不清理；清理前取消活跃回滚定时器，清理后失去手动回滚（用户已确认接受）
+3. ✅ 测试 795 → 805（+10 cleanup.bats），ShellCheck 干净
+
 > ✅ = 已实现 · 🔄 = 待验证 · ⏳ = 待实现
 
-**HANDOVER 剩余待办已全部清零 ✅**。如需后续扩展方向：check.sh 增加更多检查节（firewall/filesystem）、或接入 CI（Docker Phase 矩阵纳入新模块）。
+**HANDOVER 剩余待办已全部清零 ✅**。后续扩展方向：check.sh 增加更多检查节（firewall/filesystem）、接入 CI（Docker Phase 矩阵纳入新模块）、或评估是否将痕迹清理扩展到 Full 模式（当前仅 Lite 接入）。
 
 ## 参考
 

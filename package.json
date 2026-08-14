@@ -1,6 +1,6 @@
 {
   "name": "@soeasy13142/linux-one-key",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Linux 云服务器安全加固 + 一键环境初始化脚本 | One-key security hardening + environment setup for Linux cloud servers",
   "bin": {
     "linux-one-key": "./install.sh"
