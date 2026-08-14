@@ -1,8 +1,8 @@
 ---
 title: "收尾剩余待办：Batch 5b(sudo+日志) / check.sh CLI / 文档同步"
 created: 2026-08-13
-updated: 2026-08-13
-status: in-progress
+updated: 2026-08-14
+status: done
 source: "HANDOVER.md 剩余待办 + 路线图 D4 + 路线图 D2 文档同步缺口"
 topic: "feature"
 ---
@@ -132,3 +132,4 @@ bash scripts/utils/check.sh [--json] [--section ssh|sudo|log|...] [--help]
 
 - 2026-08-13: 创建计划，status=draft
 - 2026-08-13: 用户确认 Batch 5b 范围（sudo+日志核心版）与 check.sh 定位（独立 CLI）；status=in-progress
+- 2026-08-14: 三项全部完成（Batch 5b sudo+日志加固、check.sh CLI、文档同步），Bats 720 → 795，ShellCheck 干净；status=done
