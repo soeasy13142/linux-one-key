@@ -245,6 +245,16 @@ load_dependencies() {
     # shellcheck source=/dev/null
     source "${base_dir}/mode.sh"
 
+    # 加载 cleanup.sh（仅 Lite 模式：退出前清理运行痕迹）
+    if is_mode_lite; then
+        if [[ ! -f "${base_dir}/cleanup.sh" ]]; then
+            echo "Error: Cannot find cleanup.sh at ${base_dir}/cleanup.sh"
+            exit 1
+        fi
+        # shellcheck source=/dev/null
+        source "${base_dir}/cleanup.sh"
+    fi
+
     # 加载 swap.sh（仅 Full 模式）
     if is_mode_full; then
         if [[ ! -f "${base_dir}/swap.sh" ]]; then
@@ -1920,13 +1930,28 @@ run_mode_wizard() {
 # ═══════════════════════════════════════════
 
 cleanup_and_exit() {
-    # 清理 bootstrap 临时目录
+    # Lite 模式：退出前询问清理运行痕迹（日志/备份/报告 + /tmp 临时文件）
+    local cleaned=0
+    if is_mode_lite; then
+        if confirm "${MSG_CLEANUP_PROMPT}" "y"; then
+            cleanup_lite_traces
+            cleaned=1
+        else
+            log_info "${MSG_CLEANUP_SKIPPED}"
+        fi
+    fi
+
+    # 清理 bootstrap 临时目录（保持现有逻辑不变）
     if [[ -n "${_CLEANUP_DIR:-}" ]] && [[ -d "${_CLEANUP_DIR}" ]]; then
         rm -rf "${_CLEANUP_DIR}" 2>/dev/null || true
     fi
     echo ""
     log_info "${MSG_GOODBYE}"
     echo ""
+    # Lite 已清理场景：log_info 的 _ensure_log_dir 会重建 LOG_DIR，这里兜底删除
+    if [[ "${cleaned}" -eq 1 ]] && [[ -d "${LOG_DIR}" ]]; then
+        rm -rf "${LOG_DIR}" 2>/dev/null || true
+    fi
     exit 0
 }
 
