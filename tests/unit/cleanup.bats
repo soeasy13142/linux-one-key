@@ -114,6 +114,29 @@ EOF
     [[ -d "${TEST_DIR}/cleanup-blocked" ]]
 }
 
+# ── tmp 文件删除失败时 log_warn（设计意图：删除失败至少报警，不静默） ──
+
+@test "cleanup: warns via log_warn when a matched tmp file cannot be removed" {
+    mkdir -p "${TEST_DIR}/bin"
+    cat > "${TEST_DIR}/bin/rm" <<'EOF'
+#!/usr/bin/env bash
+case " $* " in
+    *"cleanup-blocked"*) exit 1 ;;
+esac
+exec /bin/rm "$@"
+EOF
+    chmod +x "${TEST_DIR}/bin/rm"
+    mkdir -p "${TEST_DIR}/cleanup-blocked-tmp"
+    touch "${TEST_DIR}/cleanup-blocked-tmp/.ssh-askpass-7"
+    CLEANUP_TMP_PATTERNS=("${TEST_DIR}/cleanup-blocked-*")
+    CLEANUP_LOG_DIR="${TEST_DIR}/log"
+
+    PATH="${TEST_DIR}/bin:${PATH}" run cleanup_lite_traces
+    [[ "${status}" -eq 0 ]]
+    [[ -e "${TEST_DIR}/cleanup-blocked-tmp/.ssh-askpass-7" ]]
+    [[ "${output}" == *"${MSG_CLEANUP_PARTIAL}"* ]]
+}
+
 # ── 回滚定时器取消 ──
 
 @test "cleanup: cancels active rollback timer" {

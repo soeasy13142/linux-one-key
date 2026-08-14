@@ -38,11 +38,19 @@ _cancel_active_rollback() {
 }
 
 # 清理 /tmp 临时文件（模式匹配，防空 glob）
+# Gotcha: nullglob 使无匹配的 glob 展开为空，避免对不存在的路径执行 rm（无害报错）
+# 设计意图：删除失败至少 log_warn，绝不静默吞掉（也不中止，保持失败容忍）
 _cleanup_tmp_files() {
     local pattern
     for pattern in "${CLEANUP_TMP_PATTERNS[@]}"; do
-        # shellcheck disable=SC2086 # 有意 glob 展开匹配多个文件
-        rm -f ${pattern} 2>/dev/null || true
+        # nullglob：无匹配时 glob 展开为空数组，rm 不会被调用
+        shopt -s nullglob
+        # shellcheck disable=SC2206,SC2086 # 有意 glob 展开为匹配文件数组
+        local files=( ${pattern} )
+        shopt -u nullglob
+        if [[ ${#files[@]} -gt 0 ]] && ! rm -f "${files[@]}" 2>/dev/null; then
+            log_warn "${MSG_CLEANUP_PARTIAL}"
+        fi
     done
 }
 
