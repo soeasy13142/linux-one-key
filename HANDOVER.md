@@ -12,7 +12,7 @@ ls docs/plans/                 # 待执行计划
 
 ## 项目概要
 
-Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
+Linux 云服务器安全加固一键脚本。v0.1 → v1.8.0 已完成：
 
 - **模块**: SSH / Firewall / Fail2Ban / Users / Kernel / Filesystem / Audit / Services / Swap / AutoUpdate / K3s / AIDE / ClamAV / Rootkit Detection / **Mirror（更换软件源）** / **Docker** / **Nginx** / **Redis** / **PostgreSQL** / **MySQL** / **Memcached** / **Node Exporter** / **Prometheus** / **Grafana** / **Git** / **Editor** / **Runtimes** / **Build Toolchain** / **RabbitMQ** / **Sudo（加固）** / **Logging（日志加固）** / **check.sh（CIS/STIG 合规扫描器 CLI）** / **cleanup.sh（Lite 运行痕迹清理）**
 - **Lite/Full 双模式**: `--lite` 低内存模式（SSH + Firewall + Kernel) vs Full 全模块
