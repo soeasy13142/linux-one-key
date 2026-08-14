@@ -90,7 +90,7 @@ sudo bash install.sh --lite
 
 ### 方式二：完整模式执行（默认，标准服务器推荐）
 
-适合标准配置云服务器（2GB+ 内存），运行全部 9 个安全模块：
+适合标准配置云服务器（2GB+ 内存），运行全部安全加固模块 + 服务器软件 + 开发工具：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh | sudo bash
@@ -362,7 +362,7 @@ curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/inst
 
 | 特性 | 说明 |
 |------|------|
-| 包含模块 | 全部 9 个安全模块（+Fail2Ban/Audit/用户管理/文件系统/服务管理/K3s） |
+| 包含模块 | 全部 14 个安全加固模块 + 服务器软件（Docker/数据库/监控/K3s/换源）+ 开发工具 |
 | 适用场景 | **2GB+ 内存**的标准云服务器 |
 
 ### 菜单差异
