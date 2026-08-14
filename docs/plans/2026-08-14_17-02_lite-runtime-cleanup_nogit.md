@@ -2,7 +2,7 @@
 title: "Lite 版运行痕迹清理功能"
 created: 2026-08-14
 updated: 2026-08-14
-status: draft
+status: done
 source: "用户需求（brainstorm）：lite 版运行结束后清理所有产生的文件"
 topic: "feature"
 ---
@@ -81,3 +81,4 @@ bootstrap 临时目录（下载的仓库）已通过 `_CLEANUP_DIR` 在 EXIT tra
 ## 进度记录
 
 - 2026-08-14: 创建计划，status=draft（brainstorm 完成，设计经用户逐节确认）
+- 2026-08-14: 完成（实现 805 Bats 全绿，ShellCheck 干净；文档/版本 bump v1.8.0 同步），status=done

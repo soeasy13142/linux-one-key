@@ -2,7 +2,7 @@
 title: "Lite 版运行痕迹清理 —— 实现计划"
 created: 2026-08-14
 updated: 2026-08-14
-status: draft
+status: done
 source: "docs/plans/2026-08-14_17-02_lite-runtime-cleanup_nogit.md（设计文档，已获用户逐节确认）"
 topic: "feature"
 ---
@@ -547,3 +547,4 @@ git commit -m "docs: sync HANDOVER/README for v1.8.0 Lite cleanup"
 ## 进度记录
 
 - 2026-08-14: 创建计划，status=draft
+- 2026-08-14: Task 1-5 全部完成（RED→GREEN，805 Bats 全绿 = 795+10 cleanup 用例，ShellCheck 干净），Task 6 文档同步 + 版本 bump v1.8.0 完成，status=done
