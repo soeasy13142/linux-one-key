@@ -108,9 +108,8 @@ EOF
     touch "${TEST_DIR}/cleanup-blocked/x.log"
     CLEANUP_LOG_DIR="${TEST_DIR}/cleanup-blocked"
     CLEANUP_TMP_PATTERNS=()
-    PATH="${TEST_DIR}/bin:${PATH}"
 
-    run cleanup_lite_traces
+    PATH="${TEST_DIR}/bin:${PATH}" run cleanup_lite_traces
     [[ "${status}" -eq 0 ]]
     [[ -d "${TEST_DIR}/cleanup-blocked" ]]
 }
