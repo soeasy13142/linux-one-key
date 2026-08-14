@@ -407,6 +407,9 @@ curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/inst
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.7.0 | 2026-08-14 | Batch 5b sudo+日志加固（菜单 [22]）+ check.sh CIS/STIG 合规扫描器 CLI；795 Bats |
+| v1.6.0 | 2026-08-01 | Batch 5a 备份/回滚中心 + 安全仪表盘；[19] 更换软件源；Batch 6a-6e 服务器/开发模块 |
+| v1.5.0 | 2026-07-24 | curl 精简核心测试、kernel.sh 修复、Batch 1-4 模块落地 |
 | v1.0-alpha | 2026-07-12 | Docker Phase 1 测试通过（72/72），主菜单重构 v2，4 轮 Code Review |
 | v0.4 | 2026-06-24 | 审计日志模块（auditd）、服务管理模块 |
 | v0.3 | 2026-06-24 | 用户管理、内核安全加固、文件系统安全 |

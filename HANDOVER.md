@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-08-13 · **版本**: v1.6.0 · **状态**: ✅ Batch 5b + check.sh 收尾完成（HANDOVER 剩余待办清零）· **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
+> **最后更新**: 2026-08-14 · **版本**: v1.7.0 · **状态**: ✅ Batch 5b + check.sh 收尾完成（HANDOVER 剩余待办清零）· **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
 
 ## 会话恢复
 
@@ -18,8 +18,10 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.1.0 已完成：
 - **Lite/Full 双模式**: `--lite` 低内存模式（SSH + Firewall + Kernel) vs Full 全模块
 - **测试**: 795 Bats 单元测试全部通过
 - **审查**: 5 轮全项目 Code Review，发现并修复 280+ 问题
-- **最新发布**: v1.6.0（2026-08-01），Batch 5a 备份/回滚中心 + 安全仪表盘
+- **最新发布**: v1.7.0（2026-08-14），Batch 5b sudo+日志加固 + check.sh 合规扫描器
 - **新增 [19] 更换软件源**: vendored LinuxMirrors（MIT）完整交互，Lite/Full 均可用
+- **新增 [22] sudo 与日志加固**: Full-only 子菜单（sudoers 收紧 + sudo 命令全量日志 + journald 持久化 + logrotate 加固）
+- **新增 check.sh**: CIS/STIG 合规扫描器 CLI（ssh/sudo/log/kernel 4 节，`--json` + exit code）
 
 ## 关键决策
 
