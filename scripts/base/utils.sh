@@ -280,6 +280,50 @@ done
 unset _fn
 
 # ═══════════════════════════════════════════
+# 写入安全护栏（kejilion study P1 #10）
+# ═══════════════════════════════════════════
+
+# 写配置前的目标文件安全检查：拒绝符号链接（防劫持写穿）与超界文件（防被替换成超大/超长文件）。
+# 用法: assert_safe_config_target <file> [max_size] [max_lines]
+# 返回 0 = 安全可写；返回 1 = 拒绝（已 log_error）
+assert_safe_config_target() {
+    local file="$1"
+    local max_size="${2:-1048576}"   # 默认 1MiB
+    local max_lines="${3:-10000}"    # 默认 1 万行
+
+    # 先查符号链接（-L），再查常规文件（-f 会跟随链接，顺序不能颠倒）
+    if [[ -L "${file}" ]]; then
+        # shellcheck disable=SC2059
+        log_error "$(printf "${MSG_GUARD_SYMLINK}" "${file}")"
+        return 1
+    fi
+
+    if [[ -e "${file}" ]]; then
+        if [[ ! -f "${file}" ]]; then
+            # shellcheck disable=SC2059
+            log_error "$(printf "${MSG_GUARD_NOT_REGULAR}" "${file}")"
+            return 1
+        fi
+
+        local size lines
+        size=$(wc -c < "${file}" 2>/dev/null || echo 0)
+        lines=$(wc -l < "${file}" 2>/dev/null || echo 0)
+        if [[ "${size}" -gt "${max_size}" ]]; then
+            # shellcheck disable=SC2059
+            log_error "$(printf "${MSG_GUARD_SIZE}" "${file}" "${size}" "${max_size}")"
+            return 1
+        fi
+        if [[ "${lines}" -gt "${max_lines}" ]]; then
+            # shellcheck disable=SC2059
+            log_error "$(printf "${MSG_GUARD_LINES}" "${file}" "${lines}" "${max_lines}")"
+            return 1
+        fi
+    fi
+
+    return 0
+}
+
+# ═══════════════════════════════════════════
 # SSH 配置辅助函数
 # ═══════════════════════════════════════════
 
@@ -288,6 +332,11 @@ set_ssh_config() {
     local key="$1"
     local value="$2"
     local config_file="${3:-/etc/ssh/sshd_config}"
+
+    # 写入安全护栏：拒绝符号链接/超界目标文件
+    if ! assert_safe_config_target "${config_file}"; then
+        return 1
+    fi
 
     # 使用 POSIX 字符类 [[:space:]] 确保跨平台兼容（BSD/macOS + GNU/Linux）
     # grep 和 sed 使用一致的模式：要求 key 后必须有空白字符
