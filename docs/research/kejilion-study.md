@@ -209,42 +209,90 @@ kpanel_ssh_port_noninteractive() {
 
 - **游戏服务器管理器**（mc.sh / palworld.sh）：不是 systemd 管理，而是"菜单壳 + Docker/tmux"
   （`docker start/stop` + `tmux kill-session`）。可借鉴点：**状态感知菜单**——渲染菜单前先探测
-  安装/运行状态并显示（mc.sh:120-138），菜单项随状态变化（未安装→安装，已运行→停止）。
-- **配置模板三种用法**：外部模板 fetch + `docker cp`（kejilion.sh:2500-2524）；
-  `sed -i` 占位符替换（ldnmp.sh:31-33，**有注入风险**）；heredoc 生成（manager 脚本的 systemd unit）。
-  www.conf / www-1.conf 是 standard/high 双档位变体——"一个配置两档预设"的简单手法。
-- **TG 通知**：统一 `curl POST sendMessage`；⚠️ TG-SSH-check-notify.sh 引用了**从未定义的
-  token/chat_id 变量**（静默失败 bug）——通知类脚本必须校验变量已定义。
+  安装/运行状态并显示（mc.sh:120-138），菜单项随状态变化（未安装→安装，已运行→停止）；
+  状态行还会拼公网 IP（`curl ipv4.ip.sb`，mc.sh:4-20）。
+  - 备份 = 菜单引导 `docker cp` + `tar czvf mcsave_$(date +%Y%m%d%H%M%S).tar.gz`，并把
+    `mc_backup.sh` 注册进 crontab（`(crontab -l; echo "0 3 * * * ./mc_backup.sh") | crontab -`，
+    mc.sh:307-321）——⚠️ 重复执行菜单项会**累积重复 cron 行**（无去重），且 `./mc_backup.sh`
+    相对路径依赖 cwd，cron 下会找不到文件。
+  - 版本更新：脚本自更新 = `curl -sS -O https://kejilion.pro/mc.sh` 直接覆盖当前脚本；
+    游戏更新 = `docker restart` + steamcmd `app_update`。
+- **配置模板三种用法**：外部模板 fetch + `docker cp`（kejilion.sh:2500-2524，**无版本锁定、
+  无校验和、无备份**，覆盖即永久）；`sed -i` 占位符替换（ldnmp.sh:31-33，密码含 `/&\\` 会
+  破坏 sed 或注入任意替换）；heredoc 生成（manager 脚本的 systemd unit）。
+  - **模板档位化**：www.conf / www-1.conf 是 standard/high 双档位（`pm.max_children 20 vs 10`），
+    custom_mysql_config.cnf / -1.cnf 同理，由模式选择源文件——"一个模板两档预设"值得学。
+  - **模板语义分工**：fail2ban-nginx-cc.conf（filter: failregex/ignoreregex）、cloudflare.conf
+    （action: curl 调 CF API v4 封禁/解封）、nginx.local / sshd.local（jail: `enabled = true;
+    chain = DOCKER-USER`）——filter/action/jail 三类文件分开维护。
+- **TG 通知**：统一 `curl POST sendMessage`；监控型 = tmux 长驻进程 + `@reboot` crontab 拉起
+  （非 systemd timer），指标采集用 `/proc/stat` 差分算 CPU、`awk` 累加 `/proc/net/dev` 算流量、
+  `bc -l` 比浮点；SSH 登录型 = 读 sshd 注入的 `$SSH_CONNECTION` 取 IP + 百度 opendata 查归属地。
+  ⚠️ TG-SSH-check-notify.sh 引用了**从未定义的 token/chat_id**（静默失败 bug）；无重试、无节流。
 - **工程化最高的两个脚本**（deepseek_harness_manager.sh / hermes_manager.sh，本仓库亦有关联）：
-  18 个可用环境变量覆盖的路径（**测试缝**）、输入校验、`mktemp + chmod 600 + mv` 原子写、
-  回滚函数、幂等 appno 标记、`BASH_SOURCE` 守卫可被 source 测试；hermes 用内嵌 Python
-  heredoc 做 YAML CRUD（Python 处理 YAML 比 sed 可靠——可借鉴到本项目需 YAML 的场景）。
+  18 个可用环境变量覆盖的路径（**测试缝**）、输入校验（API key 正则/域名白名单/模型 ID 字符集）、
+  `mktemp + umask 077 + chmod 600 + mv` 原子写、多步操作回滚函数、幂等 appno 标记（grep -qxF 去重）、
+  卸载 `rm -rf` 白名单 + y/N 确认、运行态分层探测（systemd is-active → pidfile → pgrep）、
+  `BASH_SOURCE` 守卫可被 source 测试。
+  - hermes 的独特结构：**Python heredoc 当"配置 CRUD 服务"内嵌在 bash 函数里**（get_info/list_p/
+    add_p/bulk_add/del_p/switch，24-238 行），shell 只做 UI 编排；模型同步用 `comm -13/-23`
+    算新增/删除；PyPI 版本检查带 6h 缓存 + 后台刷新 + mkdir 锁；交互选择用 gum、降级编号输入。
+  - 风格差异：hermes 更"UI 重"（clear/颜色/gum），deepseek 更"运维重"（校验/回滚/systemd）——
+    deepseek 的设计完全围绕可测试性，是更值得学的那个。
 
-### 6.2 冒烟测试四种技术（无 Bats，纯 bash）
+### 6.2 冒烟测试技术（无 Bats，纯 bash）
 
-1. **契约 grep**：`grep -F 'kpanel_ssh_port_noninteractive() {'` 断言函数/守卫/关键行存在。
-2. **awk 函数抽取 + eval 切片单测**：把函数体从 2.8 万行 monolith 里 `awk` 抽出来，`eval` 后
-   只测这一小片（如协议守卫函数 + 环境变量置位 → 断言返回）。
-3. **非交互协议真跑**：`KJ_*_NONINTERACTIVE=1 bash kejilion.sh <subcmd>` 真实执行，
-   再 `grep 'KPANEL_SSH_RESULT applied'` 断言机器可读输出——**这让 2.8 万行 monolith 变得可测**。
-4. **mock 二进制 + PATH 前置 + 临时 HOME 沙箱**：造假 `ss`/`sshd` 放 PATH 前面，隔离 HOME，
-   末尾用 Python heredoc 断言文件副作用（如 sshd_config 内容）。
-5. **跨语言副本同步守护**：`test_cn_script_sync.sh` 用"归一化 diff + cmp"断言主脚本与
-   cn/kejilion.sh 业务逻辑一致；kpanel 测试还要求适配层函数体在 zh/en 副本间**逐字节相同**
-   （awk 抽取后直接比对）。
+1. **契约 grep**：`grep -F '[ "${KJ_F2B_NONINTERACTIVE:-}" = "1" ] ||'` 断言函数/守卫/协议标记
+   存在；还断言旧交互菜单仍在（`grep -F '1. 安装防御程序'`），防协议层吞掉原功能。
+2. **awk 函数抽取 + 桩 + eval 切片单测**：按 `^funcname\(\) \{` 到 `^}$` 锚点从 monolith 切出
+   单个函数，前置 no-op 桩（`break_end(){ return 0; }`、`send_stats(){ return 0; }`）再 eval；
+   test_kpanel_app 一次抽取 13 个函数体做状态机测试。⚠️ 锚点脆弱：函数体嵌套 `}` 会截断，
+   必须锚 `^}$`。
+3. **非交互协议真跑**：`KJ_BBRV3_NONINTERACTIVE=1 LC_ALL=C.UTF-8 bash kejilion.sh bbrv3 status`
+   真实执行，再 `grep -Fx 'KPANEL_BBRV3_PROTOCOL 1'` / `grep -F 'KPANEL_BBRV3_STATUS {"supported":'`
+   断言机器可读输出——**"如何模拟交互输入"的答案是：不是喂 stdin，而是用环境变量切非交互协议模式**。
+4. **mock 二进制 + PATH 前置 + 临时 HOME 沙箱**：`mktemp -d` + 造假 docker/curl/npm/systemctl/
+   python3 放 `$tmp/bin` + `PATH="$tmp/bin:$PATH"` + HOME 指临时目录；假 python3 甚至 monkeypatch
+   `urllib.request.urlopen` 伪造 `/models` 响应；`source` 管理脚本后直接调函数，`stat -c '%a'`
+   断言 600 权限；bash 跑完后用 Python heredoc 断言副作用文件内容/调用日志/备份存在性。
+5. **跨语言副本同步守护**：`test_cn_script_sync.sh` 用 sed 把 `canshu` 归一化为 REGION 后
+   `cmp -s`，强制 cn 版只允许 canshu 差异；kpanel 测试还要求适配层函数体在 zh/en 副本间
+   **逐字节相同**（awk 抽取后直接比对）。
+6. **测试卫生惯例**：`set -euo pipefail`、`trap 'rm -rf "$tmp"' EXIT`、`KEEP_WORKDIR=true`
+   保留现场、`bash -n` 语法检查、结尾 `printf '%s\n' "xxx_smoke=pass"` 机器可读标记。
 
 ### 6.3 与 Bats 对比（结论）
 
 - Bats（本项目）：真单测、断言丰富、CI 友好；冒烟测试（kejilion）：契约级、依赖 grep/awk、
-  **未接入任何 CI**（唯一 workflow 是每周自动翻译 translate.yml）。
+  **未接入任何 CI**（唯一 workflow 是每周自动翻译 translate.yml——周日 02:00 cron +
+  deep-translator 全量重译 en/tw/kr/jp，`git diff --staged --quiet` 判断有无变化才 commit，
+  `GITHUB_STEP_SUMMARY` 输出各语言 ✅/❌ 表格）。
 - 值得吸收的：**协议层测试缝**（环境变量切换非交互模式）、**mock PATH + 临时 HOME 沙箱**、
   **归一化 diff 守护 i18n 对称性**（本项目 mirror.bats 已有 MSG_MIRROR 对称测试，同思路）。
+- 移植路线：这套技术可原样搬进 Bats（`run` + `assert_output --partial 'KPANEL_*'`、@test 内
+  `source` 规避子 shell 不共享函数的坑、mock bin 目录 + PATH 注入），Bats 补齐报告/隔离/CI。
 
 ### 6.4 外围脚本风险清单（不模仿）
 
-- beifen.sh 硬编码 `sshpass -p 123456`（明文密码！）；`iptables -F` 无确认（auto_cert_renewal-1.sh）；
-- OpenSSH 升级脚本无回滚；mc.sh 395 行残留帕鲁 appid 的复制粘贴 bug；存档导出/导入路径不一致；
-- 冒烟测试没进 CI → 脚本演进后契约静默漂移。
+- beifen.sh 硬编码 `sshpass -p 123456`（明文密码 + 环回地址占位，直接跑要么泄露要么失败）；
+  `iptables -F` + `ip6tables -F` 无确认（auto_cert_renewal-1.sh:28-34，续签脚本直接 wipe 防火墙）；
+- **OpenSSH 升级无回滚**（upgrade_openssh9.8p1.sh：`make install` 覆盖系统 ssh 后 `mv ssh ssh.bak`
+  + `ln -s`，中途失败直接断 SSH 管理通道，仅开始前一个 Y/N）；
+- **auto_cert_renewal.sh 停 nginx 无 trap**：standalone 路径 `docker stop nginx`（75 行）后若
+  certbot 失败，nginx 不会自动恢复，网站长时间下线；`--email your@email.com` 硬编码；
+- **mc.sh 复制粘贴残留**：更新逻辑里 `app_update 2394010` 是帕鲁 appid，Minecraft 容器里根本没有
+  steamcmd 路径（395 行）——选"更新"必失败；存档导出写 `/home/game/mcsave_*` 导入读
+  `/home/game/mc/*.tar.gz`，文件名对不上，导入必失败（283 vs 291 行）；
+- **TG-check-notify.sh**：`$public_ip` 从未定义（14 行）国家恒空；token 是中文占位符不配置就
+  静默失败；`check_and_notify $CPU_USAGE "CPU"` 未加引号有分词风险；依赖 bc/jq 无安装检查；
+- **Limiting_Shut_down.sh**：流量超阈值 `shutdown -h now` 无"已关机"幂等保护，阈值硬编码 110GB，
+  /proc/net/dev 多网卡解析异常即误关机；
+- **ldnmp.sh**：`read -p` 明文回显密码 + `sed -i "s/webroot/$dbrootpasswd/g"` 注入风险；无 set -e；
+- **hermes_manager.sh**：`api_management_submenu` 滥用 clear（497 行）破坏可审计性；
+  `config_tool` 把 API key 明文写 `~/.hermes/config.yaml` 无权限收紧提示（148-156 行）；
+- **cloudflare.conf 泄露真实邮箱**（`cfuser = kejilion@outlook.com` 随公开仓库分发）；
+  nginx.local 的 `ignoreip = 192.168.0.1/24` 等占位值直接部署会放行错误网段；
+- 冒烟测试没进 CI → 脚本演进后契约静默漂移（唯一 workflow 是翻译，tests/ 全靠手动）。
 
 ---
 
@@ -279,11 +327,19 @@ kpanel_ssh_port_noninteractive() {
     恢复前哈希比对——本项目加固写配置时可补"文件边界校验"（防止被替换成超大/符号链接文件）。
 11. **测试缝（env 覆盖路径）**：关键路径允许环境变量覆盖（deepseek/hermes manager 各 18 处），
     便于测试与用户自定义。
+12. **输入校验先行**：API key 正则 / 域名白名单 / 模型 ID 字符集，非法即 return——
+    加固模块的端口/IP/域名参数同样应先校验再动系统（本项目 ssh 端口输入校验可对齐此标准）。
+13. **多步写操作带回滚函数**：任一步失败清理已产生的文件（`rollback_webui_domain_add`，
+    deepseek_harness_manager.sh:341-348）——加固失败不能留下半成品状态（本项目已有 rollback 定时器，
+    可补"失败即时清理"）。
+14. **多发行版矩阵冒烟**：Docker 多发行版镜像跑 `bash -n` + smoke（run_openclaw_manager_matrix.sh:
+    debian:12/13、ubuntu:22.04/24.04、rockylinux:9、almalinux:9、fedora:41）——本项目 Docker CI
+    Phase 已有多发行版矩阵（curl 精简核心测试 13×5），可把新模块也纳入同一矩阵。
 
 **P2 — 文档与运营**
 
-12. **README 安全四段式 + GitHub Alert + 测试徽章**：805 Bats / ShellCheck 亮出来。
-13. **日志单源 + 脚本内联展示最近变更**：`--version` 或菜单展示最近 changelog。
+15. **README 安全四段式 + GitHub Alert + 测试徽章**：805 Bats / ShellCheck 亮出来。
+16. **日志单源 + 脚本内联展示最近变更**：`--version` 或菜单展示最近 changelog。
 
 ---
 
