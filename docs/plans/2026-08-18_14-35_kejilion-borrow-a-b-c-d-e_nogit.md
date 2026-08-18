@@ -2,7 +2,7 @@
 title: "借鉴科技lion研究：5 项可落地功能（--version / i18n 对称测试 / README 警示 / 写入护栏 / 状态菜单）"
 created: 2026-08-18
 updated: 2026-08-18
-status: in-progress
+status: done
 source: "docs/research/kejilion-study.md §7 可落地清单；对照项目现状筛选出 A-E 五项真实空缺（F/G/H 本轮不做）"
 topic: "feature"
 ---
