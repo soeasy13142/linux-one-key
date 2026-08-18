@@ -36,3 +36,6 @@ tests/docker/results/
 
 # Git worktrees (isolated dev workspaces)
 .worktrees/
+
+# 科技lion 参考克隆（本地研究用，见 docs/research/kejilion-study.md）
+科技lion脚本/

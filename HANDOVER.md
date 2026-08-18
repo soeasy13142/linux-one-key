@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-08-14 · **版本**: v1.8.0 · **状态**: ✅ Lite 运行痕迹清理完成（HANDOVER 剩余待办清零）· **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
+> **最后更新**: 2026-08-14 · **版本**: v1.8.0 · **状态**: ✅ 外部参考研究（科技lion）完成 · **更新**: 2026-08-18· **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
 
 ## 会话恢复
 
@@ -121,7 +121,13 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.8.0 已完成：
 
 > ✅ = 已实现 · 🔄 = 待验证 · ⏳ = 待实现
 
-**HANDOVER 剩余待办已全部清零 ✅**。后续扩展方向：check.sh 增加更多检查节（firewall/filesystem）、接入 CI（Docker Phase 矩阵纳入新模块）、或评估是否将痕迹清理扩展到 Full 模式（当前仅 Lite 接入）。
+本次（外部参考研究：科技lion）已完成：
+1. ✅ **克隆参考项目** — `科技lion脚本/sh/`（github.com/kejilion/sh，v4.5.7，单文件 2.85 万行），已在 `.claude/CLAUDE.md` 标注，未纳入版本管理
+2. ✅ **深度研究报告** — `docs/research/kejilion-study.md`（文档/脚本设计/代码逻辑/测试方法 4 视角 + OrbStack Docker 实测 + 可落地借鉴清单 P0/P1/P2）
+3. ✅ **Docker 实测** — debian:bookworm-slim 容器实跑主菜单/子菜单/CLI 子命令/应用市场；实测发现自安装非原子（悬空软链）、无 set -e 静默降级、打开应用市场即改全局 DNS/gai.conf 等
+4. ✅ **结论** — 借鉴：CLI 子命令别名层、`KJ_*` 非交互协议（env 守卫 + 机器可读结果）、状态感知菜单、原子自更新、range 请求查版本；不模仿：单文件 monolith、sed 改自身副本、默认埋点、整文件多语言副本
+
+**HANDOVER 剩余待办已全部清零 ✅**。后续扩展方向：check.sh 增加更多检查节（firewall/filesystem）、接入 CI（Docker Phase 矩阵纳入新模块）、或评估是否将痕迹清理扩展到 Full 模式（当前仅 Lite 接入）；另可评估研究报告中 P0 借鉴项（CLI 子命令别名层 / 非交互协议）是否立项。
 
 ## 参考
 
