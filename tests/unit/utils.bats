@@ -192,3 +192,27 @@ teardown() {
     # 符号链接指向的真实文件必须未被修改（写穿防护）
     [[ "$(cat "${real}")" == "Port 22" ]]
 }
+# ── render_service_state_label 状态标签（kejilion study P1 #5）──
+
+@test "render_service_state_label: not installed" {
+    run render_service_state_label false false
+    [[ "${status}" -eq 0 ]]
+    [[ "${output}" == "${MSG_MENU_STATE_NOT_INSTALLED}" ]]
+}
+
+@test "render_service_state_label: installed and running" {
+    run render_service_state_label true true
+    [[ "${status}" -eq 0 ]]
+    [[ "${output}" == "${MSG_MENU_STATE_INSTALLED_RUNNING}" ]]
+}
+
+@test "render_service_state_label: installed but stopped" {
+    run render_service_state_label true false
+    [[ "${status}" -eq 0 ]]
+    [[ "${output}" == "${MSG_MENU_STATE_INSTALLED_STOPPED}" ]]
+}
+
+@test "render_service_state_label: accepts real check functions as callbacks" {
+    run render_service_state_label check_nginx_installed check_nginx_running
+    [[ "${status}" -eq 0 ]]
+}
