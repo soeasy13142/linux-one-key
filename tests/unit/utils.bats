@@ -143,3 +143,52 @@ teardown() {
     [[ -n "${TIMESTAMP}" ]]
     [[ "${TIMESTAMP}" =~ ^[0-9]{8}_[0-9]{6}$ ]]
 }
+
+# ── assert_safe_config_target 写入安全护栏（kejilion study P1 #10）──
+
+@test "assert_safe_config_target accepts non-existent target (will be created)" {
+    run assert_safe_config_target "${TEST_DIR}/new.conf"
+    [[ "${status}" -eq 0 ]]
+}
+
+@test "assert_safe_config_target accepts normal small file" {
+    echo "key = value" > "${TEST_DIR}/ok.conf"
+    run assert_safe_config_target "${TEST_DIR}/ok.conf"
+    [[ "${status}" -eq 0 ]]
+}
+
+@test "assert_safe_config_target rejects symlink target" {
+    echo "Port 22" > "${TEST_DIR}/real.conf"
+    ln -s "${TEST_DIR}/real.conf" "${TEST_DIR}/link.conf"
+    run assert_safe_config_target "${TEST_DIR}/link.conf"
+    [[ "${status}" -ne 0 ]]
+}
+
+@test "assert_safe_config_target rejects non-regular file (directory)" {
+    mkdir -p "${TEST_DIR}/adir"
+    run assert_safe_config_target "${TEST_DIR}/adir"
+    [[ "${status}" -ne 0 ]]
+}
+
+@test "assert_safe_config_target rejects file exceeding max_size" {
+    head -c 2048 /dev/zero > "${TEST_DIR}/big.conf"
+    run assert_safe_config_target "${TEST_DIR}/big.conf" 1024
+    [[ "${status}" -ne 0 ]]
+}
+
+@test "assert_safe_config_target rejects file exceeding max_lines" {
+    seq 1 20 > "${TEST_DIR}/many.conf"
+    run assert_safe_config_target "${TEST_DIR}/many.conf" 1048576 10
+    [[ "${status}" -ne 0 ]]
+}
+
+@test "set_ssh_config refuses symlink config via guard (no write-through)" {
+    local real="${TEST_DIR}/sshd_real.conf"
+    local link="${TEST_DIR}/sshd_config"
+    echo "Port 22" > "${real}"
+    ln -s "${real}" "${link}"
+    run set_ssh_config "Port" "2222" "${link}"
+    [[ "${status}" -ne 0 ]]
+    # 符号链接指向的真实文件必须未被修改（写穿防护）
+    [[ "$(cat "${real}")" == "Port 22" ]]
+}
