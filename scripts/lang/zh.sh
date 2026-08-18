@@ -1103,6 +1103,7 @@ MSG_HELP_LITE="  --lite          精简模式：仅执行核心安全加固（SS
 MSG_HELP_USAGE="用法：bash install.sh [选项]"
 MSG_HELP_OPTIONS="选项："
 MSG_HELP_STATUS="  --status       查看系统安全状态（只读）"
+MSG_HELP_VERSION="  --version, -V  显示版本与最近更新"
 MSG_HELP_HELP="  --help, -h     显示此帮助"
 MSG_HELP_NO_ARGS="无参数：交互式菜单。"
 MSG_HELP_EXAMPLES="示例："
@@ -1111,6 +1112,11 @@ MSG_HELP_EXAMPLE_STATUS="  bash install.sh --status               # 仅状态检
 MSG_HELP_EXAMPLE_CURL="  curl -fsSL .../install.sh | sudo bash"
 MSG_ERROR_UNKNOWN_ARG="错误：未知参数：%s"
 MSG_ERROR_USE_HELP="使用 --help 查看可用选项"
+MSG_VERSION_RECENT="最近更新："
+MSG_VERSION_LOG_1="v1.8.0 (2026-08-14) Lite 运行痕迹清理"
+MSG_VERSION_LOG_2="v1.7.0 (2026-08-14) sudo+日志加固 + check.sh CIS/STIG 扫描器"
+MSG_VERSION_LOG_3="v1.6.0 (2026-08-01) 备份/回滚中心 + 安全仪表盘 + 更换软件源"
+MSG_VERSION_LOG_4="v1.5.0 (2026-07-24) curl 精简核心测试 + 模块落地"
 
 # ═══════════════════════════════════════════
 # AIDE 入侵检测

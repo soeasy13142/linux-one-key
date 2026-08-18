@@ -115,6 +115,7 @@ _parse_args() {
                 echo "${MSG_HELP_OPTIONS}"
                 echo "${MSG_HELP_LITE}"
                 echo "${MSG_HELP_STATUS}"
+                echo "${MSG_HELP_VERSION}"
                 echo "${MSG_HELP_HELP}"
                 echo ""
                 echo "${MSG_HELP_NO_ARGS}"
@@ -123,6 +124,16 @@ _parse_args() {
                 echo "${MSG_HELP_EXAMPLE_INTERACTIVE}"
                 echo "${MSG_HELP_EXAMPLE_STATUS}"
                 echo "${MSG_HELP_EXAMPLE_CURL}"
+                exit 0
+                ;;
+            --version|-V)
+                echo "linux-one-key v${SCRIPT_VERSION}"
+                echo ""
+                echo "${MSG_VERSION_RECENT}"
+                echo "${MSG_VERSION_LOG_1}"
+                echo "${MSG_VERSION_LOG_2}"
+                echo "${MSG_VERSION_LOG_3}"
+                echo "${MSG_VERSION_LOG_4}"
                 exit 0
                 ;;
             --yes|-y|--quick|--ssh|--firewall|--fail2ban)

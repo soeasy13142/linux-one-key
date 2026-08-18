@@ -1103,6 +1103,7 @@ MSG_HELP_LITE="  --lite          Lite mode: core security only (SSH/firewall/ker
 MSG_HELP_USAGE="Usage: bash install.sh [options]"
 MSG_HELP_OPTIONS="Options:"
 MSG_HELP_STATUS="  --status       Show system security status (read-only)"
+MSG_HELP_VERSION="  --version, -V  Show version and recent changes"
 MSG_HELP_HELP="  --help, -h     Show this help"
 MSG_HELP_NO_ARGS="No arguments: interactive menu."
 MSG_HELP_EXAMPLES="Examples:"
@@ -1111,6 +1112,11 @@ MSG_HELP_EXAMPLE_STATUS="  bash install.sh --status             # Status check o
 MSG_HELP_EXAMPLE_CURL="  curl -fsSL .../install.sh | sudo bash"
 MSG_ERROR_UNKNOWN_ARG="Error: Unknown argument: %s"
 MSG_ERROR_USE_HELP="Use --help for available options"
+MSG_VERSION_RECENT="Recent changes:"
+MSG_VERSION_LOG_1="v1.8.0 (2026-08-14) Lite runtime trace cleanup"
+MSG_VERSION_LOG_2="v1.7.0 (2026-08-14) sudo+logging hardening + check.sh CIS/STIG scanner"
+MSG_VERSION_LOG_3="v1.6.0 (2026-08-01) Backup/Rollback center + Security dashboard + mirror sources"
+MSG_VERSION_LOG_4="v1.5.0 (2026-07-24) curl lite-core tests + module delivery"
 
 # ═══════════════════════════════════════════
 # AIDE Intrusion Detection
