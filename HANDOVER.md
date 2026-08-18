@@ -1,6 +1,6 @@
 # HANDOVER
 
-> **最后更新**: 2026-08-18 · **版本**: v1.8.0 · **状态**: ✅ 科技lion 研究落地（--version/对称测试/警示块/写入护栏/状态菜单） · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
+> **最后更新**: 2026-08-18 · **版本**: v1.9.0 · **状态**: ✅ 已发布（v1.9.0，含 v1.6-v1.8 累积变更） · **npm**: `@soeasy13142/linux-one-key` → GitHub Packages
 
 ## 会话恢复
 
@@ -18,12 +18,13 @@ Linux 云服务器安全加固一键脚本。v0.1 → v1.8.0 已完成：
 - **Lite/Full 双模式**: `--lite` 低内存模式（SSH + Firewall + Kernel) vs Full 全模块
 - **测试**: 827 Bats 单元测试全部通过
 - **审查**: 5 轮全项目 Code Review，发现并修复 280+ 问题
-- **最新发布**: v1.8.0（2026-08-14），Lite 运行痕迹清理（cleanup.sh + 退出前询问）
+- **最新发布**: v1.9.0（2026-08-18），科技lion 借鉴批次（--version / i18n 键集对称测试 / 写入安全护栏 / 状态感知子菜单）
+- ⚠️ **发布缺口说明**: v1.6.0-v1.8.0 版本号随批次递增但从未打 tag / 发 GitHub Release / 发 npm（最近真实 Release 为 v1.5.0）；v1.9.0 起恢复完整发布流程，Release Notes 涵盖 v1.6→v1.9 全部累积变更
 - **新增 [19] 更换软件源**: vendored LinuxMirrors（MIT）完整交互，Lite/Full 均可用
 - **新增 [22] sudo 与日志加固**: Full-only 子菜单（sudoers 收紧 + sudo 命令全量日志 + journald 持久化 + logrotate 加固）
 - **新增 check.sh**: CIS/STIG 合规扫描器 CLI（ssh/sudo/log/kernel 4 节，`--json` + exit code）
 - **Lite 运行痕迹清理**: Lite 正常退出前询问是否清理 `/var/log/linux-one-key`（日志/备份/报告）+ `/tmp` SSH 临时文件，默认清理，保留加固配置
-- **科技lion 借鉴批次（2026-08-18，未发布，见 `docs/plans/2026-08-18_14-35_kejilion-borrow-a-b-c-d-e_nogit.md`）**:
+- **科技lion 借鉴批次（2026-08-18，随 v1.9.0 发布，见 `docs/plans/2026-08-18_14-35_kejilion-borrow-a-b-c-d-e_nogit.md`）**:
   - `install.sh --version/-V`：打印版本 + 最近变更（`MSG_VERSION_*` i18n）
   - `tests/unit/lang-symmetry.bats`：zh/en 语言包 MSG_* 键集对称守护
   - README 安装命令下 `> [!IMPORTANT]` 安全警示块

@@ -1121,10 +1121,10 @@ MSG_HELP_EXAMPLE_CURL="  curl -fsSL .../install.sh | sudo bash"
 MSG_ERROR_UNKNOWN_ARG="Error: Unknown argument: %s"
 MSG_ERROR_USE_HELP="Use --help for available options"
 MSG_VERSION_RECENT="Recent changes:"
-MSG_VERSION_LOG_1="v1.8.0 (2026-08-14) Lite runtime trace cleanup"
-MSG_VERSION_LOG_2="v1.7.0 (2026-08-14) sudo+logging hardening + check.sh CIS/STIG scanner"
-MSG_VERSION_LOG_3="v1.6.0 (2026-08-01) Backup/Rollback center + Security dashboard + mirror sources"
-MSG_VERSION_LOG_4="v1.5.0 (2026-07-24) curl lite-core tests + module delivery"
+MSG_VERSION_LOG_1="v1.9.0 (2026-08-18) kejilion borrow batch: --version / write guard / state menus (827 Bats)"
+MSG_VERSION_LOG_2="v1.8.0 (2026-08-14) Lite runtime trace cleanup"
+MSG_VERSION_LOG_3="v1.7.0 (2026-08-14) sudo+logging hardening + check.sh CIS/STIG scanner"
+MSG_VERSION_LOG_4="v1.6.0 (2026-08-01) Backup/Rollback center + Security dashboard + mirror sources"
 
 # ═══════════════════════════════════════════
 # AIDE Intrusion Detection

@@ -460,6 +460,7 @@ curl -fsSL https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/inst
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.9.0 | 2026-08-18 | 科技lion 借鉴批次：`--version` 版本/变更查询、zh/en 键集对称测试、README 安全警示、写入安全护栏（符号链接/边界）、11 个 server 模块状态感知子菜单；827 Bats |
 | v1.8.0 | 2026-08-14 | Lite 运行痕迹清理（cleanup.sh + 退出前询问）；805 Bats |
 | v1.7.0 | 2026-08-14 | Batch 5b sudo+日志加固（菜单 [22]）+ check.sh CIS/STIG 合规扫描器 CLI；795 Bats |
 | v1.6.0 | 2026-08-01 | Batch 5a 备份/回滚中心 + 安全仪表盘；[19] 更换软件源；Batch 6a-6e 服务器/开发模块 |

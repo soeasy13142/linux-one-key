@@ -17,7 +17,7 @@ set -eo pipefail
 # ═══════════════════════════════════════════
 
 # 版本号
-readonly SCRIPT_VERSION="1.8.0"
+readonly SCRIPT_VERSION="1.9.0"
 
 # 日志目录 (允许测试时覆盖)
 LOG_DIR="${LOG_DIR:-/var/log/linux-one-key}"
