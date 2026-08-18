@@ -228,6 +228,8 @@ show_docker_submenu() {
     echo -e "${BOLD}  ${MSG_DOCKER_MENU_TITLE}${NC}"
     echo -e "${BOLD}═══════════════════════════════════════════${NC}"
     echo ""
+    echo -e "  ${BLUE}${MSG_MENU_STATE_LABEL}: $(render_service_state_label check_docker_installed check_docker_running)${NC}"
+    echo ""
     echo -e "  ${GREEN}${MSG_DOCKER_MENU_INSTALL}${NC}"
     echo -e "  ${GREEN}${MSG_DOCKER_MENU_UNINSTALL}${NC}"
     echo -e "  ${GREEN}${MSG_DOCKER_MENU_STATUS}${NC}"

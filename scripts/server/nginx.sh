@@ -237,6 +237,8 @@ show_nginx_submenu() {
     echo -e "${BOLD}  ${MSG_NGINX_MENU_TITLE}${NC}"
     echo -e "${BOLD}═══════════════════════════════════════════${NC}"
     echo ""
+    echo -e "  ${BLUE}${MSG_MENU_STATE_LABEL}: $(render_service_state_label check_nginx_installed check_nginx_running)${NC}"
+    echo ""
     echo -e "  ${GREEN}${MSG_NGINX_MENU_INSTALL}${NC}"
     echo -e "  ${GREEN}${MSG_NGINX_MENU_UNINSTALL}${NC}"
     echo -e "  ${GREEN}${MSG_NGINX_MENU_STATUS}${NC}"

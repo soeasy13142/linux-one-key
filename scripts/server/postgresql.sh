@@ -337,6 +337,8 @@ show_postgres_submenu() {
     echo -e "${BOLD}  ${MSG_POSTGRES_MENU_TITLE}${NC}"
     echo -e "${BOLD}═══════════════════════════════════════════${NC}"
     echo ""
+    echo -e "  ${BLUE}${MSG_MENU_STATE_LABEL}: $(render_service_state_label check_postgres_installed check_postgres_running)${NC}"
+    echo ""
     echo -e "  ${GREEN}${MSG_POSTGRES_MENU_INSTALL}${NC}"
     echo -e "  ${GREEN}${MSG_POSTGRES_MENU_UNINSTALL}${NC}"
     echo -e "  ${GREEN}${MSG_POSTGRES_MENU_STATUS}${NC}"

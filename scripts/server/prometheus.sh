@@ -229,6 +229,8 @@ show_prometheus_submenu() {
     echo -e "${BOLD}  ${MSG_PROMETHEUS_MENU_TITLE}${NC}"
     echo -e "${BOLD}═══════════════════════════════════════════${NC}"
     echo ""
+    echo -e "  ${BLUE}${MSG_MENU_STATE_LABEL}: $(render_service_state_label check_prometheus_installed check_prometheus_running)${NC}"
+    echo ""
     echo -e "  ${GREEN}${MSG_PROMETHEUS_MENU_INSTALL}${NC}"
     echo -e "  ${GREEN}${MSG_PROMETHEUS_MENU_UNINSTALL}${NC}"
     echo -e "  ${GREEN}${MSG_PROMETHEUS_MENU_STATUS}${NC}"

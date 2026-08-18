@@ -259,6 +259,8 @@ show_node_exporter_submenu() {
     echo -e "${BOLD}  ${MSG_NODE_EXPORTER_MENU_TITLE}${NC}"
     echo -e "${BOLD}═══════════════════════════════════════════${NC}"
     echo ""
+    echo -e "  ${BLUE}${MSG_MENU_STATE_LABEL}: $(render_service_state_label check_node_exporter_installed check_node_exporter_running)${NC}"
+    echo ""
     echo -e "  ${GREEN}${MSG_NODE_EXPORTER_MENU_INSTALL}${NC}"
     echo -e "  ${GREEN}${MSG_NODE_EXPORTER_MENU_UNINSTALL}${NC}"
     echo -e "  ${GREEN}${MSG_NODE_EXPORTER_MENU_STATUS}${NC}"

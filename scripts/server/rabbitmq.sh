@@ -235,6 +235,8 @@ show_rabbitmq_submenu() {
     echo -e "${BOLD}  ${MSG_RABBITMQ_MENU_TITLE}${NC}"
     echo -e "${BOLD}═══════════════════════════════════════════${NC}"
     echo ""
+    echo -e "  ${BLUE}${MSG_MENU_STATE_LABEL}: $(render_service_state_label check_rabbitmq_installed check_rabbitmq_running)${NC}"
+    echo ""
     echo -e "  ${GREEN}${MSG_RABBITMQ_MENU_INSTALL}${NC}"
     echo -e "  ${GREEN}${MSG_RABBITMQ_MENU_UNINSTALL}${NC}"
     echo -e "  ${GREEN}${MSG_RABBITMQ_MENU_STATUS}${NC}"
