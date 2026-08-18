@@ -86,6 +86,16 @@ wget https://raw.githubusercontent.com/soeasy13142/linux-one-key/main/install.sh
 sudo bash install.sh --lite
 ```
 
+> [!IMPORTANT]
+> **安全提示**：本脚本会修改 SSH、防火墙、内核参数等系统关键配置。请先在测试环境验证，
+> 再用于生产服务器；修改 SSH 端口或禁用密码登录前，请确保已配置好密钥并能通过新端口连接。
+> 所有修改都会自动备份至 `/var/log/linux-one-key/backups/`，可通过备份/回滚中心恢复。
+>
+> **Security warning**: This script modifies system-critical settings (SSH, firewall, kernel).
+> Test in a staging environment first, and ensure your SSH key works on the new port before
+> changing the SSH port or disabling password login. All changes are auto-backed up to
+> `/var/log/linux-one-key/backups/` and can be restored from the backup/rollback center.
+
 ---
 
 ### 方式二：完整模式执行（默认，标准服务器推荐）
