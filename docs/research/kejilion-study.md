@@ -102,12 +102,19 @@
 
 ## 4. 脚本逻辑设计视角（结构/菜单/入口）
 
-数据：28,498 行、**515 个函数**（全部 `name() {` 风格，0 个 `function` 关键字）、**90 个 `while true` 自绘菜单循环**、文件末尾巨型 `case $1` CLI 分发。
+数据：28,498 行、**515 个函数**（全部 `name() {` 风格，0 个 `function` 关键字）、**90 个 `while true` 自绘菜单循环**、**498 处 `read`（其中 `read -e -p` 369 处）**、文件末尾巨型 `case $1` CLI 分发。
 
 ### 4.1 双入口设计：交互菜单 + CLI 子命令
 
 - 交互入口：主菜单 `while true; clear; echo -e 手绘边框+ANSI 颜色; read -e -p; case` 循环
   （不用 `select`；"返回上级"= 直接调用主菜单函数，如 `0) kejilion`）。
+- 菜单绘制细节：分隔线就是 `echo -e "${gl_kjlan}-----...${gl_bai}"`；两列排版用
+  `printf "%-42s %s\n"` 定宽对齐（linux_tools，9725 行附近）；`break_end()`（380 行）用
+  `read -n 1 -s -r -p ""` 实现"按任意键继续"。
+- **菜单即状态面板**：部分菜单绘制前先探测状态生成彩色状态串（docker 菜单的
+  `docker_tato`/`check_docker_app`，如 2616 行），"已安装/未安装/运行中"直接体现在菜单项上。
+- **root 守卫模式**：`root_use()`（7104 行）非 root 时提示 + `break_end` + 回到主菜单，
+  而非直接退出——保留菜单上下文，交互友好。
 - CLI 入口：文件尾部 `case $1` 把每个子命令映射到菜单同款函数，且**每个命令都有中文别名**
   （`k install` / `k add` / `k 安装`），末尾 `*)` 落到 `k_info` 速查表——天然的教学入口，
   新用户敲错命令也能看到全量用法。
@@ -131,8 +138,15 @@ kpanel_ssh_port_noninteractive() {
 - 适配层**只做校验和机器可读结果，绝不复制主业务改动逻辑**（测试专门断言这一点）。
 - 输出 `KPANEL_SSH_RESULT applied|unchanged`、`KPANEL_SSH_PORT <port>` 等稳定契约，
   供 KPanel Web 后端当作"脚本 API"调用；同时是 23 个 smoke 测试可测性的来源。
+- **写入安全护栏**（KPanel 区段，23017-26210 行，全文件工程化最高处）：
+  - 目标文件先做**边界校验**：`kpanel_system_resource_file_within_bounds "$path" 262144 1024`
+    （256KiB / 1024 行上限）；
+  - 拒绝符号链接（`[ ! -L "$path" ]`）、`mkdir "$lock_dir"` 锁目录防并发写；
+  - 恢复前做**版本哈希比对**，失败输出机器可读 `..._emit failed`。
 - 对应到本项目：`check.sh --json` 已是同类思路；可把"环境变量守卫 + 机器可读结果"模式
   推广到 ssh/firewall 等模块，让 Web 面板与 Bats 都能安全驱动同一份业务代码。
+- 附带：进度条只在非交互协议里有（`kpanel_app_progress` → `KPANEL_PROGRESS n msg`），
+  交互模式无等待动画——"进度上报"也是协议化输出的一部分。
 
 ### 4.3 包管理器与服务抽象
 
@@ -159,7 +173,10 @@ kpanel_ssh_port_noninteractive() {
 - **原子自更新**：`mktemp` 临时文件 → 校验非空 + shebang → `mv` 替换；先 `cp .bak`，失败回滚；
   中国 IP 路由到 `cn/kejilion.sh` 镜像；更新后重放状态补丁再同步 `/usr/local/bin/k`；cron 自动更新。
 - **原子写入 + 锁目录 + 版本哈希校验**（KPanel 相关区段）：下载资源前校验哈希，写入用锁目录防并发。
-- **配置落盘 sysctl.d**：内核参数用 drop-in 文件而非直接 sysctl，与本项目 kernel.sh 思路一致。
+- **配置落盘 sysctl.d**：内核调优写入 `/etc/sysctl.d/99-kejilion-optimize.conf`（8028 行）而非直接
+  sysctl，注释明说"统一写入 sysctl.d 以防与内核调优模块打架"——与本项目 kernel.sh drop-in 思路一致。
+- **容器镜像更新检测**（2657 行）：ghcr.io 走 GitHub Release API、Docker Hub 走 registry digest，
+  并把引用规范化为 `repo:tag` 再对比——"镜像源感知的更新检查"。
 - **按国家镜像路由**：`quanju_canshu` 里 `gh_proxy` + CN/V6 双模式，`zhushi` 变量控制 `run_command()`
   是否真实执行（注释模式）——一个"dry-run 开关"的朴素实现。
 - **功能埋点 send_stats**：异步子 shell POST 到自家 API（版本/国家/架构/功能名），透明注释 + 可关
@@ -168,9 +185,17 @@ kpanel_ssh_port_noninteractive() {
 ### 5.2 弱点（实测 + 静态确认）
 
 - **无顶层 `set -e/-u/pipefail`**：实测缺 `free/uptime/sysctl/ss` 时逐条报错仍继续，
-  面板字段留空但整体显示"操作完成"——静默失败被包装成成功。
-- **命令注入风险**：`read -e -p` 后直接 `$dockername` 展开执行用户输入（交互菜单选择项拼成命令执行）。
-- **686 处硬编码路径**、**47 处重复的包管理器判定链**（同一段 if 链复制粘贴 47 次）。
+  面板字段留空但整体显示"操作完成"——静默失败被包装成成功；管道错误也吞
+  （`docker ps -a -q 2>/dev/null | wc -l` 在 docker 未装时输出 `0` 而非报错）。
+- **命令注入风险**：`read -e -p` 后直接 `$dockername` 展开执行用户输入（docker_ps 531-532 行
+  "请输入创建命令: " 把整行输入当命令执行，无二次确认；其余 `docker start $dockername`
+  类未加引号展开，含空格/通配符会裂词）。
+- **交互健壮性差**：`read -e -p` 无超时、无 `/dev/tty` 重定向——cron/管道/非交互调用时
+  `read` 读到 EOF 直接空选择或死循环；菜单输入范围外值多无兜底（部分有 `*)` 提示）。
+- **外部 API 无降级**：`ipinfo.io`/`api.github.com`/`linuxmirrors.cn` 贯穿主流程（连菜单绘制
+  前都 curl），网络抖动直接卡死菜单。
+- **686 处硬编码路径**（`/home/web`、`/home/docker`、`~/kejilion.sh`…用户无法自定义安装位置）、
+  **47 处重复的包管理器判定链**（同一段 if 链复制粘贴 47 次）、docker_ps 四个 case 几乎逐字复制。
 - **字符串版本比较**（`"$sh_v" = "$sh_v_new"`，v10 会小于 v9）；`update_log.sh` 已废弃（止于 v2.5.1），
   现维护 `kejilion_sh_log.txt`。
 - **文件头无任何注释/license 头**；菜单靠 `read -e -p` 全手动，无 select/方向键。
@@ -250,13 +275,15 @@ kpanel_ssh_port_noninteractive() {
 8. **heredoc 生成配置 + 双档位预设**：systemd unit/配置文件用 heredoc 生成；
    一个配置两个预设档（standard/high，对应 www.conf/www-1.conf 思路）。
 9. **配置落盘 sysctl.d / drop-in**：内核与系统参数用 drop-in 文件，与 kernel.sh 现状一致，保持。
-10. **测试缝（env 覆盖路径）**：关键路径允许环境变量覆盖（deepseek/hermes manager 各 18 处），
+10. **写入安全护栏**：目标文件先做边界校验（大小/行数上限）、拒绝符号链接、锁目录防并发、
+    恢复前哈希比对——本项目加固写配置时可补"文件边界校验"（防止被替换成超大/符号链接文件）。
+11. **测试缝（env 覆盖路径）**：关键路径允许环境变量覆盖（deepseek/hermes manager 各 18 处），
     便于测试与用户自定义。
 
 **P2 — 文档与运营**
 
-11. **README 安全四段式 + GitHub Alert + 测试徽章**：805 Bats / ShellCheck 亮出来。
-12. **日志单源 + 脚本内联展示最近变更**：`--version` 或菜单展示最近 changelog。
+12. **README 安全四段式 + GitHub Alert + 测试徽章**：805 Bats / ShellCheck 亮出来。
+13. **日志单源 + 脚本内联展示最近变更**：`--version` 或菜单展示最近 changelog。
 
 ---
 
