@@ -121,6 +121,11 @@ _configure_fail2ban_jail() {
         *)                       banaction="iptables-multiport" ;;
     esac
 
+    # 写入安全护栏：拒绝符号链接/超界目标文件
+    if ! assert_safe_config_target "${FAIL2BAN_JAIL_LOCAL}"; then
+        return 1
+    fi
+
     # 生成 jail.local 配置（原子写入：先写临时文件再 mv，防止中断导致配置损坏）
     local tmp_jail
     tmp_jail=$(mktemp "${FAIL2BAN_JAIL_LOCAL}.XXXXXX")

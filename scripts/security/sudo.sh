@@ -87,6 +87,11 @@ _write_sudoers_dropin() {
         return 0
     fi
 
+    # 写入安全护栏：拒绝符号链接/超界目标文件
+    if ! assert_safe_config_target "${dropin}"; then
+        return 1
+    fi
+
     local backup_path=""
     if [[ -f "${dropin}" ]]; then
         backup_path=$(backup_file "${dropin}" "${MSG_SUDO_BACKUP_DROPIN}") || return 1

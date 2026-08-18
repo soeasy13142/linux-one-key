@@ -111,6 +111,11 @@ apply_sysctl_params() {
 
     log_step "${MSG_KERNEL_SYSCTL_APPLYING}..."
 
+    # 写入安全护栏：拒绝符号链接/超界目标文件
+    if ! assert_safe_config_target "${SYSCTL_HARDENING_CONF}"; then
+        return 1
+    fi
+
     # 检查模板文件是否存在
     if [[ -f "${SYSCTL_TEMPLATE}" ]]; then
         # 使用模板文件生成配置
