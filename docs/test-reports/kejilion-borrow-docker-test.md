@@ -21,7 +21,7 @@
 - **A. CLI 入口**: `install.sh --version` / `-V` / `--help`（含 `--version` 行）/ 未知参数仍拒绝（回归）
 - **B. i18n 对称**: zh/en 语言包 `MSG_*` 键集 `comm -3` 双向比对
 - **C. 写入安全护栏**: `assert_safe_config_target` 单元（符号链接/超大小/超行数/新文件）+ 4 处真实写点集成
-  - C2: `/etc/ssh/sshd_config` 符号链接 → `set_ssh_config` 拒绝且不写穿
+  - C2: `/etc/ssh/sshd_config` 符号链接 → `set_ssh_config` 拒绝且不写穿；**正向**：恢复为正常文件后 `set_ssh_config` 仍成功写入（护栏不误伤）
   - C3: `/etc/sysctl.d/99-hardening.conf` 2MiB 超界 → `apply_sysctl_params` 提前拒绝且文件未动
   - C4: `/etc/sudoers.d/99-linux-one-key-sudo` 符号链接 → `_write_sudoers_dropin` 拒绝
   - C5: `/etc/fail2ban/jail.local` 符号链接 → `_configure_fail2ban_jail` 拒绝
@@ -31,7 +31,7 @@
 
 | 发行版 | 断言数 | 通过 | 失败 | 结果 |
 |--------|--------|------|------|------|
-| debian:12 | 21 | 21 | 0 | ✅ PASS |
+| debian:12 | 23 | 23 | 0 | ✅ PASS |
 | ubuntu:22.04 | 21 | 21 | 0 | ✅ PASS |
 | almalinux:9 | 21 | 21 | 0 | ✅ PASS |
 

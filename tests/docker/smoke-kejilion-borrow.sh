@@ -46,6 +46,10 @@ if set_ssh_config Port 2222; then echo "C_SETSSH_SYMLINK=FAIL"; else echo "C_SET
 if grep -qE '^Port[[:space:]]+2222' /tmp/sshd_config.real; then echo "C_SETSSH_WRITETHRU=FAIL"; else echo "C_SETSSH_WRITETHRU=OK"; fi
 rm -f /etc/ssh/sshd_config
 mv /tmp/sshd_config.real /etc/ssh/sshd_config
+# 正向路径：正常文件写入不受护栏影响（护栏不误伤）
+if set_ssh_config Port 2222; then echo "C_SETSSH_NORMAL=OK"; else echo "C_SETSSH_NORMAL=FAIL"; fi
+if grep -qE '^Port[[:space:]]+2222' /etc/ssh/sshd_config; then echo "C_SETSSH_NORMAL_APPLIED=OK"; else echo "C_SETSSH_NORMAL_APPLIED=FAIL"; fi
+set_ssh_config Port 22 >/dev/null 2>&1 || true
 
 echo "--- C3: kernel 超界目标 → apply_sysctl_params 提前拒绝 ---"
 source scripts/security/kernel.sh
