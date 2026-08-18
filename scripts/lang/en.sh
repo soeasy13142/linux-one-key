@@ -67,6 +67,10 @@ MSG_ERROR_UNSUPPORTED_OS="Error: Unsupported operating system"
 
 MSG_MENU_INVALID="Invalid option, please try again"
 MSG_ERROR_NO_INPUT="No input detected. Use --status for non-interactive mode."
+MSG_MENU_STATE_LABEL="Status"
+MSG_MENU_STATE_NOT_INSTALLED="Not installed"
+MSG_MENU_STATE_INSTALLED_RUNNING="Installed · Running"
+MSG_MENU_STATE_INSTALLED_STOPPED="Installed · Stopped"
 
 
 # ═══════════════════════════════════════════

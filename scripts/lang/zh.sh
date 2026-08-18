@@ -67,6 +67,10 @@ MSG_ERROR_UNSUPPORTED_OS="错误：不支持的操作系统"
 
 MSG_MENU_INVALID="无效选项，请重新选择"
 MSG_ERROR_NO_INPUT="未检测到输入，非交互环境请使用 --status 模式"
+MSG_MENU_STATE_LABEL="状态"
+MSG_MENU_STATE_NOT_INSTALLED="未安装"
+MSG_MENU_STATE_INSTALLED_RUNNING="已安装 · 运行中"
+MSG_MENU_STATE_INSTALLED_STOPPED="已安装 · 未运行"
 
 
 # ═══════════════════════════════════════════

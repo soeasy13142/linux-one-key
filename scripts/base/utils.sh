@@ -324,6 +324,29 @@ assert_safe_config_target() {
 }
 
 # ═══════════════════════════════════════════
+# 服务状态标签（kejilion study P1 #5 状态感知菜单）
+# ═══════════════════════════════════════════
+
+# 依据 installed/running 探测函数（函数名作为回调参数）输出状态标签。
+# 用法: render_service_state_label <installed_fn> <running_fn>
+#   例:  render_service_state_label check_redis_installed check_redis_running
+# 输出: 未安装 / 已安装 · 运行中 / 已安装 · 未运行（i18n）
+render_service_state_label() {
+    local installed_fn="$1"
+    local running_fn="$2"
+
+    if "${installed_fn}" 2>/dev/null; then
+        if "${running_fn}" 2>/dev/null; then
+            printf '%s' "${MSG_MENU_STATE_INSTALLED_RUNNING}"
+        else
+            printf '%s' "${MSG_MENU_STATE_INSTALLED_STOPPED}"
+        fi
+    else
+        printf '%s' "${MSG_MENU_STATE_NOT_INSTALLED}"
+    fi
+}
+
+# ═══════════════════════════════════════════
 # SSH 配置辅助函数
 # ═══════════════════════════════════════════
 
