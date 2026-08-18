@@ -77,26 +77,54 @@
    核心竞争力，README 目前未突出）。
 4. **兼容矩阵徽章**（10 发行版）——本项目 README 已有类似意识，可规范成徽章行。
 
+**可借鉴但不必照抄的部分**：效果图与打赏属于"用户向/社区向"运营痕迹；语言切换条在无多语言
+需求时不建议引入（多语言在本项目付出了巨大维护成本）；TOC 锚点适合长文档（快速开始/架构/
+安全模型/测试/贡献）；双语内联可迁移为"用户向快速开始 + 开发者向架构/测试"双受众结构。
+
+**README 家族现状（维护债务证据）**：`README.ru.md`（127 行）最接近主 README（徽章条/发行版/
+打赏全齐）；`README.tw/ja/kr.md`（65-68 行）是另一套简化结构（emoji 标题 📜🌐🚀，独立编写）；
+`README.fa.md` 仅 10 行未完成。缺陷：`README.tw.md:30` 截图 alt 是韩文（复制粘贴残留）、
+`README.ja.md:58` 打赏句是机翻残留、`README.kr.md:61` "대본"（电影剧本，非软件脚本）、
+`README.ru.md:80` 闭合标签被机翻成西里尔 `</р>`（HTML 破损）、`README.md:22` English 徽章
+href 指向中文 README（无 README.en.md）。
+
 ### 3.2 多语言方案：整文件翻译副本（结论：不采用）
 
 - 机制：6 个语言目录各放一份 1.2~2.8 万行的 `kejilion.sh` 整文件翻译副本；
   `translate.py` 用**正则保护 `$var` 与引号字符串** + 免费 GoogleTranslator 机翻；
   CI（translate.yml）每周 cron 自动翻译直推 main（只覆盖 en/tw/kr/jp，ru/ir 不在 CI）。
-- 实测问题：**5 份翻译副本全部滞后**（en 停在 v4.5.5，ru/ir 停在 v3.9.3，主脚本已 v4.5.7）；
-  残留中文（en 副本 414 行仍是中文提示，如 en/kejilion.sh:532）；机翻术语错误
-  （README.kr.md:61 "대본"、README.ru.md:80 西里尔 `</р>` 标签被机翻）。
+- **两代翻译器并存 + 三处代码副本**：根 `translate.py`（翻所有引号串，只覆盖 4 语言）与
+  目录内 `to-*.py`（更窄：只翻注释 + echo/read/send_stats 行，输出 `kejilion_en.sh` 等）
+  行为不一致；workflow 又把 `translate.py` **整份内联进 YAML**（translate.yml:37-130）——
+  改翻译逻辑极易漏改其中一处。
+- **cn 副本是唯一被认真维护的镜像**：`cn/kejilion.sh` 与根脚本只差 `canshu="CN"` vs
+  `canshu="default"`（`canshu` 是**区域/网络适配参数**——CN 走 gh.kejilion.pro 代理镜像，
+  不是语言参数）；CONTRIBUTING.md 强制同提交同步 + `tests/test_cn_script_sync.sh`
+  （sed 归一化 canshu → `bash -n` → `cmp -s`）守护，实测 PASS。其余 5 种语言无任何同步约束。
+- 实测问题：**5 份翻译副本全部滞后**（en/tw/jp/kr 停在 v4.5.5 共 24671 行，ru/ir 停在
+  v3.9.3 共约 12200 行，主脚本 v4.5.7 共 28498 行——en 落后约 3800 行）；残留中文比例
+  en 414 行/1.7%、kr 1.7%、ru 2.2%、ir 2.3%（含关键输入提示 `en/kejilion.sh:532`
+  "请输入容器名…"、更新菜单 "最新版本"）；机翻术语错误（"대본"、`</р>`）。
+- **CI 直推 main 无审查无门禁**：translate.yml 用 GITHUB_TOKEN 直接 commit+push，git 历史
+  已有 **86 条** "🌐 Weekly translation update" 提交；无 `bash -n` 校验、无残留中文检查、
+  无"翻译副本版本号 == 主脚本版本号"比对。
 - 结论：整文件副本 + 机器翻译 = **同步维护地狱**。本项目"`MSG_*` 变量 + 语言包 source +
   Bats 对称性测试"（mirror.bats 已用同思路）是正确选择，继续坚持即可；
   可补一条 CI：对比 en/zh 语言包的 key 集合是否对称（已有，保持）。
 
 ### 3.3 更新日志与发版纪律
 
-- `kejilion_sh_log.txt`：3 年 335 块的活日志源，脚本在线 `tail -n 30` 拉取展示——
+- `kejilion_sh_log.txt`：3 年 335 个版本块的活日志源，格式 = "日期 + v版本号 + 条目 + 分隔线"
+  （用户向、功能向，偶有致谢）；脚本更新菜单里**在线拉取尾部 30 条**
+  （`curl raw.../kejilion_sh_log.txt | tail -n 30`，kejilion.sh:27861-27864）——
   "日志单源，脚本内联展示"值得借鉴（本项目日志在 HANDOVER.md，可考虑在脚本 `--version`
   或菜单里内联最近变更）。
-- `update_log.sh`：停在 v2.5.1 且无人调用的死代码——教训：**版本号/日志/README 三处同步发版**，
-  否则必然漂移；README 安装命令的 `en` 参数与脚本实现脱节（实测 `en` 实际无分支，落到速查表）
-  也是同一类"文档与实现不同步"问题。
+- `update_log.sh`：423 行把日志写成 echo 语句的独立脚本，**不被任何地方引用**，内容停在
+  v2.5.1（2024-05）——"日志双源"反模式的活标本。
+- **发版纪律**：git 提交惯例是 `chore: release kejilion.sh 4.5.7` + 同日追加日志条目，
+  版本号/日志/README 三处同步发版，值得写进本项目 CONTRIBUTING。
+- README 安装命令的 `en` 参数与脚本实现脱节（实测 `en` 实际无分支，落到速查表）——
+  "文档与实现不同步"问题，与 `en` 徽章指向中文 README 同类。
 
 ---
 
@@ -340,6 +368,8 @@ kpanel_ssh_port_noninteractive() {
 
 15. **README 安全四段式 + GitHub Alert + 测试徽章**：805 Bats / ShellCheck 亮出来。
 16. **日志单源 + 脚本内联展示最近变更**：`--version` 或菜单展示最近 changelog。
+17. **翻译/自动化 CI 纪律**（若未来做）：workflow 运行仓库内脚本（勿内联复制）、加 `bash -n`
+    语法校验、提交前比对"翻译副本版本号 == 主脚本版本号"、产物走 PR 审查而非直推 main。
 
 ---
 
@@ -356,5 +386,10 @@ kpanel_ssh_port_noninteractive() {
 - **危险操作无确认**：`iptables -F` 直接清空（无确认/无备份）；OpenSSH 升级无回滚。
 - **多语言版本漂移**：5 份翻译副本全部滞后（en v4.5.5、ru/ir v3.9.3 vs 主 v4.5.7）；
   机翻破坏语法（README.ru.md 西里尔 `</р>`）。整文件副本方案天然有此问题。
+- **翻译 CI 无门禁**：直推 main 无审查（86 条 "🌐" 自动提交刷历史）、无 bash -n 校验、
+  无残留中文检查、无版本比对；两代翻译器（translate.py / to-*.py）+ workflow 内联副本
+  三处代码副本易漂移——本项目若做翻译 CI，必须运行仓库内脚本 + 加版本一致性门禁。
+- **同步规则只覆盖 cn**：CONTRIBUTING 仅强制 cn 副本同步，其余 5 语言无约束（规则本身
+  承认"只有中文镜像被认真维护"）。
 - **死代码与文档脱节**：update_log.sh 停在 v2.5.1 无人调用；README 的 `en` 参数实际无分支。
 - **测试未入 CI**：冒烟测试不进 workflow，契约静默漂移（本项目 Bats 已进 Docker CI，保持）。
